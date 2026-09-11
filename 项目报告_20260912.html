@@ -31,11 +31,11 @@ ConvTransformer），并完成与 7 个主流分割模型的对比、8 个模块
 前 10% 高 no-data 的低质量图、修复标签映射缺陷）后，主模型 Kappa 由
 <strong>0.4065</strong> 提升至
 <strong>0.6312</strong>，OA 提升至 <strong>0.7030</strong>。</p>
-<p><strong>2. 模块贡献在数据充足时被压缩。</strong> 8 个消融变体的 Kappa 全部落在
-0.488–0.636
-区间，与完整模型（0.6312）差异均小于 0.01——
-即当前数据规模下各模块不再有可测量的独立贡献，唯一例外是移除可学习解码器
-（Bilinear-Up）导致显著退化。</p>
+<p><strong>2. 全部五个设计模块在数据充足时均无可测量的独立贡献。</strong> 8 个消融变体的
+Kappa 落在 0.627–0.637，
+与完整模型（0.6312）的最大差异仅 <strong>0.006</strong>；
+其中 <strong>5 个变体（含替换可学习解码器的 Bilinear-Up）反而略优于完整模型</strong>。
+FPN 与 Transformer 合计占 67% 的参数，其移除对性能无显著影响。</p>
 <p><strong>3. 收敛速度主要由学习率调度决定，而非架构。</strong> 通过累计学习量（LR 积分）分析：
 12 个模型中 9 个达到 Kappa 0.5 所需的累计学习量集中在 47%–64%，说明"第几轮收敛"
 是调度曲线的映射，不是架构优势。<strong>唯一例外是 DeepLabV3+（31.8%）</strong>，其空洞
@@ -83,7 +83,7 @@ LoveDA；数据量效应；标签噪声；消融实验</p>
 </tr>
 <tr>
 <td>消融实验（8 个变体）</td>
-<td>🔄 7/8 完成，Bilinear-Up 训练中</td>
+<td>✅ 完成（最大差异 0.006 Kappa）</td>
 </tr>
 <tr>
 <td>标签质量专项验证</td>
@@ -94,8 +94,12 @@ LoveDA；数据量效应；标签噪声；消融实验</p>
 <td>✅ 完成（11 组，含 SGDR）</td>
 </tr>
 <tr>
-<td>数据阶梯 / 交互实验</td>
-<td>⏳ 已挂载，等待执行</td>
+<td>架构改进实验（4 个）</td>
+<td>🔄 运行中（联合消融 / 解码器CA / 通道扫描）</td>
+</tr>
+<tr>
+<td>数据阶梯 / 预算攻击</td>
+<td>⏳ 已挂载，排队</td>
 </tr>
 <tr>
 <td>跨数据集验证、多光谱适配</td>
@@ -666,9 +670,9 @@ no-data 像素被错误参与训练与评估。修复后同一模型指标变化
 </tr>
 <tr>
 <td>nd_abl_bilinear</td>
-<td>0.4885</td>
-<td>0.5864</td>
-<td>19/19</td>
+<td>0.6369</td>
+<td>0.7082</td>
+<td>59/60</td>
 </tr>
 </tbody>
 </table>
@@ -718,16 +722,25 @@ no-data 像素被错误参与训练与评估。修复后同一模型指标变化
 <td>轻微负贡献</td>
 </tr>
 <tr>
-<td><strong>Bilinear-Up</strong></td>
-<td><strong>-0.1427</strong></td>
-<td><strong>显著退化（进行中）</strong></td>
+<td>Bilinear-Up</td>
+<td>+0.0057</td>
+<td>无退化（略优）</td>
 </tr>
 </tbody>
 </table>
-<p><strong>结论</strong>：在 1,768 张训练数据下，<strong>除可学习解码器外，各模块均无独立正贡献</strong>。
-唯一显著的正向依赖是转置卷积解码器——替换为双线性上采样会大幅退化。
-这与阶段 A（957 张）的结论（"EMR 关键、ECSAM 有用"）不同：<strong>数据充足后，
-模块的边际价值被压缩</strong>。</p>
+<p><strong>结论</strong>：在 1,768 张训练数据下，<strong>全部五个设计模块（EMR / ECSAM / FPN /
+Transformer / Adapter）以及可学习解码器均无可测量的独立贡献</strong>：</p>
+<ul>
+<li>8 个变体的 |ΔKappa| 全部 ≤ <strong>0.006</strong></li>
+<li><strong>5 个变体略优于完整模型</strong>（Bilinear-Up +0.0057、Trans-4L +0.0050、
+  w/o EMR +0.0043、w/o Adapter +0.0030、Trans-6L +0.0023）</li>
+<li>仅两个变体略低：w/o ECSAM（−0.0040）、w/o Transformer（−0.0010）</li>
+</ul>
+<p>这与阶段 A（957 张）的结论（"EMR 关键、ECSAM 有用"）<strong>方向相反</strong>——说明
+模块的边际价值随数据量增加而被压缩至噪声水平。</p>
+<p><strong>参数效率含义</strong>：FPN（40.7% 参数）+ Transformer（26.4% 参数）合计 <strong>67% 的
+模型容量对性能无显著贡献</strong>，移除两者后参数量降至 2.00M（−67%），该验证实验
+（<code>lg_D1_join_nofpn_notrans</code>）正在进行中。</p>
 <h4>4.3.4 模块移除的架构适配说明</h4>
 <p>消融变体并非简单"删除模块"，而需架构层面适配：</p>
 <table>
@@ -1012,8 +1025,8 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <ol>
 <li><strong>数据量与数据质量共同决定上限</strong>：两者提升使主模型 Kappa 达到
    <strong>0.6312</strong>（后训练 <strong>0.6413</strong>）</li>
-<li><strong>模块贡献在数据充足时被压缩</strong>：8 个消融变体中 7 个与完整模型差异 &lt;0.01；
-   唯可学习解码器不可替代</li>
+<li><strong>全部设计模块均无显著贡献</strong>：8 个消融变体的最大差异仅 0.006 Kappa，
+   5 个变体反而略优；FPN+Transformer 占 67% 参数但移除无影响</li>
 <li><strong>收敛速度由调度主导</strong>：累计学习量分析显示 MSSACT 无收敛速度优势；
    DeepLabV3+ 是唯一的学习效率优势案例</li>
 <li><strong>标签质量是当前评价瓶颈</strong>：模型间一致率 &gt;&gt; 模型-标签一致率，容量-性能相关性

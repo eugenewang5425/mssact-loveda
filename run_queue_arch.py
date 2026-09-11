@@ -28,13 +28,21 @@ LADDER = paths.DATA_LADDER
 ROOT_MAIN = paths.DATA_NEWSPLIT2
 
 def queues_running():
+    """等待【其他】队列结束; 必须排除自身 PID, 否则会自检死锁"""
+    my_pid = os.getpid()
     try:
         r = subprocess.run(["powershell","-Command",
             "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
-            "Where-Object {$_.CommandLine -match 'run_queue'} | "
-            "Measure-Object | Select-Object -ExpandProperty Count"],
-            capture_output=True, text=True, timeout=20)
-        return int(r.stdout.strip()) > 0
+            "Select-Object ProcessId,CommandLine | ConvertTo-Csv -NoTypeInformation"],
+            capture_output=True, text=True, timeout=25)
+        for line in r.stdout.splitlines():
+            if "run_queue" not in line: continue
+            parts = line.split(",")
+            if not parts: continue
+            pid = parts[0].strip('"')
+            if pid.isdigit() and int(pid) != my_pid:
+                return True
+        return False
     except Exception:
         return True
 

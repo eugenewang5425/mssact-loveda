@@ -489,12 +489,12 @@
    },
    "nd_abl_bilinear": {
     "tag": "nd_abl_bilinear",
-    "n_epochs": 19,
-    "best_epoch": 19,
-    "kappa": 0.4885,
-    "oa": 0.5864,
-    "mf1": 0.573,
-    "finalized": true
+    "n_epochs": 60,
+    "best_epoch": 59,
+    "kappa": 0.6369,
+    "oa": 0.7082,
+    "mf1": 0.7083,
+    "finalized": false
    }
   }
  },
