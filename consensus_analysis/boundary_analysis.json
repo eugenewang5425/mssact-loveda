@@ -1,0 +1,12 @@
+{
+ "boundary_frac": 0.9295586573798407,
+ "consensus_vs_label": {
+  "all": 0.6815283778664174,
+  "boundary": 0.6880446988280265,
+  "interior": 0.595537646588165
+ },
+ "pair_disagreement": {
+  "boundary": 0.2372283016399666,
+  "interior": 0.2920020693854664
+ }
+}

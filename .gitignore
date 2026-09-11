@@ -1,0 +1,44 @@
+
+# ---- 显式忽略已跟踪过的缓存 ----
+**/__pycache__/
+**/*.pyc
+*.pyc
+产物 (不入库) ----
+*.pt
+.env
+*.npz
+*.log
+checkpoints/*.json
+checkpoints/*.pt
+
+# ---- 原始数据与中间数据 (本地) ----
+data/
+patches/
+vis/
+eval/
+eval/
+
+# ---- 结果目录 (可复现生成, 不入库) ----
+consensus_analysis/pred_*.npz
+consensus_analysis/labels.npz
+genhe_map*/
+
+# ---- 临时/生成文件 ----
+check_*.png
+stdout.txt
+*_new.pdf
+*_v3.pdf
+
+
+# ---- 本地备份（脱敏前的脚本副本，严禁入库）----
+backups/
+/backups/
+
+# ---- 评估产物：保留 conf JSON, 忽略预测图/权重 ----
+fulltile_eval/preds_*/
+overfit_diag/*.png
+heldout_test/*.png
+tta_eval*/**/*.png
+consensus_analysis/pred_*.npz
+consensus_analysis/labels.npz
+ladder_eval/*.png

@@ -1,0 +1,69 @@
+{
+ "models": [
+  "MSSACT-light 6.1M",
+  "DeepLabV3+ 39.6M",
+  "U-Net 2.4M",
+  "FCN 23.7M",
+  "FPN 27.2M",
+  "Swin-Unet 32.6M"
+ ],
+ "n_tiles": 141,
+ "model_label_agreement": {
+  "MSSACT-light 6.1M": 0.6645510802559771,
+  "DeepLabV3+ 39.6M": 0.7256019052792664,
+  "U-Net 2.4M": 0.6294611879844546,
+  "FCN 23.7M": 0.6337457616241118,
+  "FPN 27.2M": 0.6362837265060252,
+  "Swin-Unet 32.6M": 0.6074094952725643
+ },
+ "model_model_agreement": {
+  "MSSACT-light 6.1M|DeepLabV3+ 39.6M": 0.7650385929221195,
+  "MSSACT-light 6.1M|U-Net 2.4M": 0.7672387555270679,
+  "MSSACT-light 6.1M|FCN 23.7M": 0.7856668659079445,
+  "MSSACT-light 6.1M|FPN 27.2M": 0.7970802043282083,
+  "MSSACT-light 6.1M|Swin-Unet 32.6M": 0.7459290177500069,
+  "DeepLabV3+ 39.6M|U-Net 2.4M": 0.7282644698069811,
+  "DeepLabV3+ 39.6M|FCN 23.7M": 0.7442837170807536,
+  "DeepLabV3+ 39.6M|FPN 27.2M": 0.7421443909370147,
+  "DeepLabV3+ 39.6M|Swin-Unet 32.6M": 0.6858843336782181,
+  "U-Net 2.4M|FCN 23.7M": 0.7847767617294262,
+  "U-Net 2.4M|FPN 27.2M": 0.7848967573880973,
+  "U-Net 2.4M|Swin-Unet 32.6M": 0.7230627316809678,
+  "FCN 23.7M|FPN 27.2M": 0.8378786128371479,
+  "FCN 23.7M|Swin-Unet 32.6M": 0.7357110590914889,
+  "FPN 27.2M|Swin-Unet 32.6M": 0.7558441386296922
+ },
+ "consensus_vs_label": 0.6815283778664174,
+ "per_model_on_consensus": {
+  "MSSACT-light 6.1M": {
+   "agree_label": 0.6645510802559771,
+   "agree_consensus": 0.8690260321587414,
+   "delta": 0.20447495190276432
+  },
+  "DeepLabV3+ 39.6M": {
+   "agree_label": 0.7256019052792664,
+   "agree_consensus": 0.8167491028217749,
+   "delta": 0.09114719754250855
+  },
+  "U-Net 2.4M": {
+   "agree_label": 0.6294611879844546,
+   "agree_consensus": 0.845983905017817,
+   "delta": 0.21652271703336234
+  },
+  "FCN 23.7M": {
+   "agree_label": 0.6337457616241118,
+   "agree_consensus": 0.8738684555723493,
+   "delta": 0.2401226939482375
+  },
+  "FPN 27.2M": {
+   "agree_label": 0.6362837265060252,
+   "agree_consensus": 0.8848302637267723,
+   "delta": 0.24854653722074715
+  },
+  "Swin-Unet 32.6M": {
+   "agree_label": 0.6074094952725643,
+   "agree_consensus": 0.8069821379763199,
+   "delta": 0.19957264270375563
+  }
+ }
+}

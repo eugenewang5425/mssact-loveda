@@ -1,0 +1,67 @@
+============================================================
+[1] CHECKPOINT ARCHITECTURE CHECK
+============================================================
+  OK  v3_s256                inferred L=2 d=256 expected L=2 d=256
+  OK  mssact_full60          inferred L=2 d=256 expected L=2 d=256
+  OK  ablate_trans4l         inferred L=4 d=256 expected L=4 d=256
+  OK  ablate_trans6l         inferred L=6 d=256 expected L=6 d=256
+  OK  ablate_no_emr          inferred L=2 d=256 expected L=2 d=256
+  OK  ablate_no_ecsam        inferred L=2 d=256 expected L=2 d=256
+  OK  ablate_no_fpn          inferred L=2 d=256 expected L=2 d=256
+  OK  ablate_no_trans        inferred L=0 d=0 expected L=0 d=0
+  OK  ablate_no_adapter      inferred L=2 d=256 expected L=2 d=256
+  OK  mssact_v2              inferred L=2 d=256 expected L=2 d=256
+  OK  deeplab                (non-MSSACT, 构造无参, 无此风险)
+  OK  fcn                    (non-MSSACT, 构造无参, 无此风险)
+  OK  segformer              (non-MSSACT, 构造无参, 无此风险)
+  OK  pspnet                 (non-MSSACT, 构造无参, 无此风险)
+  OK  fpn_seg                (non-MSSACT, 构造无参, 无此风险)
+  OK  swin_unet              (non-MSSACT, 构造无参, 无此风险)
+  OK  unet                   (non-MSSACT, 构造无参, 无此风险)
+  OK  unet_lr1e4             (non-MSSACT, 构造无参, 无此风险)
+  OK  unet_matrix            (non-MSSACT, 构造无参, 无此风险)
+
+============================================================
+[2] HISTORY FILE INTEGRITY
+============================================================
+  OK  v3_s256                n=120 best_k=0.3862@ep109
+  OK  mssact_full60          n=60 best_k=0.4065@ep49
+  OK  ablate_trans4l         n=60 best_k=0.3907@ep60
+  OK  ablate_trans6l         n=60 best_k=0.4026@ep60
+  OK  ablate_no_emr          n=24 best_k=0.0004@ep9
+  OK  ablate_no_ecsam        n=60 best_k=0.3134@ep60
+  OK  ablate_no_fpn          n=60 best_k=0.3760@ep60
+  OK  ablate_no_trans        n=60 best_k=0.3636@ep52
+  OK  ablate_no_adapter      n=59 best_k=0.3452@ep44
+  CORRUPT mssact_v2              Expecting value: line 7 column 14 (char 138)  -> 标记 deprecated, 不参与结论
+  OK  deeplab                n=57 best_k=0.3806@ep42
+  OK  fcn                    n=50 best_k=0.2837@ep35
+  OK  segformer              n=59 best_k=0.1775@ep44
+  OK  pspnet                 n=52 best_k=0.2513@ep37
+  OK  fpn_seg                n=60 best_k=0.2982@ep60
+  OK  swin_unet              n=55 best_k=0.2682@ep40
+  CORRUPT unet                   Expecting value: line 6 column 14 (char 98)  -> 标记 deprecated, 不参与结论
+  OK  unet_lr1e4             n=21 best_k=0.0887@ep6
+
+============================================================
+[3] CROSS-VALIDATION CONSISTENCY (4corner vs fulltile vs heldout)
+============================================================
+  ablate_no_adapter      4corner=0.3452
+  ablate_no_ecsam        4corner=0.3134
+  ablate_no_emr          4corner=0.0004
+  ablate_no_fpn          4corner=0.3760
+  ablate_no_trans        4corner=0.3636
+  ablate_trans4l         4corner=0.3907
+  ablate_trans6l         4corner=0.4026
+  deeplab                4corner=0.3806  fulltile=0.3860  heldout=0.3628 (max spread 0.0232)
+  fcn                    4corner=0.2837  fulltile=0.2791  heldout=0.2582 (max spread 0.0255)
+  fpn_seg                4corner=0.2982  fulltile=0.2897  heldout=0.2718 (max spread 0.0263)
+  mssact_full60          4corner=0.4065  fulltile=0.4026  heldout=0.3766 (max spread 0.0299)
+  pspnet                 4corner=0.2513  fulltile=0.2400  heldout=0.2171 (max spread 0.0341)
+  segformer              4corner=0.1775  fulltile=0.1673  heldout=0.1569 (max spread 0.0206)
+  swin_unet              4corner=0.2682  fulltile=0.2589  heldout=0.2422 (max spread 0.0260)
+  unet_lr1e4             4corner=0.0887
+  unet_matrix            fulltile=0.0902  heldout=0.0983 (max spread 0.0081)
+  v3_s256                4corner=0.3862  fulltile=0.3857  heldout=0.3670 (max spread 0.0192)
+
+-> verify_report.txt & experiments_index.json 已生成

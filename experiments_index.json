@@ -1,0 +1,140 @@
+{
+  "_meta": {
+    "generated_at": "2026-09-07",
+    "protocol": "AdamW+OneCycle+EMA+earlystop(patience=15/20)",
+    "val_split": "train957/val199/test100(held-out)",
+    "note": "mssact构造核验: 统一关键字参数"
+  },
+  "checkpoints_verified": {
+    "v3_s256": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "mssact_full60": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "ablate_trans4l": {
+      "arch": {
+        "layers": 4,
+        "embed": 256
+      }
+    },
+    "ablate_trans6l": {
+      "arch": {
+        "layers": 6,
+        "embed": 256
+      }
+    },
+    "ablate_no_emr": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "ablate_no_ecsam": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "ablate_no_fpn": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "ablate_no_trans": {
+      "arch": {
+        "layers": 0,
+        "embed": 0
+      }
+    },
+    "ablate_no_adapter": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    },
+    "mssact_v2": {
+      "arch": {
+        "layers": 2,
+        "embed": 256
+      }
+    }
+  },
+  "cross_scores": {
+    "v3_s256": {
+      "4corner": 0.3862294010933797,
+      "fulltile": 0.38566921968821766,
+      "heldout": 0.36700403020311956
+    },
+    "mssact_full60": {
+      "4corner": 0.40646157982966036,
+      "fulltile": 0.4025845525663687,
+      "heldout": 0.37657012572490695
+    },
+    "ablate_trans4l": {
+      "4corner": 0.3906768413442347
+    },
+    "ablate_trans6l": {
+      "4corner": 0.4026465111118123
+    },
+    "ablate_no_emr": {
+      "4corner": 0.00035692471092825946
+    },
+    "ablate_no_ecsam": {
+      "4corner": 0.31342503373954167
+    },
+    "ablate_no_fpn": {
+      "4corner": 0.3759827747148773
+    },
+    "ablate_no_trans": {
+      "4corner": 0.3635711612756739
+    },
+    "ablate_no_adapter": {
+      "4corner": 0.3452466354277304
+    },
+    "deeplab": {
+      "4corner": 0.3805932304521133,
+      "fulltile": 0.3860380852389048,
+      "heldout": 0.362821339344593
+    },
+    "fcn": {
+      "4corner": 0.28368532125446705,
+      "fulltile": 0.27905898903052967,
+      "heldout": 0.2581550633794765
+    },
+    "segformer": {
+      "4corner": 0.17753382135928433,
+      "fulltile": 0.16732512666562874,
+      "heldout": 0.15689721904577875
+    },
+    "pspnet": {
+      "4corner": 0.2512791697757463,
+      "fulltile": 0.23995860102836292,
+      "heldout": 0.21714082067804155
+    },
+    "fpn_seg": {
+      "4corner": 0.2981857384510766,
+      "fulltile": 0.2897039997243398,
+      "heldout": 0.27184864538955555
+    },
+    "swin_unet": {
+      "4corner": 0.2682389807954675,
+      "fulltile": 0.2589019093820814,
+      "heldout": 0.24219978071529344
+    },
+    "unet_lr1e4": {
+      "4corner": 0.08868212504833599
+    },
+    "unet_matrix": {
+      "fulltile": 0.09018911692517703,
+      "heldout": 0.09826310849155925
+    }
+  }
+}
