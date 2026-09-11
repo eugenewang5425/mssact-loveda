@@ -260,9 +260,13 @@ class SegmentationDecoder(nn.Module):
     - 'deconv': 转置卷积上采样 (默认)
     - 'bilinear': 双线性插值上采样
     """
-    def __init__(self, in_channels, num_classes, upsample_mode='deconv'):
+    def __init__(self, in_channels, num_classes, upsample_mode='deconv', ca_stages=()):
+        """ca_stages: 在上采样路径的指定阶段后插入 ECSAM(坐标注意力)
+        例: ca_stages=(0,) 表示在第一次上采样后(1/4分辨率)应用;
+        默认 () = 不插入, 保持原行为"""
         super(SegmentationDecoder, self).__init__()
         self.upsample_mode = upsample_mode
+        self.ca_stages = tuple(ca_stages)
 
         if upsample_mode == 'deconv':
             # 上采样路径: 32 -> 64 -> 128 -> 256 (3次转置卷积)
@@ -288,6 +292,13 @@ class SegmentationDecoder(nn.Module):
         # 最终分类头: 1x1卷积输出每个像素的类别概率
         self.classifier = nn.Conv2d(64, num_classes, 1)
 
+        # 解码器侧的坐标注意力 (可选; 通道数随阶段变化)
+        ch_by_stage = {0: in_channels // 2, 1: in_channels // 4, 2: 64}
+        self.dec_ca = nn.ModuleDict()
+        for st in self.ca_stages:
+            if st in ch_by_stage:
+                self.dec_ca[str(st)] = ECSAM(ch_by_stage[st])
+
         self._init_weights()
 
     def _init_weights(self):
@@ -302,8 +313,11 @@ class SegmentationDecoder(nn.Module):
         if self.upsample_mode == 'deconv':
             # 转置卷积上采样
             x = F.relu(self.bn1(self.upsample1(x)))   # -> (B, 256, 64, 64)
+            if "0" in self.dec_ca: x = self.dec_ca["0"](x)
             x = F.relu(self.bn2(self.upsample2(x)))   # -> (B, 128, 128, 128)
+            if "1" in self.dec_ca: x = self.dec_ca["1"](x)
             x = F.relu(self.bn3(self.upsample3(x)))    # -> (B, 64, 256, 256)
+            if "2" in self.dec_ca: x = self.dec_ca["2"](x)
         else:
             # 双线性插值上采样
             x = F.relu(self.bn1(self.conv1(x)))       # 调整通道
@@ -327,7 +341,7 @@ class MSSACTNet(nn.Module):
                  use_emr=True, use_ecsam=True, use_fpn=True,
                  use_transformer=True, use_adapter=True,
                  transformer_layers=4, transformer_heads=8,
-                 upsample_mode='deconv'):
+                 upsample_mode='deconv', decoder_ca_stages=()):
         super(MSSACTNet, self).__init__()
 
         self.in_channels = in_channels
@@ -386,7 +400,8 @@ class MSSACTNet(nn.Module):
         # 语义分割解码器 (替代全局池化)
         self.decoder = SegmentationDecoder(
             embed_dims[-1], num_classes,
-            upsample_mode=upsample_mode
+            upsample_mode=upsample_mode,
+            ca_stages=decoder_ca_stages
         )
 
     def forward(self, x):

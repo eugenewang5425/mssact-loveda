@@ -1,0 +1,138 @@
+"""实验队列 v2（按用户决策调整）:
+  - 取消: 30.5M 全量模型（性价比低、自身问题大）
+  - 保留: 数据量阶梯（用户明确要求）
+  - 新增: 三个架构改进实验（针对分析发现的问题）
+  - 砍掉: 固定LR实验（累计学习量分析已在数学上回答调度效应）
+  - 保留: 预算攻击（便宜，验证"预算是否掩盖模块差异"）
+
+架构实验设计依据（见分析）:
+  D1 联合消融    : use_fpn=False + use_transformer=False
+                   依据: FPN(40.7%参数)+Transformer(26.4%)各自消融ΔK≈0，
+                   若联合消融亦无显著下降 -> 直接证明功能冗余
+  D2 解码器CA    : ECSAM 从编码器移到解码器上采样路径（文献通行做法）
+                   依据: CA 的价值在位置敏感/定位任务; 我们的编码器用法在
+                   深层降采样特征上（位置已稀释）且任务位置无关
+  D3 通道-空间比 : embed_dims 缩至 [16,32,64,128]（超轻量）
+                   依据: 通道/像素比达标准设计4倍, 过拟合诊断ΔH=-0.241
+  D4 大容量对照  : embed_dims=[64,128,256,512]（同数据下容量对照）
+
+协议: 与阶段C一致（newsplit2/train 1768张, OneCycle-60, pt20, lr2e-4, batch8）
+"""
+import os, sys, json, time, subprocess
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+BASE = os.path.dirname(os.path.abspath(__file__))
+CKPT = os.path.join(BASE, "checkpoints")
+import paths                     # 集中路径配置
+LADDER = paths.DATA_LADDER
+ROOT_MAIN = paths.DATA_NEWSPLIT2
+
+def queues_running():
+    try:
+        r = subprocess.run(["powershell","-Command",
+            "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+            "Where-Object {$_.CommandLine -match 'run_queue'} | "
+            "Measure-Object | Select-Object -ExpandProperty Count"],
+            capture_output=True, text=True, timeout=20)
+        return int(r.stdout.strip()) > 0
+    except Exception:
+        return True
+
+def tag_state(tag, target):
+    p = os.path.join(CKPT, f"{tag}_history.json")
+    if not os.path.exists(p): return "absent"
+    try:
+        h = json.load(open(p)); n = len(h) if isinstance(h,list) else 0
+        return "complete" if n >= target else f"partial({n}/{target})"
+    except Exception:
+        return "corrupt"
+
+def verify(tag):
+    try:
+        h = json.load(open(os.path.join(CKPT, f"{tag}_history.json")))
+        b = max(h, key=lambda r: r.get("kappa",-9))
+        print(f"  OK {tag}: n={len(h)} best_k={b['kappa']:.4f}@ep{b['epoch']}", flush=True)
+    except Exception as e:
+        print(f"  !!! {tag} verify fail: {e}", flush=True)
+
+if __name__ == "__main__":
+    print("=== 实验队列 v2（等待主队列结束）===", flush=True)
+    while queues_running():
+        print("  其他队列运行中, 等待...", flush=True)
+        time.sleep(600)
+    print("开始执行", flush=True); time.sleep(60)
+
+    from experiment_matrix import train_one, UNet, DeepLabV3Plus
+    from experiment_matrix_v2 import mssact_light
+    from models.msscactnet import MSSACTNet
+
+    def light(**kw):
+        return mssact_light(**kw)
+
+    # ============ D. 架构改进实验 ============
+    print("\n===== D. 架构改进实验（针对分析发现）=====", flush=True)
+    ARCH = [
+        # (tag, 构造函数, 说明, 预算)
+        ("lg_D1_join_nofpn_notrans",
+         lambda: light(use_fpn=False, use_transformer=False),
+         "联合消融: FPN+Transformer 同时移除 (验证功能冗余)", 60),
+        ("lg_D2_decoder_ca",
+         lambda: light(decoder_ca_stages=(0, 1)),
+         "ECSAM 移到解码器上采样路径 (文献通行做法)", 60),
+        ("lg_D3_ch_tiny",
+         lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[16,32,64,128],
+                           transformer_layers=2, transformer_heads=4),
+         "超轻量通道 [16,32,64,128] (验证通道-空间比失衡)", 60),
+        ("lg_D4_ch_large",
+         lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[64,128,256,512],
+                           transformer_layers=2, transformer_heads=4),
+         "大容量通道 [64,128,256,512] (容量对照)", 60),
+    ]
+    for tag, fn, desc, ep in ARCH:
+        st = tag_state(tag, ep)
+        if st == "complete": print(f"SKIP {tag}", flush=True); continue
+        print(f"=== {tag} ===\n    {desc}", flush=True)
+        try:
+            train_one(fn, tag, max_epochs=ep, patience=20, batch=8, lr=2e-4, root=ROOT_MAIN)
+        except Exception as e:
+            print(f"FAILED {tag}: {type(e).__name__} {str(e)[:200]}", flush=True)
+        verify(tag)
+
+    # ============ A. 预算攻击 ============
+    print("\n===== A. 预算攻击（15轮, 验证'预算是否掩盖模块差异'）=====", flush=True)
+    B15 = [("full", lambda: light()), ("noecsam", lambda: light(use_ecsam=False)),
+           ("noemr", lambda: light(use_emr=False)), ("unet", lambda: UNet()),
+           ("deeplab", lambda: DeepLabV3Plus())]
+    for mtag, fn in B15:
+        tag = f"lg_b15_{mtag}"
+        st = tag_state(tag, 15)
+        if st == "complete": print(f"SKIP {tag}", flush=True); continue
+        print(f"=== {tag} ===", flush=True)
+        try:
+            train_one(fn, tag, max_epochs=15, patience=15, batch=8, lr=2e-4, root=ROOT_MAIN)
+        except Exception as e:
+            print(f"FAILED {tag}: {e}", flush=True)
+        verify(tag)
+
+    # ============ C. 数据量阶梯（用户明确保留）============
+    print("\n===== C. 数据量阶梯（250/500/1000, 30轮）=====", flush=True)
+    for n in [250, 500, 1000]:
+        root = os.path.join(LADDER, f"n{n}")
+        if not os.path.isdir(os.path.join(root, "train", "images")):
+            print(f"SKIP n{n} (无数据)", flush=True); continue
+        for mtag, fn in [("full", lambda: light()), ("noecsam", lambda: light(use_ecsam=False)),
+                         ("unet", lambda: UNet()), ("deeplab", lambda: DeepLabV3Plus())]:
+            tag = f"lg_n{n}_{mtag}"
+            st = tag_state(tag, 30)
+            if st == "complete": print(f"SKIP {tag}", flush=True); continue
+            print(f"=== {tag} ===", flush=True)
+            try:
+                train_one(fn, tag, max_epochs=30, patience=30, batch=8, lr=2e-4,
+                          root=root, val_root=ROOT_MAIN)
+            except Exception as e:
+                print(f"FAILED {tag}: {e}", flush=True)
+            verify(tag)
+
+    print("\n===== 队列 v2 全部完成 =====", flush=True)
+    r = subprocess.run([sys.executable, "-u", "eval_ladder.py"], cwd=BASE)
+    print(f"eval_ladder exit={r.returncode}", flush=True)
