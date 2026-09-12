@@ -1568,10 +1568,10 @@
    "lgR_D3_ch_tiny": {
     "series": "lgR-roll/架构消融与容量",
     "pipeline": "P-MEM-ROLL",
-    "status": "partial(33/60)",
-    "kappa": 0.545903,
-    "best_epoch": 32,
-    "epochs_run": 33,
+    "status": "complete",
+    "kappa": 0.610295,
+    "best_epoch": 60,
+    "epochs_run": 60,
     "params_M": 1.547,
     "epochs_total": 60
    },

@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-12 19:11:41",
+  "generated_at": "2026-09-12 19:27:30",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -153,7 +153,7 @@
   },
   "lgR-roll/架构消融与容量": {
    "n_experiments": 3,
-   "n_complete": 2,
+   "n_complete": 3,
    "best_kappa_in_series": 0.6375
   }
  },
@@ -884,11 +884,11 @@
   },
   "lgR_D3_ch_tiny": {
    "series": "lgR-roll/架构消融与容量",
-   "status": "partial(33/60)",
+   "status": "complete",
    "pipeline": "P-MEM-ROLL",
-   "best_kappa": 0.545903,
-   "best_epoch": 32,
-   "epochs_run": 33,
+   "best_kappa": 0.610295,
+   "best_epoch": 60,
+   "epochs_run": 60,
    "target_epochs": 60,
    "params_M": 1.547,
    "has_weight": true,
