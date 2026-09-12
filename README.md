@@ -217,51 +217,95 @@ AdamW(lr=2e-4, wd=0.02) + OneCycle(6% warmup + 余弦退火, 60 轮) + EMA(0.999
 
 ## 项目结构
 
+脚本按用途分目录；**仓库根目录只保留路径枢纽、核心库、权威事实与交付件**。
+
 ```
 loveda/
 ├── paths.py                    # 路径配置中心（环境变量 / .env / 默认值）
-├── models/msscactnet.py        # MSSACT-Net 模型定义（支持模块开关）
 ├── train_v3.py                 # 数据集 + 训练循环 + REMAP（核心）
-├── experiment_matrix.py        # 通用训练入口(train_one) + 基线模型
+├── experiment_matrix.py        # 通用训练入口 train_one() + 基线模型
 ├── experiment_matrix_v2.py     # 扩展基线(FPN/Swin-Unet) + 消融构造
 ├── train_full_data.py          # 全量数据训练（主模型 + 后训练）
+├── models/msscactnet.py        # MSSACT-Net 定义（模块可开关）
 │
-├── run_queue_new.py            # 实验队列: 主模型重训 + 对比(7) + 消融(8)
-├── run_queue_30m.py            # 30.5M 原版架构 + 后训练 + TTA
-├── run_queue_interaction.py    # 交互实验: 预算攻击 + 固定LR + 数据阶梯
-├── monitor_queue.py            # 实时进度监控（动态刷新 + ETA）
+├── queues/                     # 实验队列（自动串行、断点续跑）
+│   ├── run_chain.py            #   统一等待链：静默等待 → final → crop
+│   ├── run_queue_new.py        #   主模型重训 + 对比(7) + 消融(8)
+│   ├── run_queue_arch.py       #   架构实验 D1-D4 + 预算攻击 + 数据阶梯
+│   ├── run_queue_final.py      #   多种子噪声底线 + 22 tag 全量推理
+│   ├── run_queue_crop.py       #   裁剪策略对比（256/384/512、随机/固定）
+│   ├── run_queue_30m.py        #   30.5M 原版架构 + 后训练 + TTA
+│   ├── run_queue_interaction.py#   预算攻击 + 固定 LR
+│   ├── run_queue_batch.py      #   batch 缩放对照（bs8 vs bs16）
+│   ├── monitor_queue.py        #   实时进度监控（动态刷新 + ETA）
+│   ├── eta_queue.py            #   剩余时间估算（按实测每轮耗时累加）
+│   └── queue_guard.py          #   队列互斥守卫（CREATE_NO_WINDOW，避免弹窗）
 │
-├── resplit_filtered.py         # 数据筛选 + MD5去重 + 8:1:1 划分
-├── verify_split2.py            # 划分泄漏校验
-├── build_data_ladder.py        # 嵌套数据阶梯子集（250/500/1000）
+├── analysis/                   # 评估与分析
+│   ├── eval_rigor.py           #   严格性评估：逐类 IoU / 配对 bootstrap / TOST
+│   ├── eval_ladder.py          #   数据阶梯评价（泛化 / 过拟合 / 学习速率）
+│   ├── eval_complete.py        #   val/test × TTA
+│   ├── eval_tta_new.py         #   新数据（newsplit2）TTA
+│   ├── consensus_analysis.py   #   标签质量一致性分析
+│   ├── headroom_analysis.py    #   Kappa 归属分解（oracle 作弊实验）
+│   ├── artifact_analysis.py    #   解码器伪影 / 边缘密度
+│   ├── fix_boundary_analysis.py#   修正边界分层定义（原实现有跨图求差缺陷）
+│   ├── overfit_diag.py         #   过拟合诊断（logits 熵）
+│   └── seed_variance.py        #   随机种子噪声底线（σ_seed）
 │
-├── eval_complete.py            # val/test × TTA 评估
-├── eval_tta_new.py             # 新数据 TTA 评估
-├── eval_fulltile.py            # 全图滑窗推理评估
-├── eval_ladder.py              # 数据阶梯评价（泛化/过拟合/学习速率）
-├── consensus_analysis.py       # 标签质量一致性分析
-├── overfit_diag.py             # 过拟合诊断（logits 熵）
-├── verify_experiments.py       # 实验产物核验（架构/完整性/交叉一致）
+├── verify/                     # 校验与基准
+│   ├── verify_experiments.py   #   实验产物核验（架构/完整性/交叉一致）
+│   ├── verify_rollback.py      #   回退管线性能验证
+│   ├── verify_split2.py        #   划分泄漏校验
+│   ├── bench_parity.py         #   PNG vs memmap 数值一致性
+│   ├── bench_pipeline.py       #   管线提速基准
+│   └── sample_gpu_now.py       #   GPU 利用率采样
 │
-├── build_facts.py              # 事实汇总 → FACTS.json（报告唯一数据源）
-├── make_figures.py             # 图表生成
-├── make_stats_figures.py       # 统计图表（混淆矩阵/PRF/效率）
-├── make_report_v2.py           # 报告生成（Markdown→HTML→PDF）
+├── prep/                       # 数据准备
+│   ├── resplit_filtered.py     #   no-data 筛选 + MD5 去重 + 8:1:1 划分
+│   ├── build_data_ladder.py    #   嵌套数据阶梯子集（250/500/1000）
+│   └── build_fast_dataset.py   #   预解码 memmap（消除 PNG 解码瓶颈）
 │
-├── figures/                    # 26 张图表（报告/README 引用）
-├── legacy/                     # 历史脚本归档（16 个早期脚本 + 说明）
-├── docs/archive/               # 历史文档归档
-├── 项目报告_20260912.pdf        # 项目报告（22 页）
-├── FACTS.json                  # 全部实验结果的结构化汇总
-└── .env                        # 本地路径配置（不入库，见 STRUCTURE.md）
+├── viz/                        # 图表
+│   ├── make_figures.py         #   学习曲线 / 消融 / 每类 F1 / 同 tile 对比
+│   └── make_stats_figures.py   #   混淆矩阵 / PRF / 参数效率 / LR 调度
+│
+├── report/                     # 汇总与报告
+│   ├── build_index.py          #   实验索引 → experiments_index.json
+│   ├── build_facts.py          #   事实汇总 → FACTS.json（报告唯一数据源）
+│   ├── make_report_v2.py       #   报告 Markdown → HTML
+│   └── make_pdf.py             #   HTML → PDF（Chrome headless）+ 内容自检
+│
+├── mapping/inference_fullmap.py# 全图滑窗推理 + shp 裁剪成图（制图管线）
+│
+├── docs/                       # 文档
+│   ├── 架构有效性分析.md         #   三项已数值证实的架构缺陷 + 文献 + 修复路径
+│   ├── verify_report.txt       #   实验产物核验输出
+│   └── archive/                #   历史文档归档
+├── legacy/                     # 历史脚本归档（18 个早期脚本 + 说明）
+│
+├── artifacts/                  # 中间分析产物（非权威事实）
+├── figures/                    # 图表输出
+├── checkpoints/                # 权重 + 训练历史（不入库）
+├── FACTS.json                  # 全部结果的结构化汇总（报告唯一数据源）
+├── experiments_index.json      # 全部实验登记 + 管线世代 + 可比性分组
+├── seed_variance.json          # 多种子噪声底线结果
+└── 项目报告_20260912.pdf        # 项目报告（交付件）
 ```
+
+> **为什么核心库留在根目录**：`paths.py` 以 `REPO = dirname(abspath(__file__))`
+> 作为**所有相对路径的基准**（`checkpoints/`、`figures/`、`FACTS.json` …）。
+> 它一旦移动，全部输出路径都会错位。因此 `paths.py` 与 4 个核心模块
+> （`train_v3.py` / `experiment_matrix*.py` / `train_full_data.py`）固定留在根目录；
+> 子目录脚本通过注入的**路径引导块**（把仓库根与自身目录加入 `sys.path`）导入它们。
 
 > **路径配置**：代码中不含本地绝对路径。本地使用时创建 `.env` 提供数据根目录
 > （详见 [STRUCTURE.md](STRUCTURE.md) 第四节）。
 
 **不入库**（体积大 / 可复现生成）：`checkpoints/`（权重与训练历史）、
-`fulltile_eval/` `tta_eval*/` `heldout_test/` `consensus_analysis/`（评估结果）、
-原始 LoveDA 数据。
+`fast_dataset/`（预解码 memmap，约 9.9 GB）、
+`fulltile_eval/` `tta_eval*/` `heldout_test/` `consensus_analysis/`（评估结果与预测数组）、
+`项目报告_*.html`（可再生）、原始 LoveDA 数据。
 
 ---
 
@@ -276,26 +320,33 @@ pip install -r requirements.txt
 #    LDA_CKPT=<检查点目录>
 
 # 1) 数据准备（需先下载 LoveDA 官方训练区）
-python resplit_filtered.py        # 筛选 + 去重 + 划分
-python verify_split2.py           # 泄漏校验
-python build_data_ladder.py       # 数据阶梯子集（可选）
+python prep/resplit_filtered.py       # no-data 筛选 + 去重 + 划分
+python verify/verify_split2.py        # 泄漏校验
+python prep/build_data_ladder.py      # 数据阶梯子集（可选）
+python prep/build_fast_dataset.py     # 预解码 memmap（强烈建议，提速约 10 倍）
 
-# 2) 训练（实验队列，自动串行、断点续跑）
-python run_queue_new.py           # 主模型 + 对比(7) + 消融(8)
-python run_queue_30m.py           # 30.5M 原版 + 后训练 + TTA
-python run_queue_interaction.py   # 预算攻击 + 固定LR + 数据阶梯
+# 2) 训练（队列自动串行、断点续跑、OOM 自动降 batch）
+python queues/run_queue_new.py        # 主模型 + 对比(7) + 消融(8)
+python queues/run_queue_arch.py       # 架构实验 D1-D4 + 预算攻击 + 数据阶梯
 
-# 3) 监控（另开终端）
-python monitor_queue.py --interval 15
+# 2b) 或一次性挂起全链（静默等待其他队列，无窗口）
+pythonw queues/run_chain.py           # 等主队列结束 → final(多种子) → crop(裁剪策略)
 
-# 4) 评估与分析
-python eval_tta_new.py            # val/test_clean × TTA
-python consensus_analysis.py      # 标签质量一致性分析
-python eval_ladder.py             # 数据阶梯评价
+# 3) 监控 / 估算剩余时间（另开终端）
+python queues/monitor_queue.py --interval 15
+python queues/eta_queue.py            # 按实测每轮耗时累加出剩余小时数
+
+# 4) 评估与分析（--infer 会补齐缺失 tag 的推理并缓存）
+python analysis/eval_rigor.py --infer
+python analysis/consensus_analysis.py
+python analysis/headroom_analysis.py
+python analysis/artifact_analysis.py
 
 # 5) 汇总与报告
-python build_facts.py             # 事实汇总 → FACTS.json
-python make_report_v2.py          # 生成报告 HTML（再用 Chrome 转 PDF）
+python report/build_index.py          # 实验索引（参数量直读张量）
+python report/build_facts.py          # 事实汇总 → FACTS.json
+python report/make_report_v2.py       # 报告 HTML
+python report/make_pdf.py             # HTML → PDF（含内容自检）
 ```
 
 ---

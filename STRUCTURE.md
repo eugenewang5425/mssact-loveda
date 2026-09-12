@@ -7,141 +7,208 @@
 
 ## 一、执行链依赖（⚠️ 不可移动 / 不可重命名）
 
-所有训练与评估脚本均通过 `os.path.dirname(os.path.abspath(__file__))` 定位自身，
-并用**同目录导入**与**硬编码目录名**引用资源。因此以下文件必须留在
-`loveda/` 根目录：
+### 1.1 仓库根目录固定项
+
+`paths.py` 以
+
+```python
+REPO = os.path.dirname(os.path.abspath(__file__))
+```
+
+作为**所有相对路径的基准**（`checkpoints/`、`figures/`、`consensus_analysis/`、
+`FACTS.json` …）。它一旦移动，全部输出路径都会错位。因此以下 5 个文件
+**固定留在仓库根目录**：
+
+| 文件 | 作用 |
+|---|---|
+| `paths.py` | **路径枢纽**：全部数据/产物路径的唯一来源 |
+| `train_v3.py` | 数据集类 `LoveDADataset`、标签映射 `REMAP`、评估函数 |
+| `experiment_matrix.py` | 统一训练入口 `train_one()` + 基线模型 |
+| `experiment_matrix_v2.py` | 扩展基线（FPN / Swin-Unet） |
+| `train_full_data.py` | 全量数据训练（主模型 + 后训练） |
+
+### 1.2 子目录脚本如何找到它们
+
+每个子目录脚本在模块 docstring 之后有一段**路径引导块**（由迁移时自动注入）：
+
+```python
+import os as _os, sys as _sys
+_HERE = _os.path.dirname(_os.path.abspath(__file__))
+_BASE = _os.path.dirname(_HERE)          # 仓库根
+for _p in (_BASE, _HERE):
+    if _p not in _sys.path:
+        _sys.path.insert(0, _p)
+```
+
+- 导入 `paths` / `train_v3` / `experiment_matrix*` → 走 `_BASE`（仓库根）
+- 导入同目录模块（如 `queues/` 内的 `queue_guard`）→ 走 `_HERE`
+
+因此脚本**可从任意工作目录调用**（不必先 `cd` 到仓库根）：
+
+```bash
+python analysis/eval_rigor.py      # 等效于 cd loveda && python analysis/eval_rigor.py
+```
+
+### 1.3 调用关系
 
 ```
-run_queue_new.py / run_queue_30m.py / run_queue_interaction.py   (实验队列)
-run_queue_arch.py / run_queue_batch.py / run_queue_final.py       (架构/多种子队列)
+queues/run_chain.py                     （静默等待 → 串行驱动下面两步）
         │
-        ├─→ experiment_matrix.py ──┐
-        ├─→ experiment_matrix_v2.py┤
-        └─→ train_full_data.py ────┤
-                                   ├─→ train_v3.py ──→ models/msscactnet.py
-                                   │      （LoveDADataset / REMAP / compute_stats）
-                                   │
-        eval_complete.py ──────────┤
-        eval_tta_new.py ───────────┤
-        eval_ladder.py ────────────┤
-        eval_rigor.py ─────────────┤
-        eval_fulltile.py ──────────┤
-        consensus_analysis.py ─────┤
-        overfit_diag.py ───────────┘
+        ├─→ queues/run_queue_final.py ──→ analysis/eval_rigor.py
+        │                                analysis/eval_ladder.py
+        │                                analysis/headroom_analysis.py
+        │                                analysis/seed_variance.py
+        │                                report/build_index.py
+        │                                report/build_facts.py
+        │                                report/make_report_v2.py
+        │                                report/make_pdf.py
+        └─→ queues/run_queue_crop.py  ──→ （同上后置步骤）
+
+queues/run_queue_*.py ──→ experiment_matrix.py ──┐
+                                                 ├─→ train_v3.py ──→ models/msscactnet.py
+analysis/*.py ───────────────────────────────────┘
+verify/*.py   ───────────────────────────────────┘
 ```
 
-**硬编码的关键常量**（改动会导致实验不可复现）：
+> **子目录路径是硬编码的**：队列脚本用 `os.path.join(BASE, "<子目录>", "<脚本>")`
+> 调用后置步骤。移动子目录或改名必须同步修改 `queues/run_queue_final.py`、
+> `queues/run_queue_crop.py`、`queues/run_chain.py` 中的字符串。
+
+### 1.4 硬编码的关键常量（改动会导致实验不可复现）
 
 | 文件 | 常量 | 作用 |
 |---|---|---|
 | `train_v3.py` | `ROOT` | 默认数据根目录 |
 | `train_v3.py` | `REMAP` | **官方标签映射：0(no-data)→255(ignore)；1..7→0..6** |
-| `train_v3.py` | `CLASS_NAMES` | 类别名称顺序（背景/建筑/道路/水域/裸地/森林/农田） |
-| `experiment_matrix.py` | `train_one(...)` | 统一训练入口（所有实验共用）；`seed=42` 默认值与原行为一致 |
-| `(*).py` | `CKPT` | checkpoints 目录 |
+| `train_v3.py` | `CLASS_NAMES` | 类别顺序（背景/建筑/道路/水域/裸地/森林/农田） |
+| `experiment_matrix.py` | `train_one(..., seed=42, crop=256, center_crop=False)` | 统一训练入口；三个默认值均与原行为一致 |
+| `queues/queue_guard.py` | `CREATE_NO_WINDOW` | **不可去掉**：否则轮询会弹出终端窗口（见 2.2） |
+| `analysis/eval_rigor.py` | `SESOI = 0.02` | TOST 等效性检验的最小可关注效应 |
 
-**目录名被脚本引用**（同样不可移动）：`figures/`、`checkpoints/`、
-`fast_dataset/`、`fulltile_eval/`、`tta_eval/`、`tta_eval2/`、`heldout_test/`、
-`consensus_analysis/`、`overfit_diag/`、`ladder_eval/`。
+### 1.5 目录名被脚本引用（同样不可移动）
+
+`figures/`、`checkpoints/`、`fast_dataset/`、`fulltile_eval/`、`tta_eval/`、
+`tta_eval2/`、`heldout_test/`、`consensus_analysis/`、`overfit_diag/`、`ladder_eval/`。
 
 ---
 
 ## 二、文件组织
 
-### 2.1 模型与训练核心
+根目录只保留路径枢纽、核心库、权威事实与交付件；其余脚本按用途分 7 个子目录。
+
+### 2.1 模型与训练核心（根目录）
 
 | 文件 | 说明 |
 |---|---|
 | `models/msscactnet.py` | MSSACT-Net 定义（EMR/ECSAM/FPN/Transformer/Adapter 可开关） |
 | `train_v3.py` | **核心**：数据集类、标签映射 REMAP、训练循环、评估函数 |
-| `experiment_matrix.py` | 通用训练入口 `train_one()` + 基线模型（U-Net/PSPNet/FCN/DeepLabV3+/SegFormer-Lite） |
+| `experiment_matrix.py` | 通用训练入口 `train_one()` + 基线（U-Net/PSPNet/FCN/DeepLabV3+/SegFormer-Lite） |
 | `experiment_matrix_v2.py` | 扩展基线（FPN/Swin-Unet-Lite）+ 消融构造辅助 |
 | `train_full_data.py` | 全量数据训练与后训练（主模型专用） |
-| `baseline_unet.py` `train.py` `train_v2.py` | 早期版本（历史保留，不参与当前实验） |
 
 > ⚠️ **架构缺陷登记**：`models/msscactnet.py` 存在三处**已数值证实**的结构性缺陷
-> （FPN 多尺度融合未被使用 / 解码器无跳连 / Transformer 无位置编码），
+> （FPN 的多尺度融合未被使用 / 解码器无跳连 / Transformer 无位置编码），
 > 详见 [`docs/架构有效性分析.md`](docs/架构有效性分析.md)。修复前，
 > `use_fpn` / `use_transformer` / `use_ecsam` 的消融结果**不能**解释为
 > "模块有效性"的证据。
 
-### 2.2 实验队列（自动串行）
+### 2.2 `queues/` — 实验队列（自动串行）
 
 | 文件 | 内容 |
 |---|---|
-| `run_queue_new.py` | PHASE-0 主模型重训 → PHASE-1 对比(7) → PHASE-2 消融(8) |
-| `run_queue_30m.py` | 30.5M 原版架构 → 后训练 → TTA 评估 |
-| `run_queue_interaction.py` | 实验A 预算攻击(15轮) / 实验B 固定LR / 实验C 数据阶梯 |
-| `run_queue_arch.py` | **架构实验**：D1 联合消融 / D2 解码器CA / D3 通道缩小 / D4 通道放大 + 预算攻击 + 数据阶梯（`lgR_*` 前缀） |
-| `run_queue_batch.py` | batch 缩放对照（`bs8` vs `bs16` + 线性缩放 LR） |
-| `run_queue_final.py` | **多种子噪声底线**（3 seed × {完整模型, DeepLabV3+}）→ 22 tag 全量推理 → 严格性评估 → 汇总产物 |
-| `monitor_queue.py` | 进度监控（动态刷新、指标、ETA） |
-| `run_abl120.py` `run_queue.py` | 早期队列（已被上述替代，历史保留） |
+| `run_chain.py` | **统一等待链**：等所有 `run_queue*` 结束后，依次跑 final → crop |
+| `run_queue_new.py` | PHASE-0 主模型重训 → 对比(7) → 消融(8) |
+| `run_queue_arch.py` | 架构实验 D1-D4 + 预算攻击(15轮) + 数据阶梯（`lgR_*` 前缀） |
+| `run_queue_final.py` | **多种子噪声底线**（3 seed × {完整模型, DeepLabV3+}）→ 22 tag 推理 → 后置步骤 |
+| `run_queue_crop.py` | 裁剪策略对比（256 随机/固定中心、384、512） |
+| `run_queue_30m.py` | 30.5M 原版架构 → 后训练 → TTA |
+| `run_queue_interaction.py` | 预算攻击(15轮) / 固定 LR |
+| `run_queue_batch.py` | batch 缩放对照（bs8 vs bs16 + 线性缩放 LR） |
+| `monitor_queue.py` | 进度监控（动态刷新、逐模型指标、ETA） |
+| `eta_queue.py` | **剩余时间估算**：按实测每轮耗时逐项累加，自动扣除已完成轮次 |
+| `queue_guard.py` | 队列互斥守卫 |
 
 **队列特性**：断点续跑（按 `*_history.json` 轮数判定完成）、失败重试、
 OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_queue*` 进程时挂起）。
 
-### 2.3 数据准备
+> ⚠️ **`queue_guard.py` 的 `CREATE_NO_WINDOW` 不可去掉**。此前用
+> `subprocess.run(["powershell", ...])` 轮询进程列表，而队列由 `nohup ... &`
+> 从无控制台会话启动，powershell 会申请**新的控制台**——每轮询一次弹出一个
+> 终端窗口（实测每 300 秒一次）。`CREATE_NO_WINDOW`(0x08000000) + `SW_HIDE`
+> 抑制该行为。**单一等待点**（只由 `run_chain.py` 轮询）也是为此。
+
+### 2.3 `analysis/` — 评估与分析
+
+| 文件 | 说明 |
+|---|---|
+| `eval_rigor.py` | **严格性评估**：逐图指标 / 逐类 IoU / 配对 bootstrap CI / TOST / 紧边界分层（`--infer` 补齐缺失 tag 的推理并缓存） |
+| `eval_ladder.py` | 数据阶梯评价：泛化能力 / 过拟合度 / 学习速率 |
+| `eval_complete.py` | val/test × {有/无 TTA} 全量评估 |
+| `eval_tta_new.py` | 新数据（newsplit2）TTA 评估，含正确 REMAP |
+| `consensus_analysis.py` | 标签质量一致性分析（模型间一致率 + 共识标签） |
+| `headroom_analysis.py` | **Kappa 归属分解**：oracle 作弊实验，量化"完美解决边界/内部"各自能换取的 Kappa 上限 |
+| `artifact_analysis.py` | **解码器伪影分析**：边缘密度 + FFT 功率占比（棋盘伪影） |
+| `fix_boundary_analysis.py` | **修正**边界分层定义（原实现把 `(N,H,W)` 沿 `axis=0` 求差，跨图像素差被误判为边界） |
+| `overfit_diag.py` | 过拟合诊断（训练/验证 logits 熵差） |
+| `seed_variance.py` | **随机种子噪声底线**：σ_seed + ΔKappa 折算为 σ 倍数 |
+
+### 2.4 `verify/` — 校验与基准
+
+| 文件 | 说明 |
+|---|---|
+| `verify_experiments.py` | 实验产物核验（架构推断 / history 完整性 / 交叉一致） |
+| `verify_rollback.py` | 回退管线性能验证 |
+| `verify_split2.py` | 划分泄漏校验（三集互斥 + test_clean 隔离） |
+| `bench_parity.py` | PNG 与 memmap 两条管线的数值一致性 |
+| `bench_pipeline.py` | 管线提速基准 |
+| `sample_gpu_now.py` | GPU 利用率采样 |
+
+### 2.5 `prep/` — 数据准备
 
 | 文件 | 说明 |
 |---|---|
 | `resplit_filtered.py` | no-data ≤10% 筛选 + MD5 去重 + 8:1:1 划分 |
-| `verify_split2.py` | 划分泄漏校验（三集互斥 + test_clean 隔离） |
 | `build_data_ladder.py` | 嵌套数据阶梯子集（250/500/1000），分层抽样 |
-| `preprocess.py` | 早期 patch 预处理（历史保留） |
+| `build_fast_dataset.py` | 预解码 memmap（`fast_dataset/`），消除 PNG 解码瓶颈 |
 
-### 2.4 评估与分析
-
-| 文件 | 说明 |
-|---|---|
-| `eval_complete.py` | val/test × {有/无 TTA} 全量评估 |
-| `eval_tta_new.py` | 新数据（newsplit2）TTA 评估，含正确 REMAP |
-| `eval_rigor.py` | **严格性评估**：逐图指标 / 逐类 IoU / 配对 bootstrap CI / TOST 等效性检验 / 紧边界分层（`--infer` 可补齐缺失 tag 的推理并缓存） |
-| `fix_boundary_analysis.py` | **修正**边界分层定义（原实现把 `(N,H,W)` 沿 `axis=0` 求差，跨图像素差被误判为边界；改为逐图 2D + 仅有效类别之间） |
-| `headroom_analysis.py` | **Kappa 归属分解**：oracle 作弊实验，量化"完美解决边界/内部"各自能换取的 Kappa 上限 |
-| `build_index.py` | **实验索引生成器** → `experiments_index.json`（参数量直读张量 / 架构形状反推 / 管线世代与可比性分组） |
-| `eval_fulltile.py` | 全图滑窗推理 + 高斯融合评估 |
-| `eval_ladder.py` | 数据阶梯评价：泛化能力 / 过拟合度 / 学习速率 |
-| `consensus_analysis.py` | 标签质量一致性分析（模型间一致率 + 共识标签） |
-| `overfit_diag.py` | 过拟合诊断（训练/验证 logits 熵差） |
-| `verify_experiments.py` | 实验产物核验（架构推断 / history 完整性 / 交叉一致） |
-| `verify_rollback.py` | 回退管线性能验证 |
-| `evaluate.py` `visualize.py` `compare.py` `final_compare.py` `eval_existing.py` | 早期评估脚本（历史保留） |
-
-### 2.5 可视化与报告
+### 2.6 `viz/` 与 `report/`
 
 | 文件 | 说明 |
 |---|---|
-| `build_facts.py` | **事实汇总** → `FACTS.json`（报告与 README 的唯一数据源） |
-| `make_figures.py` | 学习曲线 / 消融图 / 每类F1 / 同 tile 对比 |
-| `make_stats_figures.py` | 混淆矩阵 / PRF / 参数效率 / LR 调度图 |
-| `fig_test_showcase.py` | 测试集 patch 预测对比图 |
-| `make_report_v2.py` | **当前报告生成器**（数据驱动，Markdown→HTML） |
-| `make_pdf.py` | **HTML→PDF**（Chrome headless）+ 页数与**关键内容自检**（防止回退为错误结论） |
-| `make_project_report.py` `make_report_pdf.py` | 早期报告生成器（历史保留） |
-| `inference_fullmap.py` | GF-1 全图滑窗推理 + shp 裁剪成图（制图管线） |
+| `viz/make_figures.py` | 学习曲线 / 消融图 / 每类 F1 / 同 tile 对比 |
+| `viz/make_stats_figures.py` | 混淆矩阵 / PRF / 参数效率 / LR 调度图 |
+| `report/build_index.py` | **实验索引** → `experiments_index.json`（参数量直读张量 / 架构形状反推 / 管线世代与可比性分组） |
+| `report/build_facts.py` | **事实汇总** → `FACTS.json`（报告与 README 的唯一数据源） |
+| `report/make_report_v2.py` | 报告生成（Markdown → HTML） |
+| `report/make_pdf.py` | HTML → PDF（Chrome headless）+ **内容自检** |
 
 > ⚠️ `make_pdf.py` 必须显式传 `--user-data-dir`：用户自身的 Chrome 占用默认
 > profile，否则 headless 实例会因等不到 profile 锁而挂起（实测 600 s 超时）。
 
-### 2.6 结果与产物
+### 2.7 `mapping/` 与归档
+
+| 文件 | 说明 |
+|---|---|
+| `mapping/inference_fullmap.py` | GF-1 全图滑窗推理 + shp 裁剪成图（制图管线） |
+| `legacy/` | 历史脚本归档（18 个早期脚本，不参与当前实验） |
+| `docs/` | `架构有效性分析.md`、`verify_report.txt`、`archive/`（历史文档） |
+
+### 2.8 结果与产物
 
 | 路径 | 内容 | 入库 |
 |---|---|---|
 | `checkpoints/` | 权重（`*_best.pt`）+ 训练历史（`*_history.json`） | ❌ |
-| `fast_dataset/` | 预解码 memmap（`*_images.npy` / `*_masks.npy` / `index.json`，约 9.9 GB） | ❌ |
-| `fulltile_eval/` | 全图滑窗评估结果 + 预测 PNG | ❌ |
-| `tta_eval/` `tta_eval2/` | TTA 评估结果 | ❌ |
-| `heldout_test/` | 早期持有测试集评估 | ❌ |
-| `consensus_analysis/` | 一致性分析 + 预测数组 + `boundary_analysis.json`（含 `.bak_*` 备份）+ `rigor.json` + `headroom.json` | ❌ |
-| `overfit_diag/` | 过拟合诊断结果 | ❌ |
-| `ladder_eval/` | 数据阶梯评价结果 | ❌ |
-| `figures/` | 26 张图表 | ✅ |
-| `FACTS.json` | 全部结果结构化汇总 | ✅ |
-| `experiments_index.json` | 全部实验登记（69 tag）+ 管线世代 + 可比性分组 | ✅ |
-| `docs/架构有效性分析.md` | **架构缺陷专项分析**（三项数值验证的缺陷 + 文献 + 修复路径） | ✅ |
-| `docs/archive/` | 历史版本报告归档 | ✅ |
-| `项目报告_20260912.pdf` | 当前项目报告（33 页） | ✅ |
+| `fast_dataset/` | 预解码 memmap（约 9.9 GB） | ❌ |
+| `fulltile_eval/` `tta_eval*/` `heldout_test/` | 全图/TTA/持有测试评估 + 预测 PNG | ❌ |
+| `consensus_analysis/` | 一致性分析 + 预测数组 + `boundary_analysis.json`（含 `.bak_*`）+ `rigor.json` + `headroom.json` + `artifact.json` | ❌（仅汇总 JSON ✅） |
+| `overfit_diag/` `ladder_eval/` | 诊断与阶梯评价结果 | ❌ |
+| `figures/` | 图表（报告/README 引用） | ✅ |
+| `artifacts/` | 中间分析产物（`convergence_learning_amount.json` 等） | ✅ |
+| `FACTS.json` | **权威事实**：全部结果结构化汇总 | ✅ |
+| `experiments_index.json` | **权威事实**：实验登记 + 管线世代 + 可比性分组 | ✅ |
+| `seed_variance.json` | **权威事实**：多种子噪声底线 | ✅ |
+| `项目报告_20260912.pdf` | 项目报告（交付件） | ✅ |
+| `项目报告_*.html` | 报告 HTML（可再生，故不入库） | ❌ |
 
 ---
 
@@ -159,14 +226,14 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 
 ### 三之二、训练管线世代（⚠️ 决定"哪些实验可以比较"）
 
-Kappa **禁止跨管线世代比较**。各世代由 `checkpoint`/日志时间戳核实
+Kappa **禁止跨管线世代比较**。各世代由 checkpoint/日志时间戳核实
 （`fast_dataset/*.npy` 建立于 2026-09-12 14:51–14:53）：
 
 | 世代 | 数据投递 | 增强随机性 | `num_workers` | 实验前缀 | 地位 |
 |---|---|---|---|---|---|
 | **P-PNG** | 每样本解码两张 1024² PNG | 全局 RNG | 0 | `nd_*` `lg_*` `abl120_*` 等 | 正式对比/消融结果 |
 | **P-MEM-DET** | memmap 预解码 | **确定性 generator** | 8 | `lgF_*` | ❌ **已否决**（Kappa −0.0246） |
-| **P-MEM-ROLL** | memmap 预解码 | 全局 RNG | 0 | `lgR_*` | 架构实验正式结果 |
+| **P-MEM-ROLL** | memmap 预解码 | 全局 RNG | 0 | `lgR_*` `sd*_*` | 架构实验正式结果 |
 
 **关键事实**：加速的真实来源是 **memmap 预解码**（消除 PNG 解码），而非增强或并发
 改动。回退验证：`lgR_D1` = **0.6293** vs `lg_D1` = **0.6277**（+0.0016，噪声内），
@@ -177,7 +244,7 @@ Kappa **禁止跨管线世代比较**。各世代由 `checkpoint`/日志时间�
 | 组 | 管线 | 协议 | 成员 |
 |---|---|---|---|
 | **G1-PNG-60ep** | P-PNG | 60ep/pt20/bs8/lr2e-4 | `full_all_v2` + `nd_abl_*`(8) + `lg_D1..D4` + `nd_*` 基线(7) |
-| **G2-MEM-ROLL-60ep** | P-MEM-ROLL | 同上 | `lgR_bs8_full` + `lgR_D1..D4` |
+| **G2-MEM-ROLL-60ep** | P-MEM-ROLL | 同上 | `lgR_bs8_full` + `lgR_D1..D4` + `sd*_*` |
 | **G3-b15** | P-PNG | 15ep/pt15/bs8/lr2e-4 | `lg_b15_*`(5) |
 
 **跨组差异已实测**：仅数据投递后端不同（memmap vs PNG），效应为 **+0.0008**
@@ -213,16 +280,25 @@ LDA_GF_SHP=<行政区矢量>
 > 仓库代码中**不包含**任何本地绝对路径；所有脚本通过 `import paths` 获取路径，
 > 因此可直接在其他机器上复现（只需提供 `.env` 或设置环境变量）。
 
+---
 
 ## 五、维护约定
 
-1. **实验产物命名**：`{前缀}_{变体}_history.json` + `{前缀}_{变体}_best.pt`
+1. **实验产物命名**：`{tag}_history.json` + `{tag}_best.pt`
    - 阶段 A：`v3_*` / `ablate_*` / `abl120_*` / `strat_*`
    - 阶段 B：`full_all` / `post_all`
    - 阶段 C：`nd_*` / `full_all_v2` / `post_all_v2`
-2. **新增实验**：在 `run_queue_*.py` 的 JOBS 列表中添加，**不改动已有条目**；
+   - 架构实验：`lg_*`（旧管线，仅参照）/ `lgF_*`（**已否决，勿引用**）/ `lgR_*`
+   - 多种子：`sd{seed}_full` / `sd{seed}_deeplab`
+   - **一律使用新文件名**，不覆盖既有产物；覆盖前先备份
+2. **新增实验**：在 `queues/run_queue_*.py` 的 JOBS 列表中添加，**不改动已有条目**；
    队列会自动跳过已完成任务（按 history 轮数判定）
-3. **结果更新后**：运行 `build_facts.py` 刷新 `FACTS.json`，
-   再运行 `make_report_v2.py` 重生成报告，保证数字一致
-4. **不移动**：执行链文件、结果目录（见第一节）
-5. **历史归档**：旧版报告、旧 README 放入 `docs/archive/`
+3. **新增脚本**：放入对应子目录即可（路径引导块会处理导入）。
+   **但若被队列按文件名调用，必须同步更新 `queues/` 中的路径字符串**
+4. **结果更新后**：依次运行
+   `report/build_index.py` → `report/build_facts.py` →
+   `report/make_report_v2.py` → `report/make_pdf.py`
+   （`build_index` 必须在前：`build_facts` 会读取它；顺序颠倒会读到过期索引）
+5. **不移动**：`paths.py`、4 个核心模块、结果目录（见第一节）
+6. **历史归档**：旧版报告、旧 README 放入 `docs/archive/`；
+   被取代的脚本放入 `legacy/`

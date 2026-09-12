@@ -1,28 +1,25 @@
-
-# 队列运行日志（本地运行产物，不入库）
-chain.log
-run_queue_*.log
-��境与备份（严禁入库）----
+# ================= 环境与备份（严禁入库）=================
 .env
 backups/
 _local_*
 
-# ---- 模型权重与训练产物 ----
+# ================= 模型权重与训练产物 =================
 *.pt
 *.npz
 *.log
 checkpoints/*.json
 checkpoints/*.pt
 
-# ---- 原始数据与预解码数据集 ----
+# ================= 原始数据与预解码数据集 =================
 data/
 _data/
 _gf_data/
 patches/
 vis/
 fast_dataset/
+ladder_data/
 
-# ---- 评估结果（可复现生成；保留 conf JSON）----
+# ================= 评估结果（可复现生成；仅保留汇总 JSON）=================
 eval/
 fulltile_eval/preds_*/
 heldout_test/*.png
@@ -33,7 +30,7 @@ consensus_analysis/pred_*.npz
 consensus_analysis/labels.npz
 genhe_map*/
 
-# ---- 临时与剖析产物 ----
+# ================= 临时与剖析产物 =================
 check_*.png
 stdout.txt
 *_new.pdf
@@ -41,3 +38,9 @@ stdout.txt
 profile_output/
 gpu_sample_*.json
 bench_*.json
+__pycache__/
+*.pyc
+
+# ================= 报告产物（带日期的 PDF 为交付件；HTML 与无日期副本可再生）=================
+项目报告_*.html
+项目报告.pdf

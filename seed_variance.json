@@ -23,14 +23,15 @@
  },
  "ablations": {
   "P-MEM-ROLL (lgR_*)": {
-   "n": 3,
-   "spread": 0.1429,
-   "min": 0.4946,
+   "n": 4,
+   "spread": 0.5994,
+   "min": 0.0381,
    "max": 0.6375,
    "values": {
     "lgR_D1_join_nofpn_notrans": 0.6293,
     "lgR_D2_decoder_ca": 0.6375,
-    "lgR_D3_ch_tiny": 0.4946
+    "lgR_D3_ch_tiny": 0.6103,
+    "lgR_D4_ch_large": 0.0381
    }
   },
   "P-PNG (nd_abl_* + lg_D*)": {

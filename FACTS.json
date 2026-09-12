@@ -1059,14 +1059,15 @@
   },
   "ablations": {
    "P-MEM-ROLL (lgR_*)": {
-    "n": 3,
-    "spread": 0.1429,
-    "min": 0.4946,
+    "n": 4,
+    "spread": 0.5994,
+    "min": 0.0381,
     "max": 0.6375,
     "values": {
      "lgR_D1_join_nofpn_notrans": 0.6293,
      "lgR_D2_decoder_ca": 0.6375,
-     "lgR_D3_ch_tiny": 0.4946
+     "lgR_D3_ch_tiny": 0.6103,
+     "lgR_D4_ch_large": 0.0381
     }
    },
    "P-PNG (nd_abl_* + lg_D*)": {
@@ -1573,6 +1574,16 @@
     "best_epoch": 60,
     "epochs_run": 60,
     "params_M": 1.547,
+    "epochs_total": 60
+   },
+   "lgR_D4_ch_large": {
+    "series": "lgR-roll/架构消融与容量",
+    "pipeline": "P-MEM-ROLL",
+    "status": "partial(2/60)",
+    "kappa": 0.038068,
+    "best_epoch": 2,
+    "epochs_run": 2,
+    "params_M": 24.242,
     "epochs_total": 60
    },
    "lg_D1_join_nofpn_notrans": {
