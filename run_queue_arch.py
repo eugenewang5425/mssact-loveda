@@ -32,7 +32,8 @@ import os, sys, json, time, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.dirname(os.path.abspath(__file__))
 CKPT = os.path.join(BASE, "checkpoints")
-import paths                     # 集中路径配置
+import paths
+import queue_guard                     # 集中路径配置
 LADDER = paths.DATA_LADDER
 ROOT_MAIN = paths.DATA_NEWSPLIT2
 
@@ -162,5 +163,6 @@ if __name__ == "__main__":
             verify(tag)
 
     print("\n===== 队列 v2 全部完成 =====", flush=True)
-    r = subprocess.run([sys.executable, "-u", "eval_ladder.py"], cwd=BASE)
+    r = subprocess.run([sys.executable, "-u", "eval_ladder.py"], cwd=BASE,
+                       **queue_guard._no_window_kwargs())
     print(f"eval_ladder exit={r.returncode}", flush=True)

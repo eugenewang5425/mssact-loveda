@@ -22,6 +22,7 @@ import os, sys, json, time, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.dirname(os.path.abspath(__file__))
 import paths
+import queue_guard
 
 CKPT = paths.CKPT
 ROOT_MAIN = paths.DATA_NEWSPLIT2
@@ -29,22 +30,17 @@ SEEDS = [7, 2024, 31337]
 
 
 def queues_running():
-    """排除自身 PID, 避免自我死锁"""
-    my_pid = os.getpid()
-    try:
-        r = subprocess.run(["powershell", "-Command",
-            "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
-            "Select-Object ProcessId,CommandLine | ConvertTo-Csv -NoTypeInformation"],
-            capture_output=True, text=True, timeout=30)
-        for line in r.stdout.splitlines():
-            if "run_queue" not in line:
-                continue
-            pid = line.split(",")[0].strip('"')
-            if pid.isdigit() and int(pid) != my_pid:
-                return True
-        return False
-    except Exception:
-        return True
+    """是否有其他 run_queue* 进程在跑（见 queue_guard.py）
+
+    必须走 queue_guard：它用 CREATE_NO_WINDOW 抑制控制台分配。
+    此前直接 subprocess.run(["powershell", ...])，而本脚本由 nohup 从无控制台
+    会话启动，powershell 会申请**新的控制台**，于是每轮询一次弹出一个终端窗口。
+    """
+    from queue_guard import queues_running as _qr
+    return _qr()
+
+
+from queue_guard import POLL_INTERVAL   # noqa: E402  (600s, 见 queue_guard.py)
 
 
 def state(tag, target):
@@ -72,9 +68,11 @@ def verify(tag):
 
 if __name__ == "__main__":
     print("=== 队列 final: 多种子 + 全量推理（等待其他队列）===", flush=True)
-    while queues_running():
-        print("  其他队列运行中, 等待 300s...", flush=True)
-        time.sleep(300)
+    # --no-wait: 由 run_chain.py 统一等待时使用, 避免两处轮询
+    if "--no-wait" not in sys.argv:
+        while queues_running():
+            print(f"  其他队列运行中, 等待 {POLL_INTERVAL}s...", flush=True)
+            time.sleep(POLL_INTERVAL)
     print("开始执行", flush=True)
     time.sleep(30)
 
@@ -105,18 +103,20 @@ if __name__ == "__main__":
     # ============ B. 全量推理 + 严格性评估 ============
     print("\n===== B. 全量推理 (22 tag, test_clean 141 张) =====", flush=True)
     script = os.path.join(BASE, "eval_rigor.py")
-    r = subprocess.run([sys.executable, "-u", script, "--infer"], cwd=BASE)
+    r = subprocess.run([sys.executable, "-u", script, "--infer"], cwd=BASE,
+                       **queue_guard._no_window_kwargs())
     print(f"eval_rigor exit={r.returncode}", flush=True)
 
     print("\n===== C. Kappa 归属分解 (逐带) =====", flush=True)
     r = subprocess.run([sys.executable, "-u", os.path.join(BASE, "headroom_analysis.py")],
-                       cwd=BASE)
+                       cwd=BASE, **queue_guard._no_window_kwargs())
     print(f"headroom exit={r.returncode}", flush=True)
 
     # ============ D. 汇总产物 ============
     for step in ("seed_variance.py", "build_index.py", "build_facts.py", "make_report_v2.py", "make_pdf.py"):
         print(f"\n===== D. {step} =====", flush=True)
-        r = subprocess.run([sys.executable, "-u", os.path.join(BASE, step)], cwd=BASE)
+        r = subprocess.run([sys.executable, "-u", os.path.join(BASE, step)], cwd=BASE,
+                           **queue_guard._no_window_kwargs())
         print(f"{step} exit={r.returncode}", flush=True)
 
     print("\n===== 队列 final 全部完成 =====", flush=True)

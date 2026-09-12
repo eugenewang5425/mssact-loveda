@@ -1,11 +1,8 @@
-# ---- Python ----
-__pycache__/
-*.pyc
-*.pyo
-**/__pycache__/
-**/*.pyc
 
-# ---- 本地环境与备份（严禁入库）----
+# 队列运行日志（本地运行产物，不入库）
+chain.log
+run_queue_*.log
+��境与备份（严禁入库）----
 .env
 backups/
 _local_*

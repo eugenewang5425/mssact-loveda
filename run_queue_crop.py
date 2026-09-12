@@ -37,6 +37,7 @@ import os, sys, json, time, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.dirname(os.path.abspath(__file__))
 import paths
+import queue_guard
 
 CKPT = paths.CKPT
 ROOT_MAIN = paths.DATA_NEWSPLIT2
@@ -49,22 +50,14 @@ JOBS = [
 
 
 def queues_running():
-    """排除自身 PID, 避免自我死锁"""
-    my_pid = os.getpid()
-    try:
-        r = subprocess.run(["powershell", "-Command",
-            "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
-            "Select-Object ProcessId,CommandLine | ConvertTo-Csv -NoTypeInformation"],
-            capture_output=True, text=True, timeout=30)
-        for line in r.stdout.splitlines():
-            if "run_queue" not in line:
-                continue
-            pid = line.split(",")[0].strip('"')
-            if pid.isdigit() and int(pid) != my_pid:
-                return True
-        return False
-    except Exception:
-        return True
+    """是否有其他 run_queue* 进程在跑（见 queue_guard.py）
+
+    必须走 queue_guard：它用 CREATE_NO_WINDOW 抑制控制台分配。
+    此前直接 subprocess.run(["powershell", ...])，而本脚本由 nohup 从无控制台
+    会话启动，powershell 会申请**新的控制台**，于是每轮询一次弹出一个终端窗口。
+    """
+    from queue_guard import queues_running as _qr
+    return _qr()
 
 
 def state(tag, target):
@@ -95,7 +88,7 @@ if __name__ == "__main__":
     if "--no-wait" not in sys.argv:
         while queues_running():
             print("  其他队列运行中, 等待 300s...", flush=True)
-            time.sleep(300)
+            time.sleep(600)
     print("开始执行", flush=True)
     time.sleep(30)
 
@@ -124,7 +117,8 @@ if __name__ == "__main__":
     print("\n===== 汇总产物 =====", flush=True)
     for step in ("seed_variance.py", "build_index.py", "build_facts.py", "make_report_v2.py", "make_pdf.py"):
         print(f"\n=== {step} ===", flush=True)
-        r = subprocess.run([sys.executable, "-u", os.path.join(BASE, step)], cwd=BASE)
+        r = subprocess.run([sys.executable, "-u", os.path.join(BASE, step)], cwd=BASE,
+                           **queue_guard._no_window_kwargs())
         print(f"{step} exit={r.returncode}", flush=True)
 
     print("\n===== 队列 crop 全部完成 =====", flush=True)

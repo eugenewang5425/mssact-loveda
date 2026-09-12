@@ -10,7 +10,8 @@
 统一: 与轻量主队列同协议 (OneCycle/pt20/lr2e-4/batch8, 除特殊说明)
 """
 import os, sys, json, time, subprocess
-import paths  # 集中路径配置 (环境变量/.env)
+import paths
+import queue_guard  # 集中路径配置 (环境变量/.env)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 BASE = paths.REPO
@@ -115,5 +116,6 @@ if __name__ == "__main__":
 
     print("\n===== 验证队列全部完成 =====", flush=True)
     # 完成后自动做评估
-    r = subprocess.run([sys.executable, "-u", "eval_ladder.py"], cwd=BASE)
+    r = subprocess.run([sys.executable, "-u", "eval_ladder.py"], cwd=BASE,
+                       **queue_guard._no_window_kwargs())
     print(f"eval_ladder exit={r.returncode}", flush=True)
