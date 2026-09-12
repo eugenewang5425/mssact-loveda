@@ -193,6 +193,34 @@ def _arch_table():
     return chr(10).join(out)
 
 
+def _sec_ladder():
+    """§5.9 数据量阶梯（数据驱动, 来源 FACTS.data_ladder）"""
+    DL = FACTS.get("data_ladder") or {}
+    rows = DL.get("rows") or {}
+    if not rows:
+        return "**（数据量阶梯结果待补齐）** 由 queues/run_queue_arch.py 的阶梯段产出。"
+    NAME = {"full": "MSSACT-Net 完整（6.10M）", "noecsam": "MSSACT-Net w/o ECSAM（6.04M）",
+            "unet": "U-Net（2.45M）", "deeplab": "DeepLabV3+（39.69M）"}
+    out = []
+    for n in (250, 500, 1000):
+        sub = {m: rows.get(f"lgR_n{n}_{m}") for m in ("full", "noecsam", "unet", "deeplab")}
+        sub = {m: r for m, r in sub.items() if r}
+        if not sub:
+            continue
+        out.append(f"**n = {n} 张**")
+        out.append("")
+        out.append("| 模型 | 参数量 | Kappa(max) | 末轮 | e50rel | e90rel | auc/max |")
+        out.append("|---|---:|---:|---:|---:|---:|---:|")
+        for m, r in sorted(sub.items(), key=lambda kv: -kv[1]["kappa"]):
+            out.append(f"| {NAME[m]} | — | **{r['kappa']:.4f}** | {r['k_final']:.4f} | "
+                       f"{r.get('e50rel') or '—'} | {r.get('e90rel') or '—'} | "
+                       f"{r.get('auc_norm') if r.get('auc_norm') is not None else '—'} |")
+        out.append("")
+    return chr(10).join(out)
+
+
+LADDER_TBL = _sec_ladder()
+
 ARCH_TABLE = _arch_table()
 
 SEC_SEED = _sec_seed()
@@ -1076,6 +1104,51 @@ EMA / 类别加权 CE），仅改变 `seed`。seed 控制模型初始化、DataL
 每轮耗时**——尺度是有计算代价的。
 
 {SEC_CROP}
+
+---
+
+## 5.9 数据量阶梯：容量与数据量的匹配
+
+**协议**：30 轮 / patience=30（等价于固定预算、不早停）/ bs8 / lr2e-4 / OneCycle；
+子集为分层抽样的嵌套样本（250 ⊂ 500 ⊂ 1000）；
+**验证集固定为 newsplit2 的 221 张**（与子集大小无关），故各档的 Kappa 可比。
+
+**管线**：走 memmap 子集预解码（`prep/build_ladder_memmap.py`）。
+此前该阶梯走 PNG 管线，每样本解码两张 1024² PNG 却只裁 256²，解码在 CPU 上，
+导致 GPU 利用率中位仅 6%、功耗 32W/180W、约 170 ms/张（主数据集约 24 ms/张）。
+切到 memmap 后利用率中位升至 75%、每轮由 42–49 s 降至 13 s。
+
+**e50rel / e90rel**：首次达到**该次运行自身 k_max** 的 50% / 90% 的轮次。
+使用相对阈值是因为低数据档的绝对 Kappa 很低（n250 完整模型上限仅 0.032），
+固定阈值 0.4/0.5/0.6 在这些档位**永远不可达**，会让"学习速率"无从比较。
+`auc/max` 为 Kappa 均值与其上限之比，刻画学习曲线的**前重后轻**程度。
+
+{LADDER_TBL}
+
+**三点结论**：
+
+1. **小数据下"模块更多"反而更差。** n=250 时排序为
+   U-Net(0.1915) > w/o ECSAM(0.1164) > **完整模型(0.0322)**——
+   完整模型不仅输给 DeepLabV3+，**连朴素 U-Net 都不如**，且差距达 6 倍。
+   n=500 同样如此。这与 5.6 节的缺陷分析一致：被移除的 FPN/Transformer/ECSAM
+   在实现上并未执行其声明的功能（FPN 的 29.96% 参数不参与前向、Transformer
+   无位置编码），因此在样本稀少时它们只贡献了**优化难度**而非有效容量。
+2. **`w/o ECSAM` 在三档上全部优于完整模型**（n250 −0.0441… 实为 0.1164 vs
+   0.0322；n500 0.3954 vs 0.3312；n1000 0.5234 vs 0.5085）。
+   与 5.6.1 的观察一致——坐标注意力仅占 **0.90%** 参数，移除它的收益大于代价。
+3. **学习曲线的形态随数据量变化。** `auc/max` 由 n1000-U-Net 的 0.619 降到
+   n250-完整模型的 0.231；后者直到第 **27/30** 轮才达到自身上限的一半，
+   说明**小数据档在 30 轮预算内仍处于爬升期**，其数值不能视为收敛值。
+
+**必须声明的局限**：
+
+- **30 轮预算对小数据档偏紧。** 由上条，n250/n500 的多组 e50rel 落在 23–27 轮，
+  e90rel 普遍在 28–29 轮——曲线尚未真正走平。故本节的**绝对** Kappa 只宜用于
+  "同预算下的相对比较"，**不宜**解读为"该模型在该数据量下的能力上限"。
+- **patience=30 = max_epochs，早停从未触发**，所有运行都跑满 30 轮；
+  这是刻意的固定预算设计，但也意味着没有"收敛轮次"这一数据。
+- 本阶梯为**单次运行**（seed=42），未做多种子；5.7 节的 σ_seed 尚未测出，
+  故各档之间的差异是否超出噪声，目前**不能判定**。
 
 ---
 

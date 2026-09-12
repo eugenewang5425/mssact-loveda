@@ -1692,5 +1692,143 @@
   "g2_d1": 0.629275,
   "g1_full": 0.6312,
   "g1_d1": 0.627695
+ },
+ "data_ladder": {
+  "rows": {
+   "lgR_n250_full": {
+    "n": 250,
+    "model": "full",
+    "n_epochs": 30,
+    "kappa": 0.0322,
+    "best_epoch": 28,
+    "k_final": 0.0261,
+    "e50rel": 27,
+    "e90rel": 28,
+    "auc_norm": 0.231
+   },
+   "lgR_n250_noecsam": {
+    "n": 250,
+    "model": "noecsam",
+    "n_epochs": 30,
+    "kappa": 0.1164,
+    "best_epoch": 29,
+    "k_final": 0.1079,
+    "e50rel": 23,
+    "e90rel": 29,
+    "auc_norm": 0.282
+   },
+   "lgR_n250_unet": {
+    "n": 250,
+    "model": "unet",
+    "n_epochs": 30,
+    "kappa": 0.1915,
+    "best_epoch": 30,
+    "k_final": 0.1915,
+    "e50rel": 14,
+    "e90rel": 28,
+    "auc_norm": 0.468
+   },
+   "lgR_n250_deeplab": {
+    "n": 250,
+    "model": "deeplab",
+    "n_epochs": 30,
+    "kappa": 0.2825,
+    "best_epoch": 29,
+    "k_final": 0.2387,
+    "e50rel": 24,
+    "e90rel": 29,
+    "auc_norm": 0.289
+   },
+   "lgR_n500_full": {
+    "n": 500,
+    "model": "full",
+    "n_epochs": 30,
+    "kappa": 0.3312,
+    "best_epoch": 30,
+    "k_final": 0.3312,
+    "e50rel": 25,
+    "e90rel": 28,
+    "auc_norm": 0.235
+   },
+   "lgR_n500_noecsam": {
+    "n": 500,
+    "model": "noecsam",
+    "n_epochs": 30,
+    "kappa": 0.3954,
+    "best_epoch": 30,
+    "k_final": 0.3954,
+    "e50rel": 19,
+    "e90rel": 29,
+    "auc_norm": 0.393
+   },
+   "lgR_n500_unet": {
+    "n": 500,
+    "model": "unet",
+    "n_epochs": 30,
+    "kappa": 0.405,
+    "best_epoch": 30,
+    "k_final": 0.405,
+    "e50rel": 19,
+    "e90rel": 28,
+    "auc_norm": 0.451
+   },
+   "lgR_n500_deeplab": {
+    "n": 500,
+    "model": "deeplab",
+    "n_epochs": 30,
+    "kappa": 0.4928,
+    "best_epoch": 30,
+    "k_final": 0.4928,
+    "e50rel": 16,
+    "e90rel": 27,
+    "auc_norm": 0.458
+   },
+   "lgR_n1000_full": {
+    "n": 1000,
+    "model": "full",
+    "n_epochs": 30,
+    "kappa": 0.5085,
+    "best_epoch": 30,
+    "k_final": 0.5085,
+    "e50rel": 17,
+    "e90rel": 25,
+    "auc_norm": 0.458
+   },
+   "lgR_n1000_noecsam": {
+    "n": 1000,
+    "model": "noecsam",
+    "n_epochs": 30,
+    "kappa": 0.5234,
+    "best_epoch": 30,
+    "k_final": 0.5234,
+    "e50rel": 15,
+    "e90rel": 24,
+    "auc_norm": 0.522
+   },
+   "lgR_n1000_unet": {
+    "n": 1000,
+    "model": "unet",
+    "n_epochs": 30,
+    "kappa": 0.4913,
+    "best_epoch": 30,
+    "k_final": 0.4913,
+    "e50rel": 12,
+    "e90rel": 20,
+    "auc_norm": 0.619
+   },
+   "lgR_n1000_deeplab": {
+    "n": 1000,
+    "model": "deeplab",
+    "n_epochs": 30,
+    "kappa": 0.631,
+    "best_epoch": 29,
+    "k_final": 0.6303,
+    "e50rel": 13,
+    "e90rel": 21,
+    "auc_norm": 0.599
+   }
+  },
+  "protocol": "30ep/pt30/bs8/lr2e-4, memmap 子集预解码, val 固定为 newsplit2/val",
+  "note": "e50rel/e90rel = 首次达到自身 k_max 的 50%/90% 的轮次（绝对阈值在低数据档不可达）"
  }
 }

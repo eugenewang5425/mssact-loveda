@@ -185,6 +185,41 @@ if os.path.exists(_idx):
         # G1 = P-PNG (与正式对比/消融同管线)
         g1_full=0.6312, g1_d1=_rows.get("lg_D1_join_nofpn_notrans", {}).get("kappa"))
 
+# ========== 数据量阶梯 (lgR_n*, memmap 子集, 30ep/pt30) ==========
+# 数据来自 checkpoints/*_history.json（best Kappa）；学习速率取 ladder_eval 若已生成
+F["data_ladder"] = None
+_lad_rows = {}
+for _n in (250, 500, 1000):
+    for _m in ("full", "noecsam", "unet", "deeplab"):
+        _t = f"lgR_n{_n}_{_m}"
+        _hp = f"{CKPT}/{_t}_history.json"
+        if not os.path.exists(_hp):
+            continue
+        try:
+            _h = json.load(open(_hp, encoding="utf-8"))
+            _b = max(_h, key=lambda r: r.get("kappa", -9))
+            _ks = [r.get("kappa", 0) for r in _h]
+            _info = dict(n=_n, model=_m, n_epochs=len(_h),
+                         kappa=round(float(_b.get("kappa", 0)), 4),
+                         best_epoch=_b.get("epoch"),
+                         k_final=round(float(_ks[-1]), 4))
+            # 学习速率（相对自身上限，跨规模可比）
+            _kmax = max(_ks) if _ks else 0.0
+            if _kmax > 1e-6:
+                _eps = [r.get("epoch") for r in _h]
+                _i50 = next((e for e, k in zip(_eps, _ks) if k >= 0.5 * _kmax), None)
+                _i90 = next((e for e, k in zip(_eps, _ks) if k >= 0.9 * _kmax), None)
+                _info.update(e50rel=_i50, e90rel=_i90,
+                             auc_norm=round(float(sum(_ks) / len(_ks) / _kmax), 3))
+            _lad_rows[_t] = _info
+        except Exception as _e:
+            print(f"  [warn] ladder {_t}: {type(_e).__name__}")
+if _lad_rows:
+    F["data_ladder"] = dict(
+        rows=_lad_rows,
+        protocol="30ep/pt30/bs8/lr2e-4, memmap 子集预解码, val 固定为 newsplit2/val",
+        note="e50rel/e90rel = 首次达到自身 k_max 的 50%/90% 的轮次（绝对阈值在低数据档不可达）")
+
 json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
 
 # 打印摘要

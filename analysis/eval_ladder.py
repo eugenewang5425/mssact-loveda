@@ -13,7 +13,7 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
-import os, sys, json, time, glob
+import os, sys, re, json, time, glob
 import paths  # 集中路径配置 (环境变量/.env)
 import numpy as np
 import torch
@@ -40,17 +40,41 @@ def gauss2d(s, sigma):
     return np.outer(g,g).astype(np.float32)
 
 def build_for(tag):
+    """按 tag 构造对应模型；无法确定配置时返回 None（由调用方跳过）
+
+    注意: 必须覆盖所有会被 glob 命中的 tag。此前只认 deeplab/unet/fcn + light 配置，
+    而 glob 形如 `lg_*` 会把 lg_D3_ch_tiny(d_model=128) / lg_D4_ch_large(d_model=512)
+    一并扫进来，于是按 light 配置(d_model=256)构造 -> load_state_dict 形状不符 -> 崩。
+    """
     if "deeplab" in tag:
         return DeepLabV3Plus()
     if "unet" in tag:
         return UNet()
     if "fcn" in tag:
         return FCN()
-    # mssact variants
-    d = dict(embed_dims=[32,64,128,256], transformer_layers=2, transformer_heads=4)
-    if "noecsam" in tag: d["use_ecsam"] = False
-    if "noemr" in tag: d["use_emr"] = False
-    return MSSACTNet(in_channels=3, num_classes=7, **d)
+    # ---- mssact 各变体 ----
+    if "ch_tiny" in tag:
+        d = dict(embed_dims=[16, 32, 64, 128])
+    elif "ch_large" in tag:
+        d = dict(embed_dims=[64, 128, 256, 512])
+    else:
+        d = dict(embed_dims=[32, 64, 128, 256])
+    d.update(transformer_layers=2, transformer_heads=4)
+    if "trans4l" in tag: d["transformer_layers"] = 4
+    if "trans6l" in tag: d["transformer_layers"] = 6
+    if "noecsam" in tag:   d["use_ecsam"] = False
+    if "noemr" in tag:     d["use_emr"] = False
+    if "no_fpn" in tag or "nofpn" in tag:         d["use_fpn"] = False
+    if "no_trans" in tag or "notrans" in tag:     d["use_transformer"] = False
+    if "no_adapter" in tag or "noadapter" in tag: d["use_adapter"] = False
+    if "bilinear" in tag:  d["upsample_mode"] = "bilinear"
+    if "decoder_ca" in tag: d["decoder_ca_stages"] = (0, 1)
+    # 明确已知且可支持的类型才构造；其余返回 None 由调用方跳过
+    if re.search(r"(full|noecsam|noemr|no_fpn|nofpn|no_trans|notrans|no_adapter|"
+                 r"noadapter|bilinear|trans4l|trans6l|ch_tiny|ch_large|decoder_ca|"
+                 r"join_nofpn_notrans)", tag):
+        return MSSACTNet(in_channels=3, num_classes=7, **d)
+    return None
 
 @torch.no_grad()
 def infer_tile(model, img_u8, batch=8):
@@ -115,18 +139,37 @@ def entropy_gap(model, n_patches=40):
     return Hs["train"], Hs["val"], Hs["train"]-Hs["val"]
 
 def curve_metrics(h):
-    """学习速率指标"""
+    """学习速率指标（绝对阈值 + 相对阈值）
+
+    绝对阈值 e40/e50/e60 在**低数据档会全部为 None**：n250 的 Kappa 上限只有约
+    0.03，永远到不了 0.4。若只看绝对阈值，跨规模的学习速率就无从比较。
+
+    故同时给出**以各次运行自身 k_max 为基准**的相对指标：
+        e50rel = 首次达到 0.5*k_max 的轮次
+        e90rel = 首次达到 0.9*k_max 的轮次
+    这两个量在不同数据规模间可比，且对"多少轮学到自身极限的几成"直接作答。
+    """
     ks = np.array([r["kappa"] for r in h]); eps = np.array([r["epoch"] for r in h])
     def first(th):
         i = np.where(ks >= th)[0]
         return int(eps[i[0]]) if len(i) else None
-    return dict(n_epochs=len(h), k_final=float(ks[-1]), k_max=float(ks.max()),
-                auc=float(ks.mean()), e40=first(0.4), e50=first(0.5), e60=first(0.6))
+    kmax = float(ks.max())
+    # 相对阈值用 k_max 的绝对值下限保护：k_max<=0 时无意义
+    rel = (lambda f: first(f * kmax) if kmax > 1e-6 else None)
+    return dict(n_epochs=len(h), k_final=float(ks[-1]), k_max=kmax,
+                auc=float(ks.mean()),
+                e40=first(0.4), e50=first(0.5), e60=first(0.6),
+                e50rel=rel(0.5), e90rel=rel(0.9),
+                auc_norm=float(ks.mean() / kmax) if kmax > 1e-6 else None)
 
 if __name__ == "__main__":
-    tags = sorted({os.path.basename(p).replace("_history.json","")
-                   for p in glob.glob(f"{CKPT}/lg_*_history.json")})
-    print(f"待评估: {len(tags)} 个实验", flush=True)
+    # 可用 argv 覆盖前缀；默认只评数据阶梯（lgR_n*）。
+    # 原先用 "lg_*" 会额外扫到 lg_D3_ch_tiny / lg_D4_ch_large / lgF_*(已否决)
+    # 等非阶梯 tag，既有形状不符的崩溃风险，也会污染阶梯统计。
+    pats = sys.argv[1:] or ["lgR_n*"]
+    tags = sorted({os.path.basename(p).replace("_history.json", "")
+                   for pat in pats for p in glob.glob(f"{CKPT}/{pat}_history.json")})
+    print(f"待评估: {len(tags)} 个实验  (模式: {', '.join(pats)})", flush=True)
     rows = []
     for tag in tags:
         ckpt = f"{CKPT}/{tag}_best.pt"
@@ -143,7 +186,10 @@ if __name__ == "__main__":
         if os.path.exists(cache):
             rec.update(json.load(open(cache)))
         else:
-            model = build_for(tag).to("cuda").eval()
+            _m = build_for(tag)
+            if _m is None:
+                print(f"  skip {tag}: 无法推断模型配置（未知变体）", flush=True); continue
+            model = _m.to("cuda").eval()
             r = model.load_state_dict(torch.load(ckpt, map_location="cuda"), strict=False)
             val = evaluate_split(model, "val")
             tst = evaluate_split(model, "test_clean")
