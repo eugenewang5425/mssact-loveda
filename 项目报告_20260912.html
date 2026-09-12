@@ -1374,9 +1374,9 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 </tr>
 <tr>
 <td><strong>D2</strong></td>
-<td>解码器<strong>无跳连</strong>，仅凭 8× 下采样特征上采样 8 倍</td>
-<td>前向代码路径 + 分辨率链追踪</td>
-<td>高分辨率特征（256²/128²/64²）<strong>从未到达输出</strong>；有效空间粒度 8×8 像素</td>
+<td>解码器<strong>无跳连</strong>，仅凭 32² 特征上采样 8 倍</td>
+<td>前向代码路径 + 分辨率链追踪 + 边缘密度/FFT 频谱实测</td>
+<td>高分辨率特征从未到达输出；预测边缘密度达标签 <strong>4.56×</strong>，且 k=8 功率超额 <strong>1.66×</strong>（与 8× 上采样吻合，属棋盘伪影）</td>
 </tr>
 <tr>
 <td><strong>D3</strong></td>
@@ -1495,7 +1495,7 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <p><strong>这不是"FPN 冗余"的证据，而是"这个 FPN 没有在工作"的证据。</strong> 前者是多尺度
 融合的一般性结论，后者是本实现的缺陷结论——科学含义完全不同。</p>
 </blockquote>
-<h3>5.6.3 D2：解码器无跳连</h3>
+<h3>5.6.3 D2：解码器无跳连 → 细节为"合成"而非"测量"，并伴生棋盘伪影</h3>
 <table>
 <thead>
 <tr>
@@ -1526,9 +1526,97 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 </tr>
 </tbody>
 </table>
-<p>输出 256² 上每个 <strong>8×8 像素块</strong>的预测，完全由 32² 表征中的<strong>一个 token</strong> 决定。
-有效空间粒度 = <strong>8 像素</strong>（@0.3 m ≈ <strong>2.4 m 地面</strong>），即在结构上无法表达比
-2.4 m 更精细的边界。</p>
+<p>必须精确表述：三次转置卷积上采样<strong>能够</strong>产生高频结构（转置卷积可学习上采样核），
+因此<strong>不能</strong>说"输出被限制在 8 像素粒度"。正确表述是：<strong>没有任何通路让高频的输入
+证据到达输出</strong>——输出中的细节是解码器<em>合成</em>的，而非在高分辨率上<em>测量</em>到的。</p>
+<p><strong>实测：模型不是"太平滑"，而是过度碎裂 + 周期性伪影</strong>（<code>artifact_analysis.py</code>，
+逐图 2D 计算，有效相邻像素对 2.94×10⁸）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th style="text-align: right;">边缘密度</th>
+<th style="text-align: right;">/标签</th>
+<th style="text-align: right;">解码器上采样</th>
+<th>周期超额比峰值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>标签（参照）</strong></td>
+<td style="text-align: right;"><strong>0.00771</strong></td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>MSSACT-Net 6.1M</strong></td>
+<td style="text-align: right;"><strong>0.03516</strong></td>
+<td style="text-align: right;"><strong>4.563</strong></td>
+<td style="text-align: right;">8×</td>
+<td><strong>k=8: 1.66×</strong></td>
+</tr>
+<tr>
+<td>DeepLabV3+ 39.7M</td>
+<td style="text-align: right;">0.00884</td>
+<td style="text-align: right;">1.147</td>
+<td style="text-align: right;">4×</td>
+<td>无</td>
+</tr>
+<tr>
+<td>FPN-Seg 27.2M</td>
+<td style="text-align: right;">0.01043</td>
+<td style="text-align: right;">1.354</td>
+<td style="text-align: right;">8×</td>
+<td>无</td>
+</tr>
+<tr>
+<td>FCN 23.8M</td>
+<td style="text-align: right;">0.01034</td>
+<td style="text-align: right;">1.342</td>
+<td style="text-align: right;">32×</td>
+<td>k=32: 1.36×</td>
+</tr>
+<tr>
+<td>U-Net 2.4M</td>
+<td style="text-align: right;">0.02139</td>
+<td style="text-align: right;">2.776</td>
+<td style="text-align: right;">16×</td>
+<td>k=16: 1.17×</td>
+</tr>
+<tr>
+<td>Swin-Unet 32.7M</td>
+<td style="text-align: right;">0.01504</td>
+<td style="text-align: right;">1.952</td>
+<td style="text-align: right;">16×</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<p>三点结论：
+1. <strong>标签非常平滑</strong>：仅 <strong>0.77%</strong> 的相邻有效像素对存在类别差异。
+2. <strong>所有模型都过度碎裂</strong>（1.15×–4.56×），且 <strong>MSSACT-Net 最严重（4.56×）</strong>。
+   这直接解释内部区域精度损失（内部带 OA 0.7032 vs DeepLabV3+ 0.7707），
+   而 Kappa 有 <strong>78.4%</strong> 来自内部像素。
+3. <strong>MSSACT-Net 的伪影具有周期性，且周期与解码器上采样倍数吻合</strong>：对预测的水平
+   边缘图沿列做 FFT，周期 <strong>k=8</strong> 附近功率占比为标签的 <strong>1.66 倍</strong>，而 8 正是
+   解码器（32²→256²，三次 stride-2 转置卷积）的总上采样倍数。同类规律见于
+   FCN（32×→k=32）与 U-Net（16×→k=16）。这与堆叠转置卷积的<strong>棋盘伪影</strong>
+   （checkerboard artifacts）机制一致。</p>
+<blockquote>
+<p><strong>方法学说明（两次自我修正）</strong>：初稿曾另用"按列 mod k 分组的 max/min"与
+"分组 CV"两种统计量，二者均显示随 k 单调上升的"周期性"。复查发现这是<strong>分组
+统计量自身的偏差</strong>（max/min 的顺序统计量偏差；CV 随每组样本数 n/k 减少而上升），
+且该漂移在<strong>标签</strong>上同样出现，说明漂移来自方法而非数据。改用 <strong>FFT 功率占比</strong>
+（对同一 k 比较模型与标签）后结论才稳定。三种统计量与结果均在
+<code>artifact_analysis.py</code> / <code>artifact.json</code> 中留痕。</p>
+<p>另需说明：初稿曾假设"无跳连 ⇒ 预测更平滑"，<strong>该假设已被实测推翻</strong>——
+实测方向相反。此处保留修正过程以明示改判依据。</p>
+</blockquote>
+<p><strong>可证伪的预测</strong>：若伪影确由转置卷积造成，则 <code>nd_abl_bilinear</code> 变体（双线性上采样
+替代转置卷积）应同时具备 (a) 更低边缘密度、(b) k=8 超额比下降。该变体的实测
+Kappa <strong>确实更高</strong>（0.6369 vs 0.6312，<strong>+0.0057</strong>），与预测方向一致——这也为
+"5.6.5 表中 Bilinear-Up 变体为何反而更好"提供了机制解释。</p>
 <p>文献依据：编码器-解码器网络"若无跳连通常无法达到最优性能"（U-Net 即利用编码器
 特征找回细粒度细节）；DeepLabV3+ 相对空洞金字塔的改进正是"<strong>增加一条跳连以保留
 低层细节</strong>"。这与本模型的缺陷形成直接对照。</p>
@@ -1579,7 +1667,7 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <tr>
 <td>Bilinear-Up</td>
 <td style="text-align: right;"><strong>+0.0057</strong></td>
-<td>解码器无跳连，learnable 与 bilinear 差别仅在内核参数化</td>
+<td>双线性替代转置卷积，<strong>消除棋盘伪影</strong>（5.6.3 已证 k=8 超额 1.66×）；这是唯一"移除即改善"的变体</td>
 </tr>
 <tr>
 <td>联合移除 FPN+Trans(+Adapter)</td>

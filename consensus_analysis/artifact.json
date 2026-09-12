@@ -1,0 +1,132 @@
+{
+ "label_edge_density": 0.007705,
+ "label_period_power_pct": {
+  "2": 0.7874,
+  "4": 1.3913,
+  "8": 1.3884,
+  "16": 1.3691
+ },
+ "period_metric": "FFT 功率占比(%%) 在周期 k 附近 ±3 bin; 仅用整行无 no-data 的行; 报告的是 模型/标签 的超额比",
+ "models": {
+  "full_all_v2": {
+   "name": "MSSACT-light 6.1M",
+   "edge_density": 0.03516,
+   "edge_ratio_vs_label": 4.563,
+   "period_power_pct": {
+    "2": 0.5521,
+    "4": 1.6017,
+    "8": 2.3005,
+    "16": 1.8051
+   },
+   "excess_vs_label": {
+    "2": 0.701,
+    "4": 1.151,
+    "8": 1.657,
+    "16": 1.318
+   },
+   "peak_excess_period": 8,
+   "decoder_upsample": 8,
+   "peak_matches_upsample": true
+  },
+  "nd_deeplab": {
+   "name": "DeepLabV3+ 39.7M",
+   "edge_density": 0.008839,
+   "edge_ratio_vs_label": 1.147,
+   "period_power_pct": {
+    "2": 0.7822,
+    "4": 1.3623,
+    "8": 1.3573,
+    "16": 1.3606
+   },
+   "excess_vs_label": {
+    "2": 0.993,
+    "4": 0.979,
+    "8": 0.978,
+    "16": 0.994
+   },
+   "peak_excess_period": 16,
+   "decoder_upsample": 4,
+   "peak_matches_upsample": false
+  },
+  "nd_fpn_seg": {
+   "name": "FPN 27.2M",
+   "edge_density": 0.010433,
+   "edge_ratio_vs_label": 1.354,
+   "period_power_pct": {
+    "2": 0.7829,
+    "4": 1.3696,
+    "8": 1.3844,
+    "16": 1.3522
+   },
+   "excess_vs_label": {
+    "2": 0.994,
+    "4": 0.984,
+    "8": 0.997,
+    "16": 0.988
+   },
+   "peak_excess_period": 8,
+   "decoder_upsample": 8,
+   "peak_matches_upsample": true
+  },
+  "nd_fcn": {
+   "name": "FCN 23.8M",
+   "edge_density": 0.01034,
+   "edge_ratio_vs_label": 1.342,
+   "period_power_pct": {
+    "2": 0.7613,
+    "4": 1.4172,
+    "8": 1.6017,
+    "16": 1.8566
+   },
+   "excess_vs_label": {
+    "2": 0.967,
+    "4": 1.019,
+    "8": 1.154,
+    "16": 1.356
+   },
+   "peak_excess_period": 16,
+   "decoder_upsample": 32,
+   "peak_matches_upsample": false
+  },
+  "nd_unet": {
+   "name": "U-Net 2.4M",
+   "edge_density": 0.021388,
+   "edge_ratio_vs_label": 2.776,
+   "period_power_pct": {
+    "2": 0.6453,
+    "4": 1.2359,
+    "8": 1.3813,
+    "16": 1.603
+   },
+   "excess_vs_label": {
+    "2": 0.82,
+    "4": 0.888,
+    "8": 0.995,
+    "16": 1.171
+   },
+   "peak_excess_period": 16,
+   "decoder_upsample": 16,
+   "peak_matches_upsample": true
+  },
+  "nd_swin_unet": {
+   "name": "Swin-Unet 32.7M",
+   "edge_density": 0.015043,
+   "edge_ratio_vs_label": 1.952,
+   "period_power_pct": {
+    "2": 0.7859,
+    "4": 1.3555,
+    "8": 1.3116,
+    "16": 1.3382
+   },
+   "excess_vs_label": {
+    "2": 0.998,
+    "4": 0.974,
+    "8": 0.945,
+    "16": 0.977
+   },
+   "peak_excess_period": 2,
+   "decoder_upsample": 16,
+   "peak_matches_upsample": false
+  }
+ }
+}
