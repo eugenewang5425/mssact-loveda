@@ -40,10 +40,13 @@ for s in range(1, 8): REMAP[s] = s - 1          # 1..7 -> 0..6; 0/8+ -> 255
 class LoveDADataset(Dataset):
     """训练: 每epoch随机裁剪1个patch/图; 验证: 4个固定角patch"""
     def __init__(self, split, mean, std, train, n_val_patches=4, epoch_seed=None, crop=256,
-                 root=None, fast=False, fast_dir=None):
+                 root=None, fast=False, fast_dir=None, center_crop=False):
         """fast=True: 使用预解码 memmap（fast_dataset/），消除 PNG 解码开销；
-        数据内容与 PNG 管线完全一致（无插值），仅解码时机不同。"""
+        数据内容与 PNG 管线完全一致（无插值），仅解码时机不同。
+        center_crop=True: 训练时固定取中心 patch（默认 False = 每轮随机位置），
+        用于"随机裁剪 vs 固定裁剪"的训练策略对比。"""
         self.crop = crop
+        self.center_crop = center_crop
         self.fast = fast
         # 注意: fast 后端固定对应主数据集（newsplit2）; 若 root 指向其他目录
         # （如数据阶梯子集），调用方须显式传 fast=False
@@ -101,6 +104,8 @@ class LoveDADataset(Dataset):
             S = self.crop
             if S >= H:
                 y = x = 0
+            elif self.center_crop:
+                y, x = (H - S) // 2, (W - S) // 2
             else:
                 y = torch.randint(0, H-S+1, (1,), generator=g).item() if g else torch.randint(0, H-S+1, (1,)).item()
                 x = torch.randint(0, W-S+1, (1,), generator=g).item() if g else torch.randint(0, W-S+1, (1,)).item()

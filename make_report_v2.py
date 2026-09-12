@@ -41,6 +41,96 @@ C = FACTS["stage_C_1768_final"]
 B = FACTS.get("stage_B_2257", {})
 A = FACTS.get("stage_A_957_legacy", {})
 CONS = FACTS.get("consensus") or {}
+SV = FACTS.get("seed_variance") or {}
+ART = FACTS.get("artifact") or {}
+
+
+def _sec_seed():
+    """§5.7 随机种子噪声底线（数据缺失时给出明确的'待补'说明）"""
+    groups = SV.get("groups") or {}
+    sigma = SV.get("sigma_seed_used")
+    deltas = SV.get("deltas_in_sigma") or []
+    if not groups:
+        return ("**（本节数据待补齐）** 多种子队列（`sd7/sd2024/sd31337` × "
+                "{完整模型, DeepLabV3+}）已由 `run_queue_final.py` 排队执行；"
+                "完成后本节的 σ_seed 与折算表将自动填入。\n\n"
+                "在 σ_seed 补齐之前，5.6 节「所有 ΔKappa 均落在噪声内」的表述"
+                "**必须保留为推断而非测量结论**（见 5.6.10 局限 1）。")
+    L = ["| 组（同管线内） | seed 数 | mean | **σ_seed** | range | 区间 |",
+         "|---|---:|---:|---:|---:|---|"]
+    for g, r in groups.items():
+        if "sigma" in r:
+            L.append(f"| {g} | {r['n']} | {r['mean']:.4f} | **{r['std']:.4f}** | "
+                     f"{r['range']:.4f} | [{r['min']:.4f}, {r['max']:.4f}] |")
+        else:
+            L.append(f"| {g} | {r.get('n',0)} | — | — | — | 样本不足，仅作参照 |")
+    L.append("")
+    if sigma:
+        L += [f"**采用各管线内最大 σ_seed = {sigma:.4f}（保守）**", "",
+              "| 管线 | 变体 | Kappa | ΔKappa | σ 倍数 | 判读 |",
+              "|---|---|---:|---:|---:|---|"]
+        for d in sorted(deltas, key=lambda x: -abs(x["n_sigma"])):
+            ns = d["n_sigma"]
+            v = ("不可分辨（|Δ|<1σ）" if abs(ns) < 1 else
+                 ("弱差异（1–2σ）" if abs(ns) < 2 else "**可分辨（>2σ）**"))
+            L.append(f"| {d['pipeline']} | `{d['tag']}` | {d['kappa']:.4f} | "
+                     f"{d['delta']:+.4f} | {ns:+.2f} | {v} |")
+        L.append("")
+        L.append(f"> **判读**：把 5.6 节的消融散布（0.006 量级）与 σ_seed = {sigma:.4f} 比较。"
+                 "若散布 < 1σ，则「移除模块无影响」与「模块确有微小影响但被噪声掩盖」"
+                 "两者**不可区分**——这正是需要 TOST 等效性检验的原因。")
+    L.append("")
+    L.append("**重要限定**：n 仅 3–4 个种子时 σ 本身有较大不确定性（GEO-Bench 建议 ≥10）。"
+             "故本表用于**量级判断**（0.006 究竟是 1σ 还是 5σ），不宜作为精确检验。"
+             "另：`nd_deeplab` 属 P-PNG 世代，**不得**与 `sd*_deeplab`（P-MEM-ROLL）"
+             "混合求均值（跨管线 Kappa 不可比）。")
+    return "\n".join(L)
+
+
+def _sec_crop():
+    """§5.8 训练策略（裁剪尺度 + 随机/固定）对比"""
+    tags = [("lgR_bs8_full_lr2e4", "256 随机（基准）"),
+            ("lgR_c256_center", "256 固定中心"),
+            ("lgR_c384_rand", "384 随机"),
+            ("lgR_c512_rand", "512 随机")]
+    C2 = FACTS.get("stage_C_1768_final", {})
+    L = ["| 配置 | crop | 位置 | Kappa | 相对基准 |", "|---|---:|---|---:|---:|"]
+    ref = None
+    rows = []
+    for t, desc in tags:
+        r = None
+        for grp in ("main", "baselines", "ablation"):
+            r = (C2.get(grp) or {}).get(t)
+            if r:
+                break
+        if r is None and t == "lgR_bs8_full_lr2e4":
+            r = {"kappa": 0.6320, "n_epochs": 60}     # 见 experiments_index.json
+        if r:
+            rows.append((t, desc, r.get("kappa")))
+            if ref is None:
+                ref = r.get("kappa")
+    if not rows:
+        return ("**（本节数据待补齐）** 裁剪策略队列（`run_queue_crop.py`）已排队执行；"
+                "完成后自动填入。设计：256 随机为基准，256 固定中心用于隔离「随机裁剪」"
+                "本身的贡献，384/512 用于观测尺度效应（batch 分别下调至 4/2 以避免显存溢出）。")
+    for t, desc, k in rows:
+        crop = t.split("_c")[1].split("_")[0] if "_c" in t else "256"
+        pos = "固定中心" if "center" in t else "随机"
+        d = f"{k-ref:+.4f}" if (ref is not None and k is not None) else "—"
+        L.append(f"| `{t}` | {crop} | {pos} | {k:.4f} | {d} |")
+    L += ["", "**判读要点**：", "",
+          "1. **256 随机 vs 256 固定中心**：两者像素量与尺度完全相同，差异**只能**归因于"
+          "「每轮随机位置」这一增强，是隔离该增强贡献的干净对照。",
+          "2. **256 → 384 → 512**：尺度效应。注意 batch 随面积下调（8/4/2），"
+          "故每轮耗时与总时长必须一并报告——**大尺度的计算代价是平方级增长的**，"
+          "若 Kappa 收益远小于耗时增长，则小尺度随机裁剪是更优的工程选择。",
+          "3. 用户明确排除过小尺度（如 128），故不设该档；阶段 A 的历史结果显示"
+          "128²（GSD 2.4m 匹配 GF-1）在本任务上几乎学不动（Kappa 0.0098）。"]
+    return "\n".join(L)
+
+
+SEC_SEED = _sec_seed()
+SEC_CROP = _sec_crop()
 
 def tbl(stage, group, tags, title):
     out = [f"**{title}**\n", "| 模型 | Kappa | OA | 最优轮/总轮 |", "|---|---|---|---|"]
@@ -854,6 +944,47 @@ DeepLabV3+ 优势的分带归因显示 **86.6% 的 ΔOA 来自内部像素**（�
    但未逐一复跑。
 4. 分带与 Kappa 归属基于**已缓存的 6 个模型预测**；8 个消融变体的逐带分解待补齐。
 5. 完整的推导、复现脚本与文献核验见 `docs/架构有效性分析.md`。
+
+---
+
+## 5.7 随机种子噪声底线（多种子实测）
+
+**方法学必要性**：本项目此前**全部**比较都基于**单次运行**（seed=42），
+从未测量种子方差。文献明确指出这不足以支持"无差异"结论：
+GEO-Bench（NeurIPS 2023 D&B）建议 **≥10 个种子**，并指出 3–5 个种子不足以给出
+可靠置信区间；社区实测同一 DeepLabV3+ 两次训练在 Cityscapes 上即可相差
+0.7 mIoU（双线性插值反向非确定）。因此在给出"模块无差异"的结论前，
+必须先把**噪声底线**测出来。
+
+**协议**：与主实验完全一致（OneCycle-60 轮 / patience=20 / batch=8 / lr=2e-4 /
+EMA / 类别加权 CE），仅改变 `seed`。seed 控制模型初始化、DataLoader 打乱顺序与
+`_geom` 增强抽样（裁剪位置由 `epoch_seed` 决定，与 seed 无关）。
+**并已核验**：训练路径只使用 torch RNG，故新增 `seed` 参数**不改变** seed=42 的
+既有结果（默认行为逐位一致），既有实验的可比性不受影响。
+
+{SEC_SEED}
+
+---
+
+## 5.8 训练策略对比：裁剪尺度与随机/固定裁剪
+
+用户明确要求对比训练策略（随机裁剪、不同固定尺寸），并强调"过小的尺度完全
+没有任何训练意义"。该对比此前**只在阶段 A（957 张）**上完成，而阶段 A 已被阶段 C
+（1,768 张 + REMAP 修复）取代——故本节在**结论依据数据**上补齐。
+
+| tag | crop | 位置 | 每样本像素 | batch |
+|---|---|---|---|---|
+| `lgR_bs8_full_lr2e4` | 256 | 随机 | 1× | 8 |
+| `lgR_c256_center` | 256 | **固定中心** | 1× | 8 |
+| `lgR_c384_rand` | 384 | 随机 | 2.25× | 4 |
+| `lgR_c512_rand` | 512 | 随机 | 4× | 2 |
+
+**设计要点**：256 随机 vs 256 中心用于隔离"随机裁剪"这一增强本身的贡献
+（同尺度、同像素量）；256/384/512 随机用于观测尺度效应。batch 按裁剪面积下调
+以避免显存溢出（256²:8 / 384²:4 / 512²:2），故**不能只比 Kappa，必须同时报告
+每轮耗时**——尺度是有计算代价的。
+
+{SEC_CROP}
 
 ---
 

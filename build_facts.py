@@ -107,6 +107,42 @@ F["overfit"] = None
 if os.path.exists(f"{BASE}/overfit_diag/overfit_summary.json"):
     F["overfit"] = json.load(open(f"{BASE}/overfit_diag/overfit_summary.json"))
 
+# ========== 随机种子噪声底线 ==========
+F["seed_variance"] = None
+if os.path.exists(f"{BASE}/seed_variance.json"):
+    F["seed_variance"] = json.load(open(f"{BASE}/seed_variance.json"))
+
+# ========== 解码器伪影 / 边缘密度 ==========
+F["artifact"] = None
+if os.path.exists(f"{CONS}/artifact.json"):
+    F["artifact"] = json.load(open(f"{CONS}/artifact.json"))
+
+# ========== 严格性评估 (逐类 IoU / 配对 bootstrap / TOST) ==========
+F["rigor"] = None
+if os.path.exists(f"{CONS}/rigor.json"):
+    F["rigor"] = json.load(open(f"{CONS}/rigor.json"))
+
+# ========== 架构缺陷 (数值验证结论, 静态登记) ==========
+# 依据 docs/架构有效性分析.md; 均由可复现数值实验证实
+F["arch_defects"] = {
+    "D1_fpn_dead_branches": {
+        "claim": "FPN 自顶向下融合只写入 laterals[0..2], 而 forward 只用 fpn_features[-1]",
+        "verification": "归零 lateral_convs[0..2] / 用'仅第4支路'等价算子替换整个 FPN",
+        "output_diff": 0.0,
+        "dead_params": 1828352, "model_params": 6101784,
+        "dead_frac": 0.2996, "effective_frac": 0.7004},
+    "D2_no_skip_connections": {
+        "claim": "解码器只接收 32x32 特征, 无 encoder->decoder 跳连, 上采样 8 倍",
+        "resolutions": [256, 128, 64, 32], "decoder_input": 32,
+        "note": "256/128/64 特征从未到达输出; 输出细节为合成而非测量"},
+    "D3_no_positional_encoding": {
+        "claim": "TransformerEncoder 摊平为 token 后未加位置编码",
+        "verification": "随机置换 token 后按逆置换还原输出",
+        "output_diff": 7.153e-07,
+        "note": "置换等变 -> 无空间位置感知; 但卷积特征提供隐式位置锚点, 属机制降级而非失效"},
+    "D4_coord_attention_share": {"ecsam_params": 55044, "frac": 0.009},
+}
+
 json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
 
 # 打印摘要

@@ -1,0 +1,53 @@
+{
+ "groups": {
+  "完整模型 MSSACT 6.10M (P-MEM-ROLL)": {
+   "n": 1,
+   "note": "样本不足, 仅作参照"
+  },
+  "DeepLabV3+ 39.69M (P-MEM-ROLL)": {
+   "n": 0,
+   "note": "样本不足, 仅作参照"
+  },
+  "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
+   "n": 2,
+   "mean": 0.6594,
+   "std": 0.0399,
+   "min": 0.6312,
+   "max": 0.6876,
+   "range": 0.0564,
+   "members": {
+    "full_all_v2": 0.6312,
+    "nd_deeplab": 0.6876
+   }
+  }
+ },
+ "ablations": {
+  "P-MEM-ROLL (lgR_*)": {
+   "n": 3,
+   "spread": 0.1429,
+   "min": 0.4946,
+   "max": 0.6375,
+   "values": {
+    "lgR_D1_join_nofpn_notrans": 0.6293,
+    "lgR_D2_decoder_ca": 0.6375,
+    "lgR_D3_ch_tiny": 0.4946
+   }
+  },
+  "P-PNG (nd_abl_* + lg_D*)": {
+   "n": 8,
+   "spread": 0.0097,
+   "min": 0.6272,
+   "max": 0.6369,
+   "values": {
+    "nd_abl_no_emr": 0.6355,
+    "nd_abl_no_ecsam": 0.6272,
+    "nd_abl_no_fpn": 0.6314,
+    "nd_abl_no_trans": 0.6302,
+    "nd_abl_no_adapter": 0.6342,
+    "nd_abl_bilinear": 0.6369,
+    "nd_abl_trans4l": 0.6362,
+    "nd_abl_trans6l": 0.6335
+   }
+  }
+ }
+}

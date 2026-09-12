@@ -1951,6 +1951,97 @@ Kappa <strong>确实更高</strong>（0.6369 vs 0.6312，<strong>+0.0057</strong
 <li>完整的推导、复现脚本与文献核验见 <code>docs/架构有效性分析.md</code>。</li>
 </ol>
 <hr />
+<h2>5.7 随机种子噪声底线（多种子实测）</h2>
+<p><strong>方法学必要性</strong>：本项目此前<strong>全部</strong>比较都基于<strong>单次运行</strong>（seed=42），
+从未测量种子方差。文献明确指出这不足以支持"无差异"结论：
+GEO-Bench（NeurIPS 2023 D&amp;B）建议 <strong>≥10 个种子</strong>，并指出 3–5 个种子不足以给出
+可靠置信区间；社区实测同一 DeepLabV3+ 两次训练在 Cityscapes 上即可相差
+0.7 mIoU（双线性插值反向非确定）。因此在给出"模块无差异"的结论前，
+必须先把<strong>噪声底线</strong>测出来。</p>
+<p><strong>协议</strong>：与主实验完全一致（OneCycle-60 轮 / patience=20 / batch=8 / lr=2e-4 /
+EMA / 类别加权 CE），仅改变 <code>seed</code>。seed 控制模型初始化、DataLoader 打乱顺序与
+<code>_geom</code> 增强抽样（裁剪位置由 <code>epoch_seed</code> 决定，与 seed 无关）。
+<strong>并已核验</strong>：训练路径只使用 torch RNG，故新增 <code>seed</code> 参数<strong>不改变</strong> seed=42 的
+既有结果（默认行为逐位一致），既有实验的可比性不受影响。</p>
+<p><strong>（本节数据待补齐）</strong> 多种子队列（<code>sd7/sd2024/sd31337</code> × {完整模型, DeepLabV3+}）已由 <code>run_queue_final.py</code> 排队执行；完成后本节的 σ_seed 与折算表将自动填入。</p>
+<p>在 σ_seed 补齐之前，5.6 节「所有 ΔKappa 均落在噪声内」的表述<strong>必须保留为推断而非测量结论</strong>（见 5.6.10 局限 1）。</p>
+<hr />
+<h2>5.8 训练策略对比：裁剪尺度与随机/固定裁剪</h2>
+<p>用户明确要求对比训练策略（随机裁剪、不同固定尺寸），并强调"过小的尺度完全
+没有任何训练意义"。该对比此前<strong>只在阶段 A（957 张）</strong>上完成，而阶段 A 已被阶段 C
+（1,768 张 + REMAP 修复）取代——故本节在<strong>结论依据数据</strong>上补齐。</p>
+<table>
+<thead>
+<tr>
+<th>tag</th>
+<th>crop</th>
+<th>位置</th>
+<th>每样本像素</th>
+<th>batch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lgR_bs8_full_lr2e4</code></td>
+<td>256</td>
+<td>随机</td>
+<td>1×</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>lgR_c256_center</code></td>
+<td>256</td>
+<td><strong>固定中心</strong></td>
+<td>1×</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>lgR_c384_rand</code></td>
+<td>384</td>
+<td>随机</td>
+<td>2.25×</td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>lgR_c512_rand</code></td>
+<td>512</td>
+<td>随机</td>
+<td>4×</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>设计要点</strong>：256 随机 vs 256 中心用于隔离"随机裁剪"这一增强本身的贡献
+（同尺度、同像素量）；256/384/512 随机用于观测尺度效应。batch 按裁剪面积下调
+以避免显存溢出（256²:8 / 384²:4 / 512²:2），故<strong>不能只比 Kappa，必须同时报告
+每轮耗时</strong>——尺度是有计算代价的。</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th style="text-align: right;">crop</th>
+<th>位置</th>
+<th style="text-align: right;">Kappa</th>
+<th style="text-align: right;">相对基准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lgR_bs8_full_lr2e4</code></td>
+<td style="text-align: right;">256</td>
+<td>随机</td>
+<td style="text-align: right;">0.6320</td>
+<td style="text-align: right;">+0.0000</td>
+</tr>
+</tbody>
+</table>
+<p><strong>判读要点</strong>：</p>
+<ol>
+<li><strong>256 随机 vs 256 固定中心</strong>：两者像素量与尺度完全相同，差异<strong>只能</strong>归因于「每轮随机位置」这一增强，是隔离该增强贡献的干净对照。</li>
+<li><strong>256 → 384 → 512</strong>：尺度效应。注意 batch 随面积下调（8/4/2），故每轮耗时与总时长必须一并报告——<strong>大尺度的计算代价是平方级增长的</strong>，若 Kappa 收益远小于耗时增长，则小尺度随机裁剪是更优的工程选择。</li>
+<li>用户明确排除过小尺度（如 128），故不设该档；阶段 A 的历史结果显示128²（GSD 2.4m 匹配 GF-1）在本任务上几乎学不动（Kappa 0.0098）。</li>
+</ol>
+<hr />
 <h2>6. 关键结论</h2>
 <ol>
 <li><strong>数据量与数据质量共同决定上限</strong>：两者提升使主模型 Kappa 达到

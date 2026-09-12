@@ -114,7 +114,7 @@ if __name__ == "__main__":
     print(f"headroom exit={r.returncode}", flush=True)
 
     # ============ D. 汇总产物 ============
-    for step in ("build_index.py", "build_facts.py", "make_report_v2.py", "make_pdf.py"):
+    for step in ("seed_variance.py", "build_index.py", "build_facts.py", "make_report_v2.py", "make_pdf.py"):
         print(f"\n===== D. {step} =====", flush=True)
         r = subprocess.run([sys.executable, "-u", os.path.join(BASE, step)], cwd=BASE)
         print(f"{step} exit={r.returncode}", flush=True)
