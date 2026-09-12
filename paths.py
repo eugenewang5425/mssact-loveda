@@ -28,6 +28,31 @@ def _load_dotenv():
 
 _load_dotenv()
 
+# ---- Windows 上 torch._inductor 的 getpass 陷阱（必须最先处理）----
+# 现象: 训练报 "ModuleNotFoundError: No module named 'pwd'" 或
+#       "AssertionError: Artifact of type=precompile already registered ..."
+# 根因: torch.optim.AdamW.add_param_group -> import torch._dynamo ->
+#       _dynamo/package.py 建 DiskDynamoCache -> _inductor cache_dir_utils.cache_dir()
+#       -> default_cache_dir() -> getpass.getuser()。getpass 先查环境变量
+#       LOGNAME/USER/LNAME/USERNAME，四个都缺失时才 `import pwd` —— 而 pwd 是
+#       Unix 专有模块，Windows 上不存在。
+#       由 nohup/计划任务等启动时环境被剥离，恰好会缺这几个变量，于是训练在
+#       建优化器时崩溃（表现为 0.2 分钟即失败）。
+# 修法: cache_dir() 的逻辑是"若 TORCHINDUCTOR_CACHE_DIR 已存在则不再调用
+#       default_cache_dir()"，故显式设定即可完全绕过该失败路径。
+os.environ.setdefault("TORCHINDUCTOR_CACHE_DIR", os.path.join(REPO, ".torch_inductor_cache"))
+
+# ---- 同理: 防止 torch.hub 把预训练权重下进仓库 ----
+# HOME/USERPROFILE 缺失时 os.path.expanduser("~") **原样返回 "~"**，torch.hub 便以
+# 相对路径 ./~/ 建缓存（基准是 CWD = 仓库根），实测把 97MB 的 resnet50 权重下进
+# 仓库并被 git add -A 误提交（.git 由 63MB 涨到 161MB）。
+# 显式指定 TORCH_HOME 即可根治：优先复用真实用户目录，拿不到就退到仓库内
+# .torch_cache/（已在 .gitignore 排除）。
+_home = os.environ.get("USERPROFILE") or os.environ.get("HOME")
+os.environ.setdefault("TORCH_HOME",
+                      os.path.join(_home, ".cache", "torch") if _home
+                      else os.path.join(REPO, ".torch_cache"))
+
 # ---- 数据根目录（包含 newsplit2/ newsplit/ loveda_official/ data_ladder/ train/ val/ test/）----
 DATA_ROOT = os.environ.get("LDA_DATA_ROOT", os.path.join(REPO, "_data"))
 

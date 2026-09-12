@@ -40,8 +40,17 @@ gpu_sample_*.json
 bench_*.json
 __pycache__/
 *.pyc
+.torch_inductor_cache/
 
 # ================= 报告产物（带日期的 PDF 为交付件；HTML 与无日期副本可再生）=================
 项目报告_*.html
 项目报告.pdf
 # 报告只保留最新一份（每次重建都会新增一个带日期的 PDF，旧的及时清理）
+
+# ================= 环境被剥离时 torch 会建的字面 ~ 目录 =================
+# HOME/USERPROFILE 缺失时 os.path.expanduser("~") 原样返回 "~"，torch.hub 便以
+# 相对路径 ./~/ 建缓存(基准是 CWD，即仓库根)，把 97MB 预训练权重下进仓库。
+# 已由 paths.py 显式设定 TORCH_HOME 根治；此处再兜一层，避免误提交。
+~/
+.torch_cache/
+*.pth

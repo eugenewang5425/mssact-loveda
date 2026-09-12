@@ -46,6 +46,24 @@ LOG = os.path.join(BASE, "chain.log")
 STEPS = ["queues/run_queue_final.py", "queues/run_queue_crop.py"]
 
 
+def _child_python():
+    """子进程一律用 python.exe，而非 pythonw.exe
+
+    原因: 本脚本通常以 pythonw.exe 启动（GUI 子系统，无控制台，避免弹窗）。
+    但 pythonw **没有 stdout/stderr**——若子进程继承 sys.executable，则其全部
+    输出（含错误堆栈）会被静默丢弃。实测后果: eval_rigor 在链里 exit=1 且
+    日志中一行输出都没有，无法定位。
+    改用同目录的 python.exe，并配合 CREATE_NO_WINDOW（见 queue_guard）与
+    显式 stdout 重定向，即可既无窗口、又有完整日志。
+    """
+    exe = sys.executable
+    if os.name == "nt" and exe.lower().endswith("pythonw.exe"):
+        cand = os.path.join(os.path.dirname(exe), "python.exe")
+        if os.path.exists(cand):
+            return cand
+    return exe
+
+
 def log(msg):
     line = f"[chain {time.strftime('%F %T')}] {msg}"
     print(line, flush=True)
@@ -74,7 +92,7 @@ def main():
         # 输出重定向到各自日志，避免污染 chain.log
         out_log = os.path.join(_HERE, f"{os.path.basename(step).replace('.py','')}.log")
         with open(out_log, "a", encoding="utf-8") as fh:
-            rc = subprocess.run([sys.executable, "-u", path, "--no-wait"],
+            rc = subprocess.run([_child_python(), "-u", path, "--no-wait"],
                                 cwd=BASE, stdout=fh, stderr=subprocess.STDOUT,
                                 **_no_window_kwargs()).returncode
         log(f"{step} 结束 rc={rc} 用时 {(time.time()-t0)/60:.1f} 分钟 -> {os.path.basename(out_log)}")
