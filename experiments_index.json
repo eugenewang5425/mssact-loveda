@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-12 17:44:10",
+  "generated_at": "2026-09-12 19:11:41",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 69,
+  "n_tags": 71,
   "unregistered_tags": []
  },
  "comparable_groups": {
@@ -148,13 +148,13 @@
   },
   "lgR-roll/架构基线": {
    "n_experiments": 1,
-   "n_complete": 0,
-   "best_kappa_in_series": 0.462
+   "n_complete": 1,
+   "best_kappa_in_series": 0.632
   },
   "lgR-roll/架构消融与容量": {
-   "n_experiments": 1,
-   "n_complete": 1,
-   "best_kappa_in_series": 0.6293
+   "n_experiments": 3,
+   "n_complete": 2,
+   "best_kappa_in_series": 0.6375
   }
  },
  "experiments": {
@@ -851,13 +851,75 @@
     "deconv_kernels": 0
    }
   },
+  "lgR_D2_decoder_ca": {
+   "series": "lgR-roll/架构消融与容量",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.637508,
+   "best_epoch": 51,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.115,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_D3_ch_tiny": {
+   "series": "lgR-roll/架构消融与容量",
+   "status": "partial(33/60)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.545903,
+   "best_epoch": 32,
+   "epochs_run": 33,
+   "target_epochs": 60,
+   "params_M": 1.547,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 16,
+    "stage_ch": [
+     16,
+     32,
+     64,
+     128
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
   "lgR_bs8_full_lr2e4": {
    "series": "lgR-roll/架构基线",
-   "status": "partial(21/60)",
+   "status": "complete",
    "pipeline": "P-MEM-ROLL",
-   "best_kappa": 0.462028,
-   "best_epoch": 21,
-   "epochs_run": 21,
+   "best_kappa": 0.632045,
+   "best_epoch": 58,
+   "epochs_run": 60,
    "target_epochs": 60,
    "params_M": 6.102,
    "has_weight": true,

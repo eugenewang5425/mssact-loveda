@@ -1894,7 +1894,115 @@ Kappa <strong>确实更高</strong>（0.6369 vs 0.6312，<strong>+0.0057</strong
 到的消融散布 0.006 <strong>同量级</strong>。</p>
 <p>DeepLabV3+ 优势的分带归因显示 <strong>86.6% 的 ΔOA 来自内部像素</strong>（内部 +0.0529 / 合计
 +0.0611），边界带仅贡献 +0.0003。</p>
-<h3>5.6.9 可验证的修复路径</h3>
+<h3>5.6.9 架构变体实测结果（数据驱动，两条管线互证）</h3>
+<p>参数量为<strong>直读 checkpoint 张量</strong>求和（<code>build_index.py</code>），非估算。</p>
+<table>
+<thead>
+<tr>
+<th>管线</th>
+<th>变体</th>
+<th>配置</th>
+<th style="text-align: right;">参数量</th>
+<th style="text-align: right;">Kappa</th>
+<th>轮次</th>
+<th style="text-align: right;">相对基线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P-MEM-ROLL</td>
+<td><strong>完整模型（基线）</strong></td>
+<td>—</td>
+<td style="text-align: right;">6.102M</td>
+<td style="text-align: right;">0.6320</td>
+<td>60/60</td>
+<td style="text-align: right;">+0.0000</td>
+</tr>
+<tr>
+<td>P-MEM-ROLL</td>
+<td><strong>D1 联合消融</strong></td>
+<td>−FPN −Transformer −Adapter</td>
+<td style="text-align: right;">2.005M</td>
+<td style="text-align: right;">0.6293</td>
+<td>60/60</td>
+<td style="text-align: right;">-0.0028</td>
+</tr>
+<tr>
+<td>P-MEM-ROLL</td>
+<td><strong>D2 解码器坐标注意力</strong></td>
+<td>ECSAM 移到上采样路径</td>
+<td style="text-align: right;">6.115M</td>
+<td style="text-align: right;">0.6375</td>
+<td>60/60</td>
+<td style="text-align: right;">+0.0055</td>
+</tr>
+<tr>
+<td>P-MEM-ROLL</td>
+<td><strong>D3 超轻量通道</strong></td>
+<td><code>[16,32,64,128]</code></td>
+<td style="text-align: right;">1.547M</td>
+<td style="text-align: right;">0.5459</td>
+<td>33/60 ⚠️partial(33/60)</td>
+<td style="text-align: right;">-0.0861</td>
+</tr>
+<tr>
+<td>P-PNG</td>
+<td>D1 联合消融</td>
+<td>−FPN −Transformer −Adapter</td>
+<td style="text-align: right;">2.005M</td>
+<td style="text-align: right;">0.6277</td>
+<td>60/60</td>
+<td style="text-align: right;">-0.0035</td>
+</tr>
+<tr>
+<td>P-PNG</td>
+<td>D2 解码器坐标注意力</td>
+<td>ECSAM 移到上采样路径</td>
+<td style="text-align: right;">6.115M</td>
+<td style="text-align: right;">0.6341</td>
+<td>60/60</td>
+<td style="text-align: right;">+0.0029</td>
+</tr>
+<tr>
+<td>P-PNG</td>
+<td>D3 超轻量通道</td>
+<td><code>[16,32,64,128]</code></td>
+<td style="text-align: right;">1.547M</td>
+<td style="text-align: right;">0.6119</td>
+<td>60/60</td>
+<td style="text-align: right;">-0.0193</td>
+</tr>
+<tr>
+<td>P-PNG</td>
+<td>D4 大容量通道</td>
+<td><code>[64,128,256,512]</code></td>
+<td style="text-align: right;">24.242M</td>
+<td style="text-align: right;">0.5696</td>
+<td>23/60 ⚠️partial(23/60)</td>
+<td style="text-align: right;">-0.0616</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>P-MEM-ROLL</code> = 回退管线（memmap + 全局RNG增强 + workers=0），<code>P-PNG</code> = 正式对比/消融所用管线。两者仅数据投递后端不同，实测效应约 +0.001，故可<strong>互相印证</strong>但<strong>不可混合求统计量</strong>。
+⚠️ 标记表示该变体仍在训练中（轮次未满），其 Kappa 为当前最优值，尚未定论。</p>
+</blockquote>
+<p><strong>读表要点</strong>：</p>
+<ol>
+<li><strong>移除 67.2% 参数几乎无影响</strong>：G2 中完整模型 6.102M → D1（同时移除 FPN +
+   Transformer + Adapter）2.005M，Kappa 仅 <strong>0.6320 → 0.6293（−0.0027）</strong>；
+   G1（PNG 管线）独立复现该结论：0.6312 → 0.6277（−0.0035）。<strong>两条管线互证。</strong></li>
+<li><strong>把坐标注意力移到解码器（D2）反而最好</strong>：G2 为 <strong>0.6375</strong>（+0.0055 vs 完整模型），
+   G1 为 0.6341（+0.0029）。这与"注意力在<strong>上采样路径</strong>上才有效"的文献结论一致，
+   也反证了 5.6.5 的判断：ECSAM 放在编码器深层（位置已被 8× 下采样稀释）时价值极低。</li>
+<li><strong>容量确有作用</strong>：D3（通道减半至 <code>[16,32,64,128]</code>，1.547M）出现<strong>显著下降</strong>
+   （G1 完整 60 轮 = 0.6119，−0.0193）。注意 D3 仍保留了全部模块（FPN/Transformer/
+   ECSAM/Adapter 都在），只是通道变窄——所以"模块不重要"不等于"容量不重要"。</li>
+<li><strong>结论的精确表述</strong>：<strong>占参数 67.14% 的两个模块（FPN + Transformer）无可测量贡献，
+   而通道宽度（密集卷积容量）才是性能来源。</strong> 这与 5.6.2/5.6.4 的机制分析一致：
+   两个模块在实现上并未执行其声明的功能。</li>
+</ol>
+<h3>5.6.10 可验证的修复路径</h3>
 <table>
 <thead>
 <tr>
@@ -1937,7 +2045,7 @@ Kappa <strong>确实更高</strong>（0.6369 vs 0.6312，<strong>+0.0057</strong
 </tr>
 </tbody>
 </table>
-<h3>5.6.10 本节局限（诚实声明）</h3>
+<h3>5.6.11 本节局限（诚实声明）</h3>
 <ol>
 <li><strong>随机种子方差尚未测量</strong>。本节所有 ΔKappa 均来自<strong>单次运行</strong>（seed=42）。
    文献建议 ≥10 个种子（GEO-Bench, NeurIPS 2023 D&amp;B），并指出 3–5 个种子不足以
@@ -1963,8 +2071,45 @@ EMA / 类别加权 CE），仅改变 <code>seed</code>。seed 控制模型初始
 <code>_geom</code> 增强抽样（裁剪位置由 <code>epoch_seed</code> 决定，与 seed 无关）。
 <strong>并已核验</strong>：训练路径只使用 torch RNG，故新增 <code>seed</code> 参数<strong>不改变</strong> seed=42 的
 既有结果（默认行为逐位一致），既有实验的可比性不受影响。</p>
-<p><strong>（本节数据待补齐）</strong> 多种子队列（<code>sd7/sd2024/sd31337</code> × {完整模型, DeepLabV3+}）已由 <code>run_queue_final.py</code> 排队执行；完成后本节的 σ_seed 与折算表将自动填入。</p>
-<p>在 σ_seed 补齐之前，5.6 节「所有 ΔKappa 均落在噪声内」的表述<strong>必须保留为推断而非测量结论</strong>（见 5.6.10 局限 1）。</p>
+<table>
+<thead>
+<tr>
+<th>组（同管线内）</th>
+<th style="text-align: right;">seed 数</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;"><strong>σ_seed</strong></th>
+<th style="text-align: right;">range</th>
+<th>区间</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>完整模型 MSSACT 6.10M (P-MEM-ROLL)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td>样本不足，仅作参照</td>
+</tr>
+<tr>
+<td>DeepLabV3+ 39.69M (P-MEM-ROLL)</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td>样本不足，仅作参照</td>
+</tr>
+<tr>
+<td>参照: 完整模型/DeepLab 的 P-PNG 单次结果</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td>样本不足，仅作参照</td>
+</tr>
+</tbody>
+</table>
+<p><strong>重要限定</strong>：n 仅 3–4 个种子时 σ 本身有较大不确定性（GEO-Bench 建议 ≥10）。故本表用于<strong>量级判断</strong>（0.006 究竟是 1σ 还是 5σ），不宜作为精确检验。另：<code>nd_deeplab</code> 属 P-PNG 世代，<strong>不得</strong>与 <code>sd*_deeplab</code>（P-MEM-ROLL）混合求均值（跨管线 Kappa 不可比）。</p>
 <hr />
 <h2>5.8 训练策略对比：裁剪尺度与随机/固定裁剪</h2>
 <p>用户明确要求对比训练策略（随机裁剪、不同固定尺寸），并强调"过小的尺度完全

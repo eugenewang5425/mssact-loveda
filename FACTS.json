@@ -1033,5 +1033,653 @@
    ],
    "seconds": 27
   }
+ },
+ "seed_variance": {
+  "groups": {
+   "完整模型 MSSACT 6.10M (P-MEM-ROLL)": {
+    "n": 1,
+    "note": "样本不足, 仅作参照"
+   },
+   "DeepLabV3+ 39.69M (P-MEM-ROLL)": {
+    "n": 0,
+    "note": "样本不足, 仅作参照"
+   },
+   "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
+    "n": 2,
+    "mean": 0.6594,
+    "std": 0.0399,
+    "min": 0.6312,
+    "max": 0.6876,
+    "range": 0.0564,
+    "members": {
+     "full_all_v2": 0.6312,
+     "nd_deeplab": 0.6876
+    }
+   }
+  },
+  "ablations": {
+   "P-MEM-ROLL (lgR_*)": {
+    "n": 3,
+    "spread": 0.1429,
+    "min": 0.4946,
+    "max": 0.6375,
+    "values": {
+     "lgR_D1_join_nofpn_notrans": 0.6293,
+     "lgR_D2_decoder_ca": 0.6375,
+     "lgR_D3_ch_tiny": 0.4946
+    }
+   },
+   "P-PNG (nd_abl_* + lg_D*)": {
+    "n": 8,
+    "spread": 0.0097,
+    "min": 0.6272,
+    "max": 0.6369,
+    "values": {
+     "nd_abl_no_emr": 0.6355,
+     "nd_abl_no_ecsam": 0.6272,
+     "nd_abl_no_fpn": 0.6314,
+     "nd_abl_no_trans": 0.6302,
+     "nd_abl_no_adapter": 0.6342,
+     "nd_abl_bilinear": 0.6369,
+     "nd_abl_trans4l": 0.6362,
+     "nd_abl_trans6l": 0.6335
+    }
+   }
+  }
+ },
+ "artifact": {
+  "label_edge_density": 0.007705,
+  "label_period_power_pct": {
+   "2": 0.7874,
+   "4": 1.3913,
+   "8": 1.3884,
+   "16": 1.3691
+  },
+  "period_metric": "FFT 功率占比(%%) 在周期 k 附近 ±3 bin; 仅用整行无 no-data 的行; 报告的是 模型/标签 的超额比",
+  "models": {
+   "full_all_v2": {
+    "name": "MSSACT-light 6.1M",
+    "edge_density": 0.03516,
+    "edge_ratio_vs_label": 4.563,
+    "period_power_pct": {
+     "2": 0.5521,
+     "4": 1.6017,
+     "8": 2.3005,
+     "16": 1.8051
+    },
+    "excess_vs_label": {
+     "2": 0.701,
+     "4": 1.151,
+     "8": 1.657,
+     "16": 1.318
+    },
+    "peak_excess_period": 8,
+    "decoder_upsample": 8,
+    "peak_matches_upsample": true
+   },
+   "nd_deeplab": {
+    "name": "DeepLabV3+ 39.7M",
+    "edge_density": 0.008839,
+    "edge_ratio_vs_label": 1.147,
+    "period_power_pct": {
+     "2": 0.7822,
+     "4": 1.3623,
+     "8": 1.3573,
+     "16": 1.3606
+    },
+    "excess_vs_label": {
+     "2": 0.993,
+     "4": 0.979,
+     "8": 0.978,
+     "16": 0.994
+    },
+    "peak_excess_period": 16,
+    "decoder_upsample": 4,
+    "peak_matches_upsample": false
+   },
+   "nd_fpn_seg": {
+    "name": "FPN 27.2M",
+    "edge_density": 0.010433,
+    "edge_ratio_vs_label": 1.354,
+    "period_power_pct": {
+     "2": 0.7829,
+     "4": 1.3696,
+     "8": 1.3844,
+     "16": 1.3522
+    },
+    "excess_vs_label": {
+     "2": 0.994,
+     "4": 0.984,
+     "8": 0.997,
+     "16": 0.988
+    },
+    "peak_excess_period": 8,
+    "decoder_upsample": 8,
+    "peak_matches_upsample": true
+   },
+   "nd_fcn": {
+    "name": "FCN 23.8M",
+    "edge_density": 0.01034,
+    "edge_ratio_vs_label": 1.342,
+    "period_power_pct": {
+     "2": 0.7613,
+     "4": 1.4172,
+     "8": 1.6017,
+     "16": 1.8566
+    },
+    "excess_vs_label": {
+     "2": 0.967,
+     "4": 1.019,
+     "8": 1.154,
+     "16": 1.356
+    },
+    "peak_excess_period": 16,
+    "decoder_upsample": 32,
+    "peak_matches_upsample": false
+   },
+   "nd_unet": {
+    "name": "U-Net 2.4M",
+    "edge_density": 0.021388,
+    "edge_ratio_vs_label": 2.776,
+    "period_power_pct": {
+     "2": 0.6453,
+     "4": 1.2359,
+     "8": 1.3813,
+     "16": 1.603
+    },
+    "excess_vs_label": {
+     "2": 0.82,
+     "4": 0.888,
+     "8": 0.995,
+     "16": 1.171
+    },
+    "peak_excess_period": 16,
+    "decoder_upsample": 16,
+    "peak_matches_upsample": true
+   },
+   "nd_swin_unet": {
+    "name": "Swin-Unet 32.7M",
+    "edge_density": 0.015043,
+    "edge_ratio_vs_label": 1.952,
+    "period_power_pct": {
+     "2": 0.7859,
+     "4": 1.3555,
+     "8": 1.3116,
+     "16": 1.3382
+    },
+    "excess_vs_label": {
+     "2": 0.998,
+     "4": 0.974,
+     "8": 0.945,
+     "16": 0.977
+    },
+    "peak_excess_period": 2,
+    "decoder_upsample": 16,
+    "peak_matches_upsample": false
+   }
+  }
+ },
+ "rigor": {
+  "sesoi": 0.02,
+  "n_boot": 1000,
+  "n_images": 141,
+  "boundary_frac_correct": 0.023619139822960124,
+  "boundary_def": "逐图 2D; 仅有效类别之间的边界 (排除 valid<->255 过渡)",
+  "class_names": [
+   "background",
+   "building",
+   "road",
+   "water",
+   "barren",
+   "forest",
+   "agriculture"
+  ],
+  "results": {
+   "full_all_v2": {
+    "source": "cache",
+    "kappa_pooled": 0.577442,
+    "kappa_img_mean": 0.442511,
+    "oa_img_mean": 0.664689,
+    "miou_pooled": 0.322861,
+    "per_class_iou": [
+     0.3809,
+     0.4114,
+     0.3761,
+     0.2999,
+     0.2329,
+     0.2644,
+     0.2944
+    ],
+    "miou_no_barren": 0.337847,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4517,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4805,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5213,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5727,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.7032,
+      "n": 115433613
+     }
+    }
+   },
+   "nd_unet": {
+    "source": "cache",
+    "kappa_pooled": 0.534821,
+    "kappa_img_mean": 0.404273,
+    "oa_img_mean": 0.629572,
+    "miou_pooled": 0.26747,
+    "per_class_iou": [
+     0.3417,
+     0.3698,
+     0.3483,
+     0.2382,
+     0.1687,
+     0.231,
+     0.1746
+    ],
+    "miou_no_barren": 0.283934,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4397,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4654,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5005,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5445,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6643,
+      "n": 115433613
+     }
+    }
+   },
+   "nd_fcn": {
+    "source": "cache",
+    "kappa_pooled": 0.541627,
+    "kappa_img_mean": 0.413391,
+    "oa_img_mean": 0.633897,
+    "miou_pooled": 0.293059,
+    "per_class_iou": [
+     0.3486,
+     0.3928,
+     0.3358,
+     0.2948,
+     0.1922,
+     0.2424,
+     0.2448
+    ],
+    "miou_no_barren": 0.309864,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4375,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4566,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.4865,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.531,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6729,
+      "n": 115433613
+     }
+    }
+   },
+   "nd_deeplab": {
+    "source": "cache",
+    "kappa_pooled": 0.649467,
+    "kappa_img_mean": 0.530701,
+    "oa_img_mean": 0.725579,
+    "miou_pooled": 0.401649,
+    "per_class_iou": [
+     0.4552,
+     0.495,
+     0.4908,
+     0.3909,
+     0.2935,
+     0.2814,
+     0.4046
+    ],
+    "miou_no_barren": 0.419669,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4657,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.5059,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5595,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.6237,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.7707,
+      "n": 115433613
+     }
+    }
+   },
+   "nd_fpn_seg": {
+    "source": "cache",
+    "kappa_pooled": 0.543981,
+    "kappa_img_mean": 0.415371,
+    "oa_img_mean": 0.636412,
+    "miou_pooled": 0.309437,
+    "per_class_iou": [
+     0.3541,
+     0.4057,
+     0.3489,
+     0.3071,
+     0.2001,
+     0.2465,
+     0.3037
+    ],
+    "miou_no_barren": 0.327664,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4414,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4661,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5005,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5423,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6732,
+      "n": 115433613
+     }
+    }
+   },
+   "nd_swin_unet": {
+    "source": "cache",
+    "kappa_pooled": 0.504078,
+    "kappa_img_mean": 0.366038,
+    "oa_img_mean": 0.60751,
+    "miou_pooled": 0.282959,
+    "per_class_iou": [
+     0.3445,
+     0.3386,
+     0.2999,
+     0.3035,
+     0.1801,
+     0.2415,
+     0.2726
+    ],
+    "miou_no_barren": 0.300098,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4237,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4484,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.481,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5202,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6418,
+      "n": 115433613
+     }
+    }
+   }
+  }
+ },
+ "arch_defects": {
+  "D1_fpn_dead_branches": {
+   "claim": "FPN 自顶向下融合只写入 laterals[0..2], 而 forward 只用 fpn_features[-1]",
+   "verification": "归零 lateral_convs[0..2] / 用'仅第4支路'等价算子替换整个 FPN",
+   "output_diff": 0.0,
+   "dead_params": 1828352,
+   "model_params": 6101784,
+   "dead_frac": 0.2996,
+   "effective_frac": 0.7004
+  },
+  "D2_no_skip_connections": {
+   "claim": "解码器只接收 32x32 特征, 无 encoder->decoder 跳连, 上采样 8 倍",
+   "resolutions": [
+    256,
+    128,
+    64,
+    32
+   ],
+   "decoder_input": 32,
+   "note": "256/128/64 特征从未到达输出; 输出细节为合成而非测量"
+  },
+  "D3_no_positional_encoding": {
+   "claim": "TransformerEncoder 摊平为 token 后未加位置编码",
+   "verification": "随机置换 token 后按逆置换还原输出",
+   "output_diff": 7.153e-07,
+   "note": "置换等变 -> 无空间位置感知; 但卷积特征提供隐式位置锚点, 属机制降级而非失效"
+  },
+  "D4_coord_attention_share": {
+   "ecsam_params": 55044,
+   "frac": 0.009
+  }
+ },
+ "arch_experiments": {
+  "rows": {
+   "lgR_bs8_full_lr2e4": {
+    "series": "lgR-roll/架构基线",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.632045,
+    "best_epoch": 58,
+    "epochs_run": 60,
+    "params_M": 6.102,
+    "epochs_total": 60
+   },
+   "lgR_D1_join_nofpn_notrans": {
+    "series": "lgR-roll/架构消融与容量",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.629275,
+    "best_epoch": 55,
+    "epochs_run": 60,
+    "params_M": 2.005,
+    "epochs_total": 60
+   },
+   "lgR_D2_decoder_ca": {
+    "series": "lgR-roll/架构消融与容量",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.637508,
+    "best_epoch": 51,
+    "epochs_run": 60,
+    "params_M": 6.115,
+    "epochs_total": 60
+   },
+   "lgR_D3_ch_tiny": {
+    "series": "lgR-roll/架构消融与容量",
+    "pipeline": "P-MEM-ROLL",
+    "status": "partial(33/60)",
+    "kappa": 0.545903,
+    "best_epoch": 32,
+    "epochs_run": 33,
+    "params_M": 1.547,
+    "epochs_total": 60
+   },
+   "lg_D1_join_nofpn_notrans": {
+    "series": "lg-old/架构(旧管线)",
+    "pipeline": "P-PNG",
+    "status": "complete",
+    "kappa": 0.627695,
+    "best_epoch": 53,
+    "epochs_run": 60,
+    "params_M": 2.005,
+    "epochs_total": 60
+   },
+   "lg_D2_decoder_ca": {
+    "series": "lg-old/架构(旧管线)",
+    "pipeline": "P-PNG",
+    "status": "complete",
+    "kappa": 0.634124,
+    "best_epoch": 54,
+    "epochs_run": 60,
+    "params_M": 6.115,
+    "epochs_total": 60
+   },
+   "lg_D3_ch_tiny": {
+    "series": "lg-old/架构(旧管线)",
+    "pipeline": "P-PNG",
+    "status": "complete",
+    "kappa": 0.61188,
+    "best_epoch": 60,
+    "epochs_run": 60,
+    "params_M": 1.547,
+    "epochs_total": 60
+   },
+   "lg_D4_ch_large": {
+    "series": "lg-old/架构(旧管线)",
+    "pipeline": "P-PNG",
+    "status": "partial(23/60)",
+    "kappa": 0.569626,
+    "best_epoch": 23,
+    "epochs_run": 23,
+    "params_M": 24.242,
+    "epochs_total": 60
+   }
+  },
+  "comparable_groups": {
+   "G1-PNG-60ep": {
+    "pipeline": "P-PNG",
+    "root": "DATA_NEWSPLIT2",
+    "protocol": "60ep/pt20/bs8/lr2e-4",
+    "members": [
+     "full_all_v2",
+     "nd_abl_no_emr",
+     "nd_abl_no_ecsam",
+     "nd_abl_no_fpn",
+     "nd_abl_no_trans",
+     "nd_abl_no_adapter",
+     "nd_abl_bilinear",
+     "nd_abl_trans4l",
+     "nd_abl_trans6l",
+     "lg_D1_join_nofpn_notrans",
+     "lg_D2_decoder_ca",
+     "lg_D3_ch_tiny",
+     "lg_D4_ch_large"
+    ],
+    "note": "对比实验基线组 (nd_unet/pspnet/fcn/deeplab/segformer/fpn_seg/swin_unet) 同为 P-PNG/60ep/pt20/bs8/lr2e-4, 与本组可比较"
+   },
+   "G2-MEM-ROLL-60ep": {
+    "pipeline": "P-MEM-ROLL",
+    "root": "DATA_NEWSPLIT2",
+    "protocol": "60ep/pt20/bs8/lr2e-4",
+    "members": [
+     "lgR_bs8_full_lr2e4",
+     "lgR_D1_join_nofpn_notrans",
+     "lgR_D2_decoder_ca",
+     "lgR_D3_ch_tiny",
+     "lgR_D4_ch_large"
+    ],
+    "note": "架构结论的复现组; 与 G1 的差异仅为数据投递后端 (memmap vs PNG), 该差异已实测为 +0.0016 (lgR_D1 0.6293 vs lg_D1 0.6277)"
+   },
+   "G3-b15": {
+    "pipeline": "P-PNG",
+    "root": "DATA_NEWSPLIT2",
+    "protocol": "15ep/pt15/bs8/lr2e-4",
+    "members": [
+     "lg_b15_full",
+     "lg_b15_noecsam",
+     "lg_b15_noemr",
+     "lg_b15_unet",
+     "lg_b15_deeplab"
+    ],
+    "note": "预算攻击: 检验'充足预算是否掩盖模块差异'"
+   },
+   "REJECTED": {
+    "pipeline": "P-MEM-DET",
+    "members": [
+     "lgF_D1_join_nofpn_notrans",
+     "lgF_D2_decoder_ca",
+     "lgF_D3_ch_tiny",
+     "lgF_D4_ch_large",
+     "lgF_bs8_full_lr2e4",
+     "lgF_bs16_full_lr4e4"
+    ],
+    "note": "确定性增强世代, 相对 P-PNG 损失 0.0246 Kappa, 结论一律不引用"
+   }
+  },
+  "g2_full": 0.632045,
+  "g2_d1": 0.629275,
+  "g1_full": 0.6312,
+  "g1_d1": 0.627695
  }
 }

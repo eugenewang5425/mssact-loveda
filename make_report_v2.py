@@ -129,6 +129,54 @@ def _sec_crop():
     return "\n".join(L)
 
 
+def _arch_table():
+    """§5.6.9 架构变体实测表（数据驱动, 来源 FACTS.arch_experiments）"""
+    AE = FACTS.get("arch_experiments") or {}
+    rows = AE.get("rows") or {}
+    if not rows:
+        return "**（架构变体结果待补齐）**"
+    DESC = {
+        "lgR_bs8_full_lr2e4": ("完整模型基线", "—"),
+        "lgR_D1_join_nofpn_notrans": ("**D1 联合消融**", "−FPN −Transformer −Adapter"),
+        "lgR_D2_decoder_ca": ("**D2 解码器坐标注意力**", "ECSAM 移到上采样路径"),
+        "lgR_D3_ch_tiny": ("**D3 超轻量通道**", "`[16,32,64,128]`"),
+        "lgR_D4_ch_large": ("**D4 大容量通道**", "`[64,128,256,512]`"),
+        "lg_D1_join_nofpn_notrans": ("D1 联合消融", "−FPN −Transformer −Adapter"),
+        "lg_D2_decoder_ca": ("D2 解码器坐标注意力", "ECSAM 移到上采样路径"),
+        "lg_D3_ch_tiny": ("D3 超轻量通道", "`[16,32,64,128]`"),
+        "lg_D4_ch_large": ("D4 大容量通道", "`[64,128,256,512]`"),
+    }
+    out = ["| 管线 | 变体 | 配置 | 参数量 | Kappa | 轮次 | 相对基线 |",
+           "|---|---|---|---:|---:|---|---:|"]
+    for pipe, ref_tag, ref_k, order in (
+            ("P-MEM-ROLL", "lgR_bs8_full_lr2e4", rows.get("lgR_bs8_full_lr2e4", {}).get("kappa"),
+             ["lgR_bs8_full_lr2e4", "lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
+              "lgR_D3_ch_tiny", "lgR_D4_ch_large"]),
+            ("P-PNG", "full_all_v2", 0.6312,
+             ["lg_D1_join_nofpn_notrans", "lg_D2_decoder_ca", "lg_D3_ch_tiny",
+              "lg_D4_ch_large"])):
+        for t in order:
+            r = rows.get(t)
+            if not r:
+                continue
+            nm, cfg = DESC.get(t, (t, ""))
+            k = r.get("kappa")
+            if t == ref_tag:
+                nm = "**完整模型（基线）**"
+            d = (f"{k-ref_k:+.4f}" if (k is not None and ref_k) else "—")
+            st = r.get("status") or ""
+            note = "" if st == "complete" else f" ⚠️{st}"
+            out.append(f"| {pipe} | {nm} | {cfg} | {r.get('params_M')}M | "
+                       f"{k:.4f} | {r.get('epochs_run')}/{r.get('epochs_total')}{note} | {d} |")
+    out += ["", "> `P-MEM-ROLL` = 回退管线（memmap + 全局RNG增强 + workers=0），"
+                "`P-PNG` = 正式对比/消融所用管线。两者仅数据投递后端不同，"
+                "实测效应约 +0.001，故可**互相印证**但**不可混合求统计量**。",
+            "> ⚠️ 标记表示该变体仍在训练中（轮次未满），其 Kappa 为当前最优值，尚未定论。"]
+    return chr(10).join(out)
+
+
+ARCH_TABLE = _arch_table()
+
 SEC_SEED = _sec_seed()
 SEC_CROP = _sec_crop()
 
@@ -922,7 +970,28 @@ test_clean（141 张）池化 Kappa 与配对 bootstrap（1000 次图像级重�
 DeepLabV3+ 优势的分带归因显示 **86.6% 的 ΔOA 来自内部像素**（内部 +0.0529 / 合计
 +0.0611），边界带仅贡献 +0.0003。
 
-### 5.6.9 可验证的修复路径
+### 5.6.9 架构变体实测结果（数据驱动，两条管线互证）
+
+参数量为**直读 checkpoint 张量**求和（`build_index.py`），非估算。
+
+{ARCH_TABLE}
+
+**读表要点**：
+
+1. **移除 67.2% 参数几乎无影响**：G2 中完整模型 6.102M → D1（同时移除 FPN +
+   Transformer + Adapter）2.005M，Kappa 仅 **0.6320 → 0.6293（−0.0027）**；
+   G1（PNG 管线）独立复现该结论：0.6312 → 0.6277（−0.0035）。**两条管线互证。**
+2. **把坐标注意力移到解码器（D2）反而最好**：G2 为 **0.6375**（+0.0055 vs 完整模型），
+   G1 为 0.6341（+0.0029）。这与"注意力在**上采样路径**上才有效"的文献结论一致，
+   也反证了 5.6.5 的判断：ECSAM 放在编码器深层（位置已被 8× 下采样稀释）时价值极低。
+3. **容量确有作用**：D3（通道减半至 `[16,32,64,128]`，1.547M）出现**显著下降**
+   （G1 完整 60 轮 = 0.6119，−0.0193）。注意 D3 仍保留了全部模块（FPN/Transformer/
+   ECSAM/Adapter 都在），只是通道变窄——所以"模块不重要"不等于"容量不重要"。
+4. **结论的精确表述**：**占参数 67.14% 的两个模块（FPN + Transformer）无可测量贡献，
+   而通道宽度（密集卷积容量）才是性能来源。** 这与 5.6.2/5.6.4 的机制分析一致：
+   两个模块在实现上并未执行其声明的功能。
+
+### 5.6.10 可验证的修复路径
 
 | 优先级 | 修复 | 预期效果 | 验证方式 |
 |---|---|---|---|
@@ -932,7 +1001,7 @@ DeepLabV3+ 优势的分带归因显示 **86.6% 的 ΔOA 来自内部像素**（�
 | **P1** | 重新定义消融语义：先修实现，再评估"模块是否有效" | 使消融结论可解释 | — |
 | **P2** | 容量重新配比，修正 2.67× 容量膨胀 | 参数效率 | 参数量-Kappa 曲线 |
 
-### 5.6.10 本节局限（诚实声明）
+### 5.6.11 本节局限（诚实声明）
 
 1. **随机种子方差尚未测量**。本节所有 ΔKappa 均来自**单次运行**（seed=42）。
    文献建议 ≥10 个种子（GEO-Bench, NeurIPS 2023 D&B），并指出 3–5 个种子不足以

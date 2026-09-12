@@ -143,6 +143,36 @@ F["arch_defects"] = {
     "D4_coord_attention_share": {"ecsam_params": 55044, "frac": 0.009},
 }
 
+# ========== 架构实验 (lgR_* 回退管线) 汇总 ==========
+# 来源: experiments_index.json (参数量直读张量, 由 build_index.py 生成)
+F["arch_experiments"] = None
+_idx = f"{BASE}/experiments_index.json"
+if os.path.exists(_idx):
+    _d = json.load(open(_idx, encoding="utf-8"))
+    _e = _d.get("experiments", {})
+    _want = ["lgR_bs8_full_lr2e4", "lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
+             "lgR_D3_ch_tiny", "lgR_D4_ch_large",
+             "lg_D1_join_nofpn_notrans", "lg_D2_decoder_ca", "lg_D3_ch_tiny",
+             "lg_D4_ch_large"]
+    _rows = {}
+    for _t in _want:
+        _r = _e.get(_t)
+        if _r:
+            _rows[_t] = dict(series=_r.get("series"), pipeline=_r.get("pipeline"),
+                             status=_r.get("status"), kappa=_r.get("best_kappa"),
+                             best_epoch=_r.get("best_epoch"),
+                             epochs_run=_r.get("epochs_run"),
+                             params_M=_r.get("params_M"),
+                             epochs_total=_r.get("target_epochs"))
+    F["arch_experiments"] = dict(
+        rows=_rows,
+        comparable_groups=_d.get("comparable_groups"),
+        # 同管线内的关键对照 (G2 = P-MEM-ROLL, 回退管线)
+        g2_full=_rows.get("lgR_bs8_full_lr2e4", {}).get("kappa"),
+        g2_d1=_rows.get("lgR_D1_join_nofpn_notrans", {}).get("kappa"),
+        # G1 = P-PNG (与正式对比/消融同管线)
+        g1_full=0.6312, g1_d1=_rows.get("lg_D1_join_nofpn_notrans", {}).get("kappa"))
+
 json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
 
 # 打印摘要
