@@ -264,7 +264,8 @@ loveda/
 ├── prep/                       # 数据准备
 │   ├── resplit_filtered.py     #   no-data 筛选 + MD5 去重 + 8:1:1 划分
 │   ├── build_data_ladder.py    #   嵌套数据阶梯子集（250/500/1000）
-│   └── build_fast_dataset.py   #   预解码 memmap（消除 PNG 解码瓶颈）
+│   ├── build_fast_dataset.py   #   预解码主数据集 memmap（消除 PNG 解码瓶颈）
+│   └── build_ladder_memmap.py  #   预解码阶梯子集 memmap（ladder_n250/500/1000）
 │
 ├── viz/                        # 图表
 │   ├── make_figures.py         #   学习曲线 / 消融 / 每类 F1 / 同 tile 对比
@@ -323,7 +324,8 @@ pip install -r requirements.txt
 python prep/resplit_filtered.py       # no-data 筛选 + 去重 + 划分
 python verify/verify_split2.py        # 泄漏校验
 python prep/build_data_ladder.py      # 数据阶梯子集（可选）
-python prep/build_fast_dataset.py     # 预解码 memmap（强烈建议，提速约 10 倍）
+python prep/build_fast_dataset.py     # 预解码主数据集 memmap（强烈建议，提速约 10 倍）
+python prep/build_ladder_memmap.py    # 预解码阶梯子集 memmap（数据阶梯必需；跑前先停队列）
 
 # 2) 训练（队列自动串行、断点续跑、OOM 自动降 batch）
 python queues/run_queue_new.py        # 主模型 + 对比(7) + 消融(8)

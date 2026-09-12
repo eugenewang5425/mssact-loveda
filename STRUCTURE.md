@@ -169,7 +169,12 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 |---|---|
 | `resplit_filtered.py` | no-data ≤10% 筛选 + MD5 去重 + 8:1:1 划分 |
 | `build_data_ladder.py` | 嵌套数据阶梯子集（250/500/1000），分层抽样 |
-| `build_fast_dataset.py` | 预解码 memmap（`fast_dataset/`），消除 PNG 解码瓶颈 |
+| `build_fast_dataset.py` | 预解码主数据集 memmap（`fast_dataset/`），消除 PNG 解码瓶颈 |
+| `build_ladder_memmap.py` | 预解码**数据阶梯子集** memmap（`fast_dataset/ladder_n{250,500,1000}/`） |
+
+> ⚠️ 两个预解码脚本都是**重量级磁盘 I/O**（解码 PNG + 写数 GB），会与训练的
+> memmap 随机读争抢磁盘——实测可使轮次耗时恶化约 10 倍（D4 从 87 s/轮 到 866 s/轮）。
+> **务必在训练队列停止时运行。**
 
 ### 2.6 `viz/` 与 `report/`
 
@@ -198,7 +203,7 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 | 路径 | 内容 | 入库 |
 |---|---|---|
 | `checkpoints/` | 权重（`*_best.pt`）+ 训练历史（`*_history.json`） | ❌ |
-| `fast_dataset/` | 预解码 memmap（约 9.9 GB） | ❌ |
+| `fast_dataset/` | 预解码 memmap：主数据集（约 9.9 GB）+ 阶梯子集 `ladder_n*`（约 7.3 GB） | ❌ |
 | `fulltile_eval/` `tta_eval*/` `heldout_test/` | 全图/TTA/持有测试评估 + 预测 PNG | ❌ |
 | `consensus_analysis/` | 一致性分析 + 预测数组 + `boundary_analysis.json`（含 `.bak_*`）+ `rigor.json` + `headroom.json` + `artifact.json` | ❌（仅汇总 JSON ✅） |
 | `overfit_diag/` `ladder_eval/` | 诊断与阶梯评价结果 | ❌ |
