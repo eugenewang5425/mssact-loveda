@@ -1021,6 +1021,200 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <p><strong>结论</strong>：除 SegFormer 外普遍存在中度过拟合；数据量提升后泛化差距缩小
 （test 与 val 的 Kappa 接近）。</p>
 <hr />
+<h2>5.5 训练基础设施与硬件效率优化</h2>
+<h3>5.5.1 问题诊断：GPU 半时间空闲</h3>
+<p>在训练进行中连续采样（480 样本 / 274 秒），发现 <strong>GPU 利用率仅 49.9%</strong>，且
+<strong>34.6% 的时间处于基本空闲（&lt;10%）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>优化前</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU 利用率均值 / 中位</td>
+<td>49.9% / 43%</td>
+</tr>
+<tr>
+<td>低于 10%（基本空闲）</td>
+<td><strong>34.6% 的时间</strong></td>
+</tr>
+<tr>
+<td>低于 30%</td>
+<td>42.9% 的时间</td>
+</tr>
+<tr>
+<td>高于 90%</td>
+<td>31.7% 的时间</td>
+</tr>
+<tr>
+<td>功耗均值</td>
+<td>88.5 W（上限 180 W）</td>
+</tr>
+</tbody>
+</table>
+<p>时序采样呈现规律的「空闲簇 → 满载簇」周期（每 5–10 秒循环），是典型的
+<strong>等待数据</strong>特征：</p>
+<pre><code>____=+=___-+=-___-+=___=#__-##=_=##=-=_-###=__+##+___=##=__-+#+-__=##+___
+（_ &lt;10%, - &lt;30%, = &lt;60%, + &lt;90%, # ≥90%）
+</code></pre>
+<h3>5.5.2 瓶颈定位：参数量-耗时无关性检验</h3>
+<p>最有力的证据来自<strong>不同容量实验的每轮耗时</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>实验</th>
+<th>参数量</th>
+<th>每轮耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D3 通道[16,32,64,128]</td>
+<td><strong>1.55M</strong></td>
+<td>144 s</td>
+</tr>
+<tr>
+<td>D2 解码器CA</td>
+<td><strong>6.11M</strong></td>
+<td>159 s</td>
+</tr>
+<tr>
+<td>D4 通道[64,128,256,512]</td>
+<td><strong>24.24M</strong></td>
+<td>121–176 s</td>
+</tr>
+</tbody>
+</table>
+<p>参数量相差 <strong>15.6 倍</strong>，每轮耗时几乎不变。若 GPU 是瓶颈，D4 应显著慢于 D3——
+<strong>结论：每轮时间被数据管线钉住，且该成本对所有模型是同一常数。</strong></p>
+<p><strong>数据侧实测</strong>：每张训练图需解码两个 1024×1024 PNG（图像 1.96 MB + 掩膜），
+解码后仅裁出 256×256——<strong>94% 的解码结果被丢弃</strong>。单样本约 31–37 ms，
+一个 batch 约 310 ms。而数据加载配置为 <code>num_workers=0</code>，即解码与增强全部在
+训练主进程中<strong>串行执行</strong>，与 GPU 计算争用同一关键路径。</p>
+<h3>5.5.3 四项优化措施</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>措施</th>
+<th>原理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>预解码为 npy memmap</strong>（9.86 GB / 2351 张）</td>
+<td>一次性解码后以 <code>np.memmap</code> 随机裁剪，彻底消除 PNG 解码（保留"每轮每图随机位置"增强语义）</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong><code>num_workers=8</code> + <code>persistent_workers</code> + <code>prefetch_factor=4</code></strong></td>
+<td>解码/增强移出主进程，与 GPU 计算并行</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>EMA 改为遍历 <code>parameters()</code>/<code>buffers()</code></strong></td>
+<td>替代每步 <code>state_dict()</code>（省去字典构建开销）</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>损失张量累积，去掉每步 <code>.item()</code></strong></td>
+<td>消除每步 GPU→CPU 同步往返</td>
+</tr>
+</tbody>
+</table>
+<p><strong>附带改进</strong>：几何增强改为确定性 generator（种子由 <code>epoch_seed</code>+<code>idx</code> 决定），
+使增强序列<strong>与 DataLoader worker 数无关</strong>，训练完全可复现。</p>
+<h3>5.5.4 优化效果</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>优化前</th>
+<th>优化后</th>
+<th>改善</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GPU 利用率均值</strong></td>
+<td>49.9%</td>
+<td><strong>84.3%</strong></td>
+<td><strong>1.69×</strong></td>
+</tr>
+<tr>
+<td>中位数</td>
+<td>43%</td>
+<td>87%</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>低于 10%（空闲）</strong></td>
+<td><strong>34.6%</strong></td>
+<td><strong>0.0%</strong></td>
+<td><strong>完全消除</strong></td>
+</tr>
+<tr>
+<td>低于 30%</td>
+<td>42.9%</td>
+<td>0.0%</td>
+<td>完全消除</td>
+</tr>
+<tr>
+<td>高于 90%</td>
+<td>31.7%</td>
+<td><strong>91.0%</strong></td>
+<td>2.87×</td>
+</tr>
+<tr>
+<td>功耗均值</td>
+<td>88.5 W</td>
+<td>117.5 W</td>
+<td>1.33×</td>
+</tr>
+<tr>
+<td><strong>数据等待</strong></td>
+<td>59.3 s/轮（268 ms/batch）</td>
+<td><strong>0.9 s/轮（4 ms/batch）</strong></td>
+<td><strong>66×</strong></td>
+</tr>
+<tr>
+<td>每轮耗时（6.10M 模型）</td>
+<td>88.0 s</td>
+<td><strong>29.5 s</strong></td>
+<td><strong>3.0×</strong></td>
+</tr>
+<tr>
+<td>每轮耗时（2.00M 模型, 含验证/EMA/保存）</td>
+<td>~150 s</td>
+<td><strong>11–12 s</strong></td>
+<td><strong>~13×</strong></td>
+</tr>
+</tbody>
+</table>
+<p>优化后的时序采样<strong>无任何空闲帧</strong>：</p>
+<pre><code>+++++++++++#++++++++++#++=+++#+++++++=++#+++++++++++++#++++++#+#+++++++++...
+（+ 60–90%, # ≥90%）
+</code></pre>
+<p><strong>为何生产加速（13×）大于基准（3×）</strong>：优化前的瓶颈是<strong>固定成本</strong>（数据管线，
+与模型大小无关），因此模型越小、相对加速越显著——这从反面确认了瓶颈定位。</p>
+<h3>5.5.5 方法论价值</h3>
+<ol>
+<li><strong>瓶颈定位的判据</strong>：以"参数量-耗时无关性"区分"计算受限"与"数据受限"，
+   比单看 GPU 利用率更可靠</li>
+<li><strong>时序采样的必要性</strong>：均值会掩盖周期性等待；时序图能直接区分"随机波动"
+   与"规律的等待周期"</li>
+<li><strong>工程收益</strong>：实验队列总时长由约 <strong>24 小时压缩至约 3 小时</strong>，使更多
+   对照实验（架构验证、数据阶梯）在同等时间预算内成为可能</li>
+</ol>
+<p><strong>注</strong>：批量大小（batch）未作调整。显存实测表明 light 模型 batch=16 峰值
+4.61 GB（安全），batch=32 需 9.16 GB（超出 8 GB 会 OOM）；且优化后 GPU
+利用率已达 84%，继续增大 batch 的边际收益有限，而改变 batch 需按线性缩放
+规则重调学习率、会破坏与已完成实验的可比性，故保持 batch=8。</p>
+<hr />
 <h2>6. 关键结论</h2>
 <ol>
 <li><strong>数据量与数据质量共同决定上限</strong>：两者提升使主模型 Kappa 达到

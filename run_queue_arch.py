@@ -1,4 +1,8 @@
-"""实验队列 v2（按用户决策调整）:
+"""实验队列 v3（管线升级: memmap + 8 workers，实测 3.0x 加速）:
+  - tag 前缀 lgF_ 表示"fast pipeline"，与旧管线实验区分
+  - 阶梯子集用 PNG + workers=8（未预解码）
+
+实验队列 v2（按用户决策调整）:
   - 取消: 30.5M 全量模型（性价比低、自身问题大）
   - 保留: 数据量阶梯（用户明确要求）
   - 新增: 三个架构改进实验（针对分析发现的问题）
@@ -81,27 +85,39 @@ if __name__ == "__main__":
     print("\n===== D. 架构改进实验（针对分析发现）=====", flush=True)
     ARCH = [
         # (tag, 构造函数, 说明, 预算)
-        ("lg_D1_join_nofpn_notrans",
+        ("lgF_D1_join_nofpn_notrans",
          lambda: light(use_fpn=False, use_transformer=False),
          "联合消融: FPN+Transformer 同时移除 (验证功能冗余)", 60),
-        ("lg_D2_decoder_ca",
+        ("lgF_D2_decoder_ca",
          lambda: light(decoder_ca_stages=(0, 1)),
          "ECSAM 移到解码器上采样路径 (文献通行做法)", 60),
-        ("lg_D3_ch_tiny",
+        ("lgF_D3_ch_tiny",
          lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[16,32,64,128],
                            transformer_layers=2, transformer_heads=4),
          "超轻量通道 [16,32,64,128] (验证通道-空间比失衡)", 60),
-        ("lg_D4_ch_large",
+        ("lgF_D4_ch_large",
          lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[64,128,256,512],
                            transformer_layers=2, transformer_heads=4),
          "大容量通道 [64,128,256,512] (容量对照)", 60),
     ]
+    # batch 缩放对照（用户建议）: batch=16 (显存实测 4.61GB, 安全上限) vs 已有 batch=8
+    # 线性缩放规则 (Goyal et al. 2017): lr = 2e-4 * (16/8) = 4e-4
+    ARCH += [
+        ("lgF_bs8_full_lr2e4", lambda: light(),
+         "对照: 完整模型 batch=8 lr=2e-4 (新管线基线)", 60),
+        ("lgF_bs16_full_lr4e4", lambda: light(),
+         "实验: batch=16 lr=4e-4 (线性缩放, 验证精度/速度权衡)", 60),
+    ]
+
     for tag, fn, desc, ep in ARCH:
         st = tag_state(tag, ep)
         if st == "complete": print(f"SKIP {tag}", flush=True); continue
         print(f"=== {tag} ===\n    {desc}", flush=True)
+        # 按 tag 决定 batch/lr（bs16 实验用线性缩放后的 lr）
+        _bs = 16 if "bs16" in tag else 8
+        _lr = 4e-4 if "bs16" in tag else 2e-4
         try:
-            train_one(fn, tag, max_epochs=ep, patience=20, batch=8, lr=2e-4, root=ROOT_MAIN)
+            train_one(fn, tag, max_epochs=ep, patience=20, batch=_bs, lr=_lr, root=ROOT_MAIN)
         except Exception as e:
             print(f"FAILED {tag}: {type(e).__name__} {str(e)[:200]}", flush=True)
         verify(tag)
@@ -112,7 +128,7 @@ if __name__ == "__main__":
            ("noemr", lambda: light(use_emr=False)), ("unet", lambda: UNet()),
            ("deeplab", lambda: DeepLabV3Plus())]
     for mtag, fn in B15:
-        tag = f"lg_b15_{mtag}"
+        tag = f"lgF_b15_{mtag}"
         st = tag_state(tag, 15)
         if st == "complete": print(f"SKIP {tag}", flush=True); continue
         print(f"=== {tag} ===", flush=True)
@@ -130,13 +146,13 @@ if __name__ == "__main__":
             print(f"SKIP n{n} (无数据)", flush=True); continue
         for mtag, fn in [("full", lambda: light()), ("noecsam", lambda: light(use_ecsam=False)),
                          ("unet", lambda: UNet()), ("deeplab", lambda: DeepLabV3Plus())]:
-            tag = f"lg_n{n}_{mtag}"
+            tag = f"lgF_n{n}_{mtag}"
             st = tag_state(tag, 30)
             if st == "complete": print(f"SKIP {tag}", flush=True); continue
             print(f"=== {tag} ===", flush=True)
             try:
                 train_one(fn, tag, max_epochs=30, patience=30, batch=8, lr=2e-4,
-                          root=root, val_root=ROOT_MAIN)
+                          root=root, val_root=ROOT_MAIN, fast_data=False)  # 阶梯为 PNG 子集
             except Exception as e:
                 print(f"FAILED {tag}: {e}", flush=True)
             verify(tag)

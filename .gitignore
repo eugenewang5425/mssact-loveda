@@ -1,44 +1,46 @@
-
-# ---- 显式忽略已跟踪过的缓存 ----
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
 **/__pycache__/
 **/*.pyc
-*.pyc
-产物 (不入库) ----
-*.pt
+
+# ---- 本地环境与备份（严禁入库）----
 .env
+backups/
+_local_*
+
+# ---- 模型权重与训练产物 ----
+*.pt
 *.npz
 *.log
 checkpoints/*.json
 checkpoints/*.pt
 
-# ---- 原始数据与中间数据 (本地) ----
+# ---- 原始数据与预解码数据集 ----
 data/
+_data/
+_gf_data/
 patches/
 vis/
-eval/
-eval/
+fast_dataset/
 
-# ---- 结果目录 (可复现生成, 不入库) ----
+# ---- 评估结果（可复现生成；保留 conf JSON）----
+eval/
+fulltile_eval/preds_*/
+heldout_test/*.png
+tta_eval*/**/*.png
+overfit_diag/*.png
+ladder_eval/*.png
 consensus_analysis/pred_*.npz
 consensus_analysis/labels.npz
 genhe_map*/
 
-# ---- 临时/生成文件 ----
+# ---- 临时与剖析产物 ----
 check_*.png
 stdout.txt
 *_new.pdf
 *_v3.pdf
-
-
-# ---- 本地备份（脱敏前的脚本副本，严禁入库）----
-backups/
-/backups/
-
-# ---- 评估产物：保留 conf JSON, 忽略预测图/权重 ----
-fulltile_eval/preds_*/
-overfit_diag/*.png
-heldout_test/*.png
-tta_eval*/**/*.png
-consensus_analysis/pred_*.npz
-consensus_analysis/labels.npz
-ladder_eval/*.png
+profile_output/
+gpu_sample_*.json
+bench_*.json

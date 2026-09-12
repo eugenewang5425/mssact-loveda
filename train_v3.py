@@ -39,18 +39,38 @@ for s in range(1, 8): REMAP[s] = s - 1          # 1..7 -> 0..6; 0/8+ -> 255
 
 class LoveDADataset(Dataset):
     """训练: 每epoch随机裁剪1个patch/图; 验证: 4个固定角patch"""
-    def __init__(self, split, mean, std, train, n_val_patches=4, epoch_seed=None, crop=256, root=None):
+    def __init__(self, split, mean, std, train, n_val_patches=4, epoch_seed=None, crop=256,
+                 root=None, fast=False, fast_dir=None):
+        """fast=True: 使用预解码 memmap（fast_dataset/），消除 PNG 解码开销；
+        数据内容与 PNG 管线完全一致（无插值），仅解码时机不同。"""
         self.crop = crop
-        base = root if root is not None else ROOT
-        self.img_dir = f"{base}/{split}/images"
-        self.msk_dir = f"{base}/{split}/masks"
-        self.names = sorted(set(os.listdir(self.img_dir)) & set(os.listdir(self.msk_dir)))
+        self.fast = fast
+        # 注意: fast 后端固定对应主数据集（newsplit2）; 若 root 指向其他目录
+        # （如数据阶梯子集），调用方须显式传 fast=False
+        if fast:
+            fd = fast_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fast_dataset")
+            self._fast_dir = fd
+            self._split = split
+            self._imgs = None      # 懒加载: worker 首次访问时才打开 memmap
+            self._msks = None
+            _n = json.load(open(os.path.join(fd, "index.json")))[split]
+            self.names = list(range(_n))
+        else:
+            base = root if root is not None else ROOT
+            self.img_dir = f"{base}/{split}/images"
+            self.msk_dir = f"{base}/{split}/masks"
+            self.names = sorted(set(os.listdir(self.img_dir)) & set(os.listdir(self.msk_dir)))
         self.mean, self.std, self.train = mean, std, train
         self.n_val = n_val_patches
         self.epoch_seed = epoch_seed
     def __len__(self):
         return len(self.names) * (1 if (self.train or GFMATCH) else self.n_val)
     def _load(self, i):
+        if self.fast:
+            if self._imgs is None:      # 每个 worker 独立打开只读 memmap
+                self._imgs = np.load(os.path.join(self._fast_dir, f"{self._split}_images.npy"), mmap_mode="r")
+                self._msks = np.load(os.path.join(self._fast_dir, f"{self._split}_masks.npy"), mmap_mode="r")
+            return np.asarray(self._imgs[i]), np.asarray(self._msks[i])
         n = self.names[i]
         img = Image.open(f"{self.img_dir}/{n}").convert("RGB")
         msk = Image.open(f"{self.msk_dir}/{n}")
@@ -61,14 +81,16 @@ class LoveDADataset(Dataset):
         msk = REMAP[np.array(msk)]
         return img, msk
     def _norm(self, img):
-        x = torch.from_numpy(img).float().permute(2,0,1)/255.0
-        return (x-self.mean)/self.std
+        # np.asarray(..., float32) 在 dtype 不同时创建可写副本, 避免 memmap 只读告警
+        x = torch.from_numpy(np.asarray(img, dtype=np.float32)).permute(2, 0, 1) / 255.0
+        return (x - self.mean) / self.std
     @staticmethod
-    def _geom(img, lab):
-        k = int(torch.randint(0,4,(1,)).item())
-        if k: img, lab = torch.rot90(img,k,dims=[1,2]), torch.rot90(lab,k,dims=[0,1])
-        if torch.rand(1)<.5: img, lab = torch.flip(img,[2]), torch.flip(lab,[1])
-        if torch.rand(1)<.5: img, lab = torch.flip(img,[1]), torch.flip(lab,[0])
+    def _geom(img, lab, g=None):
+        """几何增强; g 为确定性 generator -> 增强序列与 DataLoader worker 数无关"""
+        k = int(torch.randint(0, 4, (1,), generator=g).item())
+        if k: img, lab = torch.rot90(img, k, dims=[1,2]), torch.rot90(lab, k, dims=[0,1])
+        if torch.rand(1, generator=g).item() < .5: img, lab = torch.flip(img,[2]), torch.flip(lab,[1])
+        if torch.rand(1, generator=g).item() < .5: img, lab = torch.flip(img,[1]), torch.flip(lab,[0])
         return img.contiguous(), lab.contiguous()
     def __getitem__(self, idx):
         if self.train:
@@ -83,7 +105,9 @@ class LoveDADataset(Dataset):
                 y = torch.randint(0, H-S+1, (1,), generator=g).item() if g else torch.randint(0, H-S+1, (1,)).item()
                 x = torch.randint(0, W-S+1, (1,), generator=g).item() if g else torch.randint(0, W-S+1, (1,)).item()
             img, lab = img[y:y+S, x:x+S], msk[y:y+S, x:x+S]
-            img_t, lab_t = self._geom(self._norm(img), torch.from_numpy(lab.astype(np.int64)))
+            if g is None:
+                g = torch.Generator().manual_seed(12345 + idx)
+            img_t, lab_t = self._geom(self._norm(img), torch.from_numpy(lab.astype(np.int64)), g)
             return img_t, lab_t
         else:
             i, p = divmod(idx, 1 if GFMATCH else self.n_val)

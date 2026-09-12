@@ -53,7 +53,7 @@ def main():
     # 3) 输出各档位
     for size in SIZES:
         subset = ordered[:size]
-        dst = f"{OUT}/n{size}"
+        dst = f"{OUT}/n{size}/train"      # 加 train 层, 与 LoveDADataset(split="train") 一致
         if os.path.exists(dst): shutil.rmtree(dst)
         os.makedirs(f"{dst}/images", exist_ok=True); os.makedirs(f"{dst}/masks", exist_ok=True)
         for n in subset:

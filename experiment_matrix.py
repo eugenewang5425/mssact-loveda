@@ -138,9 +138,12 @@ class EMA:
         for p in self.shadow.parameters(): p.requires_grad_(False)
     @torch.no_grad()
     def update(self, model):
-        for es, ms in zip(self.shadow.state_dict().values(), model.state_dict().values()):
-            if es.dtype.is_floating_point: es.mul_(self.decay).add_(ms.detach(), alpha=1-self.decay)
-            else: es.copy_(ms)
+        """遍历 parameters()/buffers() 而非 state_dict() —— 省去每步构建字典的开销"""
+        d = self.decay
+        for es, ms in zip(self.shadow.parameters(), model.parameters()):
+            es.mul_(d).add_(ms.detach(), alpha=1 - d)
+        for eb, mb in zip(self.shadow.buffers(), model.buffers()):
+            eb.copy_(mb)
 
 @torch.no_grad()
 def evaluate(model, loader):
@@ -163,14 +166,21 @@ def evaluate(model, loader):
     return float(oa), float(kappa), float(np.mean(f1s)), [float(x) for x in f1s]
 
 
-def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None):
+def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=8):
     """通用训练入口: 复用 train_v3 的数据/EMA/早停协议, 模型/head/调度可替换
     root: 数据根目录 (None=旧957张; 传入 newsplit 路径=官方全量2257张)"""
     mean, std = compute_stats(root=root)
     while True:
         try:
-            tr = DataLoader(LoveDADataset("train", mean, std, train=True, root=root), batch_size=batch, shuffle=True, num_workers=0, pin_memory=True, drop_last=True)
-            va = DataLoader(LoveDADataset("val", mean, std, train=False, n_val_patches=4, root=(val_root or root)), batch_size=batch, shuffle=False, num_workers=0, pin_memory=True)
+            tr = DataLoader(LoveDADataset("train", mean, std, train=True, root=root, fast=fast_data),
+                             batch_size=batch, shuffle=True, num_workers=num_workers,
+                             pin_memory=True, drop_last=True, persistent_workers=(num_workers > 0),
+                             prefetch_factor=(4 if num_workers > 0 else None))
+            va = DataLoader(LoveDADataset("val", mean, std, train=False, n_val_patches=4,
+                                              root=(val_root or root), fast=fast_data),
+                             batch_size=batch, shuffle=False,
+                             num_workers=min(4, num_workers), pin_memory=True,
+                             persistent_workers=(num_workers > 0))
             torch.manual_seed(42)
             model = model_fn().to(DEVICE)
             if init_ckpt and os.path.exists(init_ckpt):
@@ -227,6 +237,7 @@ def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sch
         model.train()
         tr.dataset.epoch_seed = ep
         t0 = time.time(); tot = 0
+        tot_t = torch.zeros((), device=DEVICE)   # 张量累积, 避免每步同步
         for img, lab in tr:
             img = img.to(DEVICE, non_blocking=True)
             lab = lab.to(DEVICE, non_blocking=True)
@@ -251,7 +262,8 @@ def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sch
             scaler.unscale_(opt); nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             scaler.step(opt); scaler.update()
             if step_per_batch and sched is not None: sched.step()
-            ema.update(model); tot += loss.item()
+            ema.update(model); tot_t += loss.detach().float()
+        tot = float(tot_t.item())
         if not step_per_batch and sched is not None: sched.step()
         else:  # only if inner loop didn't break (no OOM)
             oa, k, mf1, f1s = evaluate(ema.shadow, va)
