@@ -166,7 +166,7 @@ def evaluate(model, loader):
     return float(oa), float(kappa), float(np.mean(f1s)), [float(x) for x in f1s]
 
 
-def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=8):
+def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=0):   # 回退: 默认 0（同原管线）
     """通用训练入口: 复用 train_v3 的数据/EMA/早停协议, 模型/head/调度可替换
     root: 数据根目录 (None=旧957张; 传入 newsplit 路径=官方全量2257张)"""
     mean, std = compute_stats(root=root)

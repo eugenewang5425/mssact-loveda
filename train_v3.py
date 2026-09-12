@@ -85,12 +85,12 @@ class LoveDADataset(Dataset):
         x = torch.from_numpy(np.asarray(img, dtype=np.float32)).permute(2, 0, 1) / 255.0
         return (x - self.mean) / self.std
     @staticmethod
-    def _geom(img, lab, g=None):
-        """几何增强; g 为确定性 generator -> 增强序列与 DataLoader worker 数无关"""
-        k = int(torch.randint(0, 4, (1,), generator=g).item())
+    def _geom(img, lab):
+        """几何增强（回退版: 使用全局 RNG, 与原管线行为一致）"""
+        k = int(torch.randint(0, 4, (1,)).item())
         if k: img, lab = torch.rot90(img, k, dims=[1,2]), torch.rot90(lab, k, dims=[0,1])
-        if torch.rand(1, generator=g).item() < .5: img, lab = torch.flip(img,[2]), torch.flip(lab,[1])
-        if torch.rand(1, generator=g).item() < .5: img, lab = torch.flip(img,[1]), torch.flip(lab,[0])
+        if torch.rand(1) < .5: img, lab = torch.flip(img,[2]), torch.flip(lab,[1])
+        if torch.rand(1) < .5: img, lab = torch.flip(img,[1]), torch.flip(lab,[0])
         return img.contiguous(), lab.contiguous()
     def __getitem__(self, idx):
         if self.train:
@@ -105,9 +105,7 @@ class LoveDADataset(Dataset):
                 y = torch.randint(0, H-S+1, (1,), generator=g).item() if g else torch.randint(0, H-S+1, (1,)).item()
                 x = torch.randint(0, W-S+1, (1,), generator=g).item() if g else torch.randint(0, W-S+1, (1,)).item()
             img, lab = img[y:y+S, x:x+S], msk[y:y+S, x:x+S]
-            if g is None:
-                g = torch.Generator().manual_seed(12345 + idx)
-            img_t, lab_t = self._geom(self._norm(img), torch.from_numpy(lab.astype(np.int64)), g)
+            img_t, lab_t = self._geom(self._norm(img), torch.from_numpy(lab.astype(np.int64)))
             return img_t, lab_t
         else:
             i, p = divmod(idx, 1 if GFMATCH else self.n_val)

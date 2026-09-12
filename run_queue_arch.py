@@ -1,4 +1,9 @@
-"""实验队列 v3（管线升级: memmap + 8 workers，实测 3.0x 加速）:
+"""实验队列 v4（回退版: memmap 加速 + 原增强语义，性能已恢复）:
+  - tag 前缀 lgR_ = "rollback pipeline"（memmap 加速 + 全局RNG增强 + workers=0）
+  - 已验证: 回退版 D1 = 0.6293 vs 旧管线 0.6277（+0.0016，性能恢复）
+  - 加速来源: memmap 消除 PNG 解码（14.7s/轮 vs 旧 144s/轮，10x）
+
+原 v3 说明（已被回退）:
   - tag 前缀 lgF_ 表示"fast pipeline"，与旧管线实验区分
   - 阶梯子集用 PNG + workers=8（未预解码）
 
@@ -85,29 +90,28 @@ if __name__ == "__main__":
     print("\n===== D. 架构改进实验（针对分析发现）=====", flush=True)
     ARCH = [
         # (tag, 构造函数, 说明, 预算)
-        ("lgF_D1_join_nofpn_notrans",
+        ("lgR_D1_join_nofpn_notrans",
          lambda: light(use_fpn=False, use_transformer=False),
          "联合消融: FPN+Transformer 同时移除 (验证功能冗余)", 60),
-        ("lgF_D2_decoder_ca",
+        ("lgR_D2_decoder_ca",
          lambda: light(decoder_ca_stages=(0, 1)),
          "ECSAM 移到解码器上采样路径 (文献通行做法)", 60),
-        ("lgF_D3_ch_tiny",
+        ("lgR_D3_ch_tiny",
          lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[16,32,64,128],
                            transformer_layers=2, transformer_heads=4),
          "超轻量通道 [16,32,64,128] (验证通道-空间比失衡)", 60),
-        ("lgF_D4_ch_large",
+        ("lgR_D4_ch_large",
          lambda: MSSACTNet(in_channels=3, num_classes=7, embed_dims=[64,128,256,512],
                            transformer_layers=2, transformer_heads=4),
          "大容量通道 [64,128,256,512] (容量对照)", 60),
     ]
     # batch 缩放对照（用户建议）: batch=16 (显存实测 4.61GB, 安全上限) vs 已有 batch=8
     # 线性缩放规则 (Goyal et al. 2017): lr = 2e-4 * (16/8) = 4e-4
-    ARCH += [
-        ("lgF_bs8_full_lr2e4", lambda: light(),
-         "对照: 完整模型 batch=8 lr=2e-4 (新管线基线)", 60),
-        ("lgF_bs16_full_lr4e4", lambda: light(),
-         "实验: batch=16 lr=4e-4 (线性缩放, 验证精度/速度权衡)", 60),
-    ]
+    # 完整模型基线（新管线）: 架构冗余结论的必需同管线对照 -> 插到最前
+    ARCH = [
+        ("lgR_bs8_full_lr2e4", lambda: light(),
+         "★ 新管线完整模型基线（D1-D4 的同管线对照）", 60),
+    ] + ARCH
 
     for tag, fn, desc, ep in ARCH:
         st = tag_state(tag, ep)
@@ -128,7 +132,7 @@ if __name__ == "__main__":
            ("noemr", lambda: light(use_emr=False)), ("unet", lambda: UNet()),
            ("deeplab", lambda: DeepLabV3Plus())]
     for mtag, fn in B15:
-        tag = f"lgF_b15_{mtag}"
+        tag = f"lgR_b15_{mtag}"
         st = tag_state(tag, 15)
         if st == "complete": print(f"SKIP {tag}", flush=True); continue
         print(f"=== {tag} ===", flush=True)
@@ -146,7 +150,7 @@ if __name__ == "__main__":
             print(f"SKIP n{n} (无数据)", flush=True); continue
         for mtag, fn in [("full", lambda: light()), ("noecsam", lambda: light(use_ecsam=False)),
                          ("unet", lambda: UNet()), ("deeplab", lambda: DeepLabV3Plus())]:
-            tag = f"lgF_n{n}_{mtag}"
+            tag = f"lgR_n{n}_{mtag}"
             st = tag_state(tag, 30)
             if st == "complete": print(f"SKIP {tag}", flush=True); continue
             print(f"=== {tag} ===", flush=True)

@@ -1190,8 +1190,8 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <tr>
 <td>每轮耗时（2.00M 模型, 含验证/EMA/保存）</td>
 <td>~150 s</td>
-<td><strong>11–12 s</strong></td>
-<td><strong>~13×</strong></td>
+<td><strong>14.7 s</strong>（回退版, 性能已验证）</td>
+<td><strong>~10×</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1253,13 +1253,48 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 </tr>
 <tr>
 <td>5</td>
-<td>增强改确定性 generator</td>
-<td>序列不同、<strong>分布相同</strong></td>
-<td>同样的 rot90 + 双向翻转，概率不变</td>
-<td>✅ 零损失（并额外获得可复现性）</td>
+<td>~~增强改确定性 generator~~</td>
+<td><strong>序列改变</strong></td>
+<td><strong>实测回退验证</strong></td>
+<td>❌ <strong>已回退</strong>：导致 Kappa 由 0.6277 降至 0.6031（−0.0246）</td>
 </tr>
 </tbody>
 </table>
+<p><strong>第 5 项的关键发现（已回退）</strong>：将几何增强改为确定性 generator（种子由
+<code>epoch_seed</code>+<code>idx</code> 决定）后，D1 配置（2.00M）的 Kappa 从 <strong>0.6277 降至 0.6031</strong>。
+轨迹分析显示原因是<strong>训练前期的"验证坍缩期"长度改变</strong>——旧管线（全局 RNG）
+前 10 轮验证 OA 恒为 0.1778（模型预测单一类别），第 11 轮后才开始正常学习；
+确定性增强版则从第 1 轮即开始上升。该改动虽不改变增强的<strong>分布</strong>，却显著影响
+<strong>随机性来源</strong>，进而改变优化轨迹与最终收敛值。</p>
+<p><strong>回退验证</strong>（同配置、同数据、同协议）：</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>Kappa</th>
+<th>每轮耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>旧管线（原始增强）</td>
+<td>0.6277</td>
+<td>144 s</td>
+</tr>
+<tr>
+<td>确定性增强版</td>
+<td>0.6031</td>
+<td>12 s</td>
+</tr>
+<tr>
+<td><strong>回退版（memmap + 原始增强 + workers=0）</strong></td>
+<td><strong>0.6293</strong></td>
+<td><strong>14.7 s</strong></td>
+</tr>
+</tbody>
+</table>
+<p>结论：<strong>回退后性能完全恢复（+0.0016，在噪声内）</strong>，同时保留约 <strong>10 倍加速</strong>——
+加速的真实来源是 <strong>memmap 预解码</strong>（消除 PNG 解码），而非增强或并发改动。</p>
 <p><strong>主动放弃的改动</strong>（均为会改变训练语义、损失可比性的措施）：</p>
 <table>
 <thead>
