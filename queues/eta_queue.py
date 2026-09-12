@@ -43,8 +43,13 @@ MAIN_LOG = os.path.join(LOGDIR, "call_00_p2ZpXJD7LuBTVfXsAVqp0139-stdout.log")
 # ---- 实测每轮秒数（memmap 管线） ----
 T = {"full": 43, "d1": 14.7, "d2": 44, "d3": 29, "d4": 87,
      "unet": 38, "deeplab": 50, "noecsam": 43, "noemr": 43}
-# PNG 管线每图成本（数据瓶颈），用于数据阶梯（fast_data=False）
-PNG_S_PER_IMAGE = {"full": 81, "noecsam": 81, "unet": 78, "deeplab": 85}  # 81ms/图 = 144s/1768
+# 数据阶梯（现已改走 memmap 子集预解码；见 prep/build_ladder_memmap.py）
+# 每轮耗时 = 固定验证开销 + n × 每图训练成本
+#   验证集固定为 newsplit2/val（221 张 ×4 角 = 884 patch），与子集大小无关
+#   实测 n250 = 13 s/轮（切换前 PNG 管线为 42-49 s/轮，3.4x）
+#   由此解出: 固定验证开销 ≈ 8 s, 每图训练成本 ≈ 20 ms
+LADDER_VAL_OVERHEAD_S = 8.0
+LADDER_S_PER_IMAGE = {"full": 0.024, "noecsam": 0.024, "unet": 0.021, "deeplab": 0.028}
 
 # ---- 队列定义（与 run_queue_arch.py / final / crop 一致） ----
 B15 = [("lgR_b15_full", "full"), ("lgR_b15_noecsam", "noecsam"),
@@ -87,7 +92,7 @@ def main():
             dn = done_epochs(tag); rem = max(0, 30 - dn)
             if dn >= 30:
                 continue
-            s = n * PNG_S_PER_IMAGE[m] / 1000.0
+            s = LADDER_VAL_OVERHEAD_S + n * LADDER_S_PER_IMAGE[m]
             h = rem * s / 3600.0
             rows.append((f"1 主队列", tag, rem, round(s), h)); P1 += h
     rows.append(("1 主队列", "analysis/eval_ladder.py", 1, 600, 600 / 3600)); P1 += 600 / 3600
@@ -145,8 +150,10 @@ def main():
     print("假设与来源：")
     print("  memmap 管线: full 43s / D1 14.7s / D2 44s / D3 29s / D4 87s  （日志实测稳定值）")
     print("  unet 38s, deeplab 50s: 由 PNG 管线实测值扣掉数据成分后得到")
-    print("  PNG 管线（数据阶梯 fast_data=False）: 81 ms/图（= 144s/1768 图, 实测）")
+    print("  数据阶梯: 固定验证开销 8s + n × 每图成本（实测 n250=13s/轮, memmap）")
     print("  裁剪 384/512 按像素量平方外推（2.25× / 4×）")
+    print()
+    print("  注: 阶梯的验证集固定为 221 张 ×4 角, 与子集大小无关, 故小规模档由验证主导")
     print()
     print("  ⚠️ 本机在跑训练时, 请避免同时做重量级磁盘 I/O（如读取全部 checkpoint、")
     print("     大文件 git 操作）: 会与 memmap 随机读争抢磁盘, 使训练轮次由计算受限")

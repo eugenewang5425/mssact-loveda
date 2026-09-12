@@ -166,22 +166,26 @@ def evaluate(model, loader):
     return float(oa), float(kappa), float(np.mean(f1s)), [float(x) for x in f1s]
 
 
-def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=0, seed=42, crop=256, center_crop=False):   # num_workers 回退默认 0（同原管线）; seed/crop 默认值与原行为一致
+def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=0, seed=42, crop=256, center_crop=False, fast_dir=None):   # num_workers 回退默认 0（同原管线）; seed/crop 默认值与原行为一致
     """通用训练入口: 复用 train_v3 的数据/EMA/早停协议, 模型/head/调度可替换
     root: 数据根目录 (None=旧957张; 传入 newsplit 路径=官方全量2257张)
     seed: 控制 模型初始化 / DataLoader 打乱顺序 / _geom 增强抽样
           （裁剪位置由 epoch_seed 决定, 与 seed 无关）
     crop: 训练裁剪边长 (原图 1024²; 默认 256)
-    center_crop: True 时固定取中心 patch（用于"随机裁剪 vs 固定裁剪"对比）"""
+    center_crop: True 时固定取中心 patch（用于"随机裁剪 vs 固定裁剪"对比）
+    fast_dir: 训练集的 memmap 目录（数据阶梯子集用）。默认 None = 主数据集。
+              **验证集始终用主 memmap**（阶梯的 val_root 固定为 newsplit2），
+              故此处只作用于训练集。"""
     mean, std = compute_stats(root=root)
     while True:
         try:
             tr = DataLoader(LoveDADataset("train", mean, std, train=True, root=root,
-                                          fast=fast_data, crop=crop,
+                                          fast=fast_data, fast_dir=fast_dir, crop=crop,
                                           center_crop=center_crop),
                              batch_size=batch, shuffle=True, num_workers=num_workers,
                              pin_memory=True, drop_last=True, persistent_workers=(num_workers > 0),
                              prefetch_factor=(4 if num_workers > 0 else None))
+            # 验证集: 始终用主 memmap（fast_dir=None），阶梯的 val 固定为 newsplit2/val
             va = DataLoader(LoveDADataset("val", mean, std, train=False, n_val_patches=4,
                                               root=(val_root or root), fast=fast_data,
                                               crop=crop),

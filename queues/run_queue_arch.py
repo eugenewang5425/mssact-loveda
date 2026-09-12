@@ -5,7 +5,7 @@
 
 原 v3 说明（已被回退）:
   - tag 前缀 lgF_ 表示"fast pipeline"，与旧管线实验区分
-  - 阶梯子集用 PNG + workers=8（未预解码）
+  - 阶梯子集改用 memmap 预解码（fast_dir=fast_dataset/ladder_n{size}）
 
 实验队列 v2（按用户决策调整）:
   - 取消: 30.5M 全量模型（性价比低、自身问题大）
@@ -167,8 +167,18 @@ if __name__ == "__main__":
             if st == "complete": print(f"SKIP {tag}", flush=True); continue
             print(f"=== {tag} ===", flush=True)
             try:
+                # 阶梯改走 memmap（子集预解码；见 prep/build_ladder_memmap.py）。
+                # 原先传 fast_data=False -> 退回 PNG 管线：每样本解码两张 1024² PNG
+                # 却只裁 256²，解码在 CPU 上，GPU 利用率中位仅 6%、功耗 32W/180W。
+                # 实测 n250 仅 250 张却要 42-49s/轮（约 170ms/张），是主数据集
+                # （约 24ms/张）的 7 倍——纯解码开销。故为三档各建 memmap。
+                _fd = os.path.join(paths.REPO, "fast_dataset", f"ladder_n{n}")
+                if not os.path.isdir(_fd):
+                    print(f"SKIP {tag}: 缺子集 memmap {_fd}; 请先运行 python prep/build_ladder_memmap.py", flush=True)
+                    continue
                 train_one(fn, tag, max_epochs=30, patience=30, batch=8, lr=2e-4,
-                          root=root, val_root=ROOT_MAIN, fast_data=False)  # 阶梯为 PNG 子集
+                          root=root, val_root=ROOT_MAIN,
+                          fast_data=True, fast_dir=_fd)
             except Exception as e:
                 print(f"FAILED {tag}: {e}", flush=True)
             verify(tag)
