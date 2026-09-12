@@ -10,7 +10,11 @@
 memmap 管线（计算受限，耗时随模型规模变化）：
     完整模型 6.102M = 43 s/轮      D1 2.005M = 14.7 s/轮
     D2 6.115M      = 44 s/轮      D3 1.547M = 29 s/轮
-    D4 24.242M     = 750 s/轮（ep1 866, ep2 732）
+    D4 24.242M     = 87 s/轮（稳定值）
+                     ⚠️ 前 4 轮（866/732/1568/484 s）**不可用**：当时本机同时在跑
+                     重量级磁盘 I/O（build_index 读 2.8GB checkpoint、git 操作、
+                     导入冒烟测试），与 memmap 随机读争抢磁盘，使这几轮变成
+                     I/O 受限而非计算受限。取稳定后的 86-87 s。
 PNG 管线（**数据受限**，耗时与模型规模几乎无关）：
     完整模型 144 s/轮   nd_deeplab 151 s/轮
     nd_abl_no_ecsam 158 s/轮   nd_abl_no_emr 162 s/轮
@@ -37,7 +41,7 @@ LOGDIR = r"C:/Users/Administrator/.zcode/cli/exec/sess_79382b4e-b5fc-48a3-9f7f-7
 MAIN_LOG = os.path.join(LOGDIR, "call_00_p2ZpXJD7LuBTVfXsAVqp0139-stdout.log")
 
 # ---- 实测每轮秒数（memmap 管线） ----
-T = {"full": 43, "d1": 14.7, "d2": 44, "d3": 29, "d4": 750,
+T = {"full": 43, "d1": 14.7, "d2": 44, "d3": 29, "d4": 87,
      "unet": 38, "deeplab": 50, "noecsam": 43, "noemr": 43}
 # PNG 管线每图成本（数据瓶颈），用于数据阶梯（fast_data=False）
 PNG_S_PER_IMAGE = {"full": 81, "noecsam": 81, "unet": 78, "deeplab": 85}  # 81ms/图 = 144s/1768
@@ -139,10 +143,14 @@ def main():
               f"（总时长的 {100*d4[0][4]/total:.0f}%）")
     print()
     print("假设与来源：")
-    print("  memmap 管线: full 43s / D1 14.7s / D2 44s / D3 29s / D4 750s  （日志实测）")
+    print("  memmap 管线: full 43s / D1 14.7s / D2 44s / D3 29s / D4 87s  （日志实测稳定值）")
     print("  unet 38s, deeplab 50s: 由 PNG 管线实测值扣掉数据成分后得到")
     print("  PNG 管线（数据阶梯 fast_data=False）: 81 ms/图（= 144s/1768 图, 实测）")
     print("  裁剪 384/512 按像素量平方外推（2.25× / 4×）")
+    print()
+    print("  ⚠️ 本机在跑训练时, 请避免同时做重量级磁盘 I/O（如读取全部 checkpoint、")
+    print("     大文件 git 操作）: 会与 memmap 随机读争抢磁盘, 使训练轮次由计算受限")
+    print("     退化为 I/O 受限(实测 D4 从 87s/轮 恶化到 866s/轮)。")
 
 
 if __name__ == "__main__":
