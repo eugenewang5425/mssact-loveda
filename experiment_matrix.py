@@ -4,7 +4,7 @@
 
 统一训练协议(train_v3.py 的 s256 设置 + EMA + 早停), 固定 256px @ 0.3m, 验证集 299×4 patch
 """
-import os, sys, time, copy, json
+import os, sys, time, copy, json, random
 import paths  # 集中路径配置 (环境变量/.env)
 import numpy as np
 import torch, torch.nn as nn
@@ -166,9 +166,11 @@ def evaluate(model, loader):
     return float(oa), float(kappa), float(np.mean(f1s)), [float(x) for x in f1s]
 
 
-def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=0):   # 回退: 默认 0（同原管线）
+def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sched_kind="onecycle", root=None, init_ckpt=None, val_root=None, fast_data=True, num_workers=0, seed=42):   # num_workers 回退默认 0（同原管线）; seed 默认 42（与原行为一致, 不影响既有结果）
     """通用训练入口: 复用 train_v3 的数据/EMA/早停协议, 模型/head/调度可替换
-    root: 数据根目录 (None=旧957张; 传入 newsplit 路径=官方全量2257张)"""
+    root: 数据根目录 (None=旧957张; 传入 newsplit 路径=官方全量2257张)
+    seed: 控制 模型初始化 / DataLoader 打乱顺序 / _geom 增强抽样
+          （裁剪位置由 epoch_seed 决定, 与 seed 无关）"""
     mean, std = compute_stats(root=root)
     while True:
         try:
@@ -181,7 +183,10 @@ def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sch
                              batch_size=batch, shuffle=False,
                              num_workers=min(4, num_workers), pin_memory=True,
                              persistent_workers=(num_workers > 0))
-            torch.manual_seed(42)
+            torch.manual_seed(seed)
+            np.random.seed(seed)
+            random.seed(seed)
+            torch.cuda.manual_seed_all(seed)
             model = model_fn().to(DEVICE)
             if init_ckpt and os.path.exists(init_ckpt):
                 _sd = torch.load(init_ckpt, map_location=DEVICE)

@@ -1,0 +1,55 @@
+{
+ "n_images": 141,
+ "n_valid_pixels": 147263661,
+ "band_frac": {
+  "0 (边界)": 0.0236,
+  "1-2": 0.0534,
+  "3-4": 0.0517,
+  "5-8": 0.0875,
+  ">8 (内部)": 0.7839
+ },
+ "oracle_kappa": {
+  "full_all_v2": {
+   "kappa_base": 0.5774,
+   "kappa_oracle_boundary": 0.5936,
+   "d_boundary": 0.0161,
+   "kappa_oracle_interior": 0.87,
+   "d_interior": 0.2925
+  },
+  "nd_deeplab": {
+   "kappa_base": 0.6495,
+   "kappa_oracle_boundary": 0.6654,
+   "d_boundary": 0.0159,
+   "kappa_oracle_interior": 0.88,
+   "d_interior": 0.2306
+  },
+  "nd_fpn_seg": {
+   "kappa_base": 0.544,
+   "kappa_oracle_boundary": 0.5602,
+   "d_boundary": 0.0162,
+   "kappa_oracle_interior": 0.8644,
+   "d_interior": 0.3204
+  },
+  "nd_fcn": {
+   "kappa_base": 0.5416,
+   "kappa_oracle_boundary": 0.5579,
+   "d_boundary": 0.0163,
+   "kappa_oracle_interior": 0.8615,
+   "d_interior": 0.3199
+  },
+  "nd_unet": {
+   "kappa_base": 0.5348,
+   "kappa_oracle_boundary": 0.5512,
+   "d_boundary": 0.0163,
+   "kappa_oracle_interior": 0.8644,
+   "d_interior": 0.3296
+  },
+  "nd_swin_unet": {
+   "kappa_base": 0.5041,
+   "kappa_oracle_boundary": 0.5211,
+   "d_boundary": 0.017,
+   "kappa_oracle_interior": 0.8587,
+   "d_interior": 0.3546
+  }
+ }
+}

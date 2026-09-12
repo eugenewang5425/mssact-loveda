@@ -927,18 +927,42 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 </tr>
 <tr>
 <td>4</td>
-<td>标签碎片化</td>
-<td><strong>93.0%</strong> 像素在类边界上</td>
-<td>0.3m 分辨率下边界"真值"难以定义</td>
+<td>边界像素占比（<strong>已修正</strong>）</td>
+<td>边界(距离0) 仅 <strong>2.4%</strong>；≤8px <strong>21.6%</strong>；内部(&gt;8px) <strong>78.4%</strong></td>
+<td>标签<strong>并不碎片化</strong>；聚合指标 78.4% 权重来自内部像素</td>
 </tr>
 <tr>
 <td>5</td>
 <td>准确率随距边界距离</td>
-<td>边界 0.61–0.73 → 中距离 0.47–0.57</td>
-<td><strong>越"纯净"区域模型越不同意标签</strong></td>
+<td>边界 0.45 → 内部 0.70（单调上升）</td>
+<td>常规规律；边界是标签最不确定处（模型间分歧 0.288 vs 内部 0.229）</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Kappa 归属上限（新增）</strong></td>
+<td>完美解决边界仅 <strong>+0.016 Kappa</strong>；完美解决内部 <strong>+0.292 Kappa</strong></td>
+<td><strong>指标在结构上几乎看不见边界质量</strong>：边界仅占 2.4% 像素</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>勘误说明</strong>：早期版本此处报告"<strong>93.0%</strong> 像素在类边界上"，并据此得出"标签碎片化"
+与"越纯净区域模型越不同意标签"两条结论。经复核，原实现把标签批次按 <code>(N,H,W)</code>
+三维数组沿 <code>axis=0</code> 求差分，<strong>跨图像的像素差被误判为类边界</strong>，故得出虚高的边界比例；
+同时又未排除 <code>valid↔255(ignore)</code> 的过渡。改为逐图 (2D)、且仅统计两个<strong>不同有效类别</strong>
+之间的相邻像素后，真实边界比例为 <strong>2.4%</strong>，结论方向也随之反转（准确率随距边界
+距离<strong>单调上升</strong>）。修正脚本见 <code>fix_boundary_analysis.py</code>，原始文件已备份为
+<code>boundary_analysis.bak_*.json</code>。</p>
+</blockquote>
+<p><strong>第 6 项是本项目对"模块差异为何消失"最有力的数学解释</strong>：
+在 test_clean 上，完美预测全部边界像素（2.4%）只能把 Kappa 从 0.5774 提到
+0.5936（<strong>+0.016</strong>）；而完美预测内部像素（78.4%）可提到 0.8700（<strong>+0.293</strong>）。
+六模型的该上限高度一致（边界 +0.016~+0.017，内部 +0.231~+0.355）。
+因此任何<strong>面向边界锐化</strong>的模块（多尺度融合 FPN、坐标注意力、转置卷积解码器）
+在聚合 Kappa 上的可见空间被限制在 ≈0.016 以内，而本实验观测到的 8 个消融变体
+总散布仅 0.006——<strong>同一量级</strong>。这为 5.6 节的"设计模块无可测量贡献"提供了机制性
+解释：不是模块一定无效，而是<strong>本指标主要在度量内部区域的语义分类能力</strong>，
+而该能力由标签一致性而非模块设计决定。</p>
 <p><strong>结论</strong>：6 个模型的能力差异（跨度约 0.08 Kappa）已落在标签噪声带来的不确定性
 范围内；容量-性能相关性随参考标准反转，说明<strong>当前标注精度已成为模型能力评价
 的上限约束</strong>。进一步区分架构优劣需要更高精度的人工标注数据（多标注者一致性
@@ -1210,7 +1234,7 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <li><strong>工程收益</strong>：实验队列总时长由约 <strong>24 小时压缩至约 3 小时</strong>，使更多
    对照实验（架构验证、数据阶梯）在同等时间预算内成为可能</li>
 </ol>
-<h3>5.5.5 零性能损失验证</h3>
+<h3>5.5.6 零性能损失验证</h3>
 <p>优化过程中<strong>仅采用不改变训练语义的措施</strong>，并逐项验证：</p>
 <table>
 <thead>
@@ -1325,6 +1349,519 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <p><strong>结论</strong>：优化后 GPU 利用率由 49.9% 提升至 84.3%、每轮耗时降低 3–13 倍，
 且<strong>训练语义与数据完全不变</strong>——所有收益来自消除数据管线瓶颈与主进程同步开销，
 而非牺牲精度。</p>
+<hr />
+<h2>5.6 架构有效性分析：为什么消融实验全部"无差异"</h2>
+<p><strong>本节是对自研架构的否定性发现，也是本项目最重要的技术结论。</strong></p>
+<p>此前 8 个消融变体的 Kappa 全部落在 ±0.006 内，且有 5 个变体<strong>超过</strong>完整模型。
+5.3 节给出的解释是"标签质量上限使基准分辨力不足"。经对 checkpoint 张量与
+前向传播的<strong>直接数值检验</strong>，该解释不完整：本模型存在<strong>三处结构性缺陷</strong>，
+使得多个设计模块<strong>在实现层面并未按设计意图工作</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>缺陷</th>
+<th>验证方式</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D1</strong></td>
+<td>FPN 的多尺度融合是<strong>死计算</strong></td>
+<td>归零支路 0–2 后输出差<strong>恰好 0.0</strong>；整个 FPN 可用两个卷积<strong>逐位等价</strong>替换</td>
+<td><strong>1,828,352 参数（全模型 29.96%）永不参与输出</strong></td>
+</tr>
+<tr>
+<td><strong>D2</strong></td>
+<td>解码器<strong>无跳连</strong>，仅凭 8× 下采样特征上采样 8 倍</td>
+<td>前向代码路径 + 分辨率链追踪</td>
+<td>高分辨率特征（256²/128²/64²）<strong>从未到达输出</strong>；有效空间粒度 8×8 像素</td>
+</tr>
+<tr>
+<td><strong>D3</strong></td>
+<td>Transformer <strong>无位置编码</strong></td>
+<td>置换 token 后按逆置换还原，差 <strong>7.15e-07</strong></td>
+<td>模块<strong>置换等变</strong>，是集合级算子，<strong>无空间位置感知</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>5.6.1 参数量账目（直读张量）</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th style="text-align: right;">参数</th>
+<th style="text-align: right;">占全模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>fpn</strong></td>
+<td style="text-align: right;">2,484,224</td>
+<td style="text-align: right;"><strong>40.71%</strong></td>
+</tr>
+<tr>
+<td><strong>transformer</strong></td>
+<td style="text-align: right;">1,612,609</td>
+<td style="text-align: right;"><strong>26.43%</strong></td>
+</tr>
+<tr>
+<td>encoder (EMR)</td>
+<td style="text-align: right;">1,226,504</td>
+<td style="text-align: right;">20.10%</td>
+</tr>
+<tr>
+<td>decoder</td>
+<td style="text-align: right;">722,378</td>
+<td style="text-align: right;">11.84%</td>
+</tr>
+<tr>
+<td><strong>ecsam（坐标注意力）</strong></td>
+<td style="text-align: right;"><strong>55,044</strong></td>
+<td style="text-align: right;"><strong>0.90%</strong></td>
+</tr>
+<tr>
+<td>stem</td>
+<td style="text-align: right;">1,025</td>
+<td style="text-align: right;">0.02%</td>
+</tr>
+<tr>
+<td>合计</td>
+<td style="text-align: right;">6,101,784</td>
+<td style="text-align: right;">100%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>两点直接推论</strong>：
+1. FPN + Transformer = <strong>67.14%</strong> 的参数。联合移除后参数降至 <strong>2,005,120（−67.2%）</strong>，
+   而 Kappa 仅变化 <strong>−0.0027</strong>（0.6320 → 0.6293，回退管线同管线对比）。
+2. 坐标注意力仅占 <strong>0.90%</strong> 参数——<strong>先天地</strong>不可能产生可测量贡献。</p>
+<h3>5.6.2 D1：FPN 的多尺度融合未被使用</h3>
+<p><code>MSSACTNet.forward</code> 只取 <code>fpn_features[-1]</code>；而 <code>FPN.forward</code> 的自顶向下融合循环
+写入索引 <code>i-1</code>（即 2/1/0），<strong>最深层的 <code>laterals[3]</code> 从未被融合增强</strong>。
+两者叠加的结果是：<code>laterals[0..2]</code> 及 <code>fpn_convs[0..2]</code> 计算完毕后<strong>全部被丢弃</strong>。</p>
+<p><strong>数值验证</strong>（两次检验均为<strong>逐位相同 0.0</strong>，而非"小到可忽略"）：</p>
+<table>
+<thead>
+<tr>
+<th>检验</th>
+<th>操作</th>
+<th>输出最大绝对差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>只归零 <code>lateral_convs[0..2]</code></td>
+<td><strong>0.000e+00</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>把整个 FPN 替换为"仅第 4 支路"（1×1 + 3×3 卷积）的等价算子</td>
+<td><strong>0.000e+00</strong></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th style="text-align: right;">参数</th>
+<th style="text-align: right;">占全模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FPN 死参数（支路 0–2）</td>
+<td style="text-align: right;">1,828,352</td>
+<td style="text-align: right;"><strong>29.96%</strong></td>
+</tr>
+<tr>
+<td>FPN 有效参数（支路 3）</td>
+<td style="text-align: right;">655,872</td>
+<td style="text-align: right;">10.75%</td>
+</tr>
+<tr>
+<td><strong>实际参与前向的有效参数</strong></td>
+<td style="text-align: right;"><strong>4,273,432</strong></td>
+<td style="text-align: right;"><strong>70.04%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>因此"w/o FPN"消融的真实含义是：移除"最深尺度上的 1×1 + 3×3 卷积，外加 3 条
+被丢弃的支路"。这解释了实测 ΔKappa = <strong>+0.0002</strong>（移除后略微变好）。</p>
+<blockquote>
+<p><strong>这不是"FPN 冗余"的证据，而是"这个 FPN 没有在工作"的证据。</strong> 前者是多尺度
+融合的一般性结论，后者是本实现的缺陷结论——科学含义完全不同。</p>
+</blockquote>
+<h3>5.6.3 D2：解码器无跳连</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>分辨率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入</td>
+<td>256×256</td>
+</tr>
+<tr>
+<td>stem / encoder[0]+pool / [1]+pool / [2]+pool</td>
+<td>256² → 128² → 64² → 32²</td>
+</tr>
+<tr>
+<td><strong>encoder[3]（无 pool）</strong></td>
+<td><strong>32×32</strong> ← FPN 支路 3 取此层</td>
+</tr>
+<tr>
+<td>Transformer</td>
+<td>32² → <strong>1024 tokens</strong></td>
+</tr>
+<tr>
+<td>decoder（3 次转置卷积 stride 2）</td>
+<td>64² → 128² → 256²，<strong>无任何跳连</strong></td>
+</tr>
+</tbody>
+</table>
+<p>输出 256² 上每个 <strong>8×8 像素块</strong>的预测，完全由 32² 表征中的<strong>一个 token</strong> 决定。
+有效空间粒度 = <strong>8 像素</strong>（@0.3 m ≈ <strong>2.4 m 地面</strong>），即在结构上无法表达比
+2.4 m 更精细的边界。</p>
+<p>文献依据：编码器-解码器网络"若无跳连通常无法达到最优性能"（U-Net 即利用编码器
+特征找回细粒度细节）；DeepLabV3+ 相对空洞金字塔的改进正是"<strong>增加一条跳连以保留
+低层细节</strong>"。这与本模型的缺陷形成直接对照。</p>
+<h3>5.6.4 D3：Transformer 无位置编码</h3>
+<p><code>TransformerEncoder.forward</code> 在 <code>flatten(2).permute(0,2,1)</code> 摊平为 token 序列后
+<strong>未插入任何位置信息</strong>；而 <code>nn.TransformerEncoderLayer</code> 不自带位置编码（不同于 ViT）。</p>
+<p>自注意力本身是置换等变的：对置换矩阵 $P$，$A=\mathrm{softmax}(QK^  op/\sqrt d) o PAP^  op$。</p>
+<p><strong>数值验证</strong>：随机置换 64 个 token，把输出按逆置换还原，与原始输出的最大绝对差
+= <strong>7.153e-07</strong>（浮点噪声量级）→ 模块对 token 顺序完全等价，<strong>输出不依赖 token 位置</strong>。</p>
+<p><strong>必须如实说明的三点限定</strong>：
+1. <strong>不等价于"完全无用"</strong>。输入 token 来自卷积特征，其<em>内容</em>本身是位置相关的；
+   且零填充/边界可充当<strong>隐式位置锚点</strong>（CPVT/PEG 一脉的论证），故含卷积的混合
+   架构可以不用显式位置编码仍能工作。该模块仍能完成<strong>基于内容相似度</strong>的全局聚合。
+2. <strong>但无法完成基于空间邻近的上下文建模</strong>——而"长程空间上下文"正是分割网络中
+   全局注意力的标准用途。这是<strong>机制性降级</strong>，不是彻底失效。
+3. <strong>量级参照</strong>：位置编码并非可有可无——移除 DeiT-tiny 的位置编码使 ImageNet
+   精度由 <strong>72.2% 降至 68.2%</strong>。故此处是实质性缺陷，只是后果被卷积主干部分抵消。</p>
+<h3>5.6.5 与消融结果的对应（机制解释）</h3>
+<table>
+<thead>
+<tr>
+<th>变体</th>
+<th style="text-align: right;">实测 ΔKappa</th>
+<th>机制解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>w/o FPN</td>
+<td style="text-align: right;"><strong>+0.0002</strong></td>
+<td>FPN 支路 0–2 是死计算（5.6.2）</td>
+</tr>
+<tr>
+<td>w/o Transformer</td>
+<td style="text-align: right;"><strong>−0.0010</strong></td>
+<td>置换等变集合算子（5.6.4）</td>
+</tr>
+<tr>
+<td>w/o ECSAM</td>
+<td style="text-align: right;"><strong>−0.0040</strong></td>
+<td>仅占 <strong>0.90%</strong> 参数</td>
+</tr>
+<tr>
+<td>w/o Adapter</td>
+<td style="text-align: right;"><strong>+0.0030</strong></td>
+<td>仅 33K 参数（0.54%）</td>
+</tr>
+<tr>
+<td>Bilinear-Up</td>
+<td style="text-align: right;"><strong>+0.0057</strong></td>
+<td>解码器无跳连，learnable 与 bilinear 差别仅在内核参数化</td>
+</tr>
+<tr>
+<td>联合移除 FPN+Trans(+Adapter)</td>
+<td style="text-align: right;"><strong>−0.0027 / −0.0035</strong></td>
+<td>上述机制叠加</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键推论</strong>：<strong>没有一个消融变体削弱了它声称削弱的功能</strong>——对应功能在实现中本就
+不存在（FPN）或不可用（Transformer 的位置感知）。故这一组消融<strong>不能</strong>作为
+"模块有效性"的证据，它衡量的是"移除无效计算的影响"。</p>
+<h3>5.6.6 基线为何领先：+0.072 的机制解释</h3>
+<p>test_clean（141 张）池化 Kappa 与配对 bootstrap（1000 次图像级重采样）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th style="text-align: right;">参数</th>
+<th style="text-align: right;">Kappa</th>
+<th style="text-align: right;">Δ vs 自研</th>
+<th>95% CI</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DeepLabV3+</strong></td>
+<td style="text-align: right;">39.69M</td>
+<td style="text-align: right;"><strong>0.6495</strong></td>
+<td style="text-align: right;"><strong>+0.0720</strong></td>
+<td>[+0.0525, +0.0929]</td>
+<td>显著差异</td>
+</tr>
+<tr>
+<td>FPN-Seg</td>
+<td style="text-align: right;">27.20M</td>
+<td style="text-align: right;">0.5440</td>
+<td style="text-align: right;">−0.0335</td>
+<td>[−0.0432, −0.0231]</td>
+<td>显著差异</td>
+</tr>
+<tr>
+<td>FCN</td>
+<td style="text-align: right;">23.78M</td>
+<td style="text-align: right;">0.5416</td>
+<td style="text-align: right;">−0.0358</td>
+<td>[−0.0453, −0.0264]</td>
+<td>显著差异</td>
+</tr>
+<tr>
+<td>U-Net</td>
+<td style="text-align: right;">2.45M</td>
+<td style="text-align: right;">0.5348</td>
+<td style="text-align: right;">−0.0426</td>
+<td>[−0.0532, −0.0318]</td>
+<td>显著差异</td>
+</tr>
+<tr>
+<td>Swin-Unet</td>
+<td style="text-align: right;">32.67M</td>
+<td style="text-align: right;">0.5041</td>
+<td style="text-align: right;">−0.0734</td>
+<td>[−0.0891, −0.0564]</td>
+<td>显著差异</td>
+</tr>
+<tr>
+<td><strong>MSSACT-Net（自研）</strong></td>
+<td style="text-align: right;"><strong>6.10M</strong></td>
+<td style="text-align: right;"><strong>0.5774</strong></td>
+<td style="text-align: right;">—</td>
+<td>—</td>
+<td>参考</td>
+</tr>
+</tbody>
+</table>
+<p>逐类 mIoU：<strong>DeepLabV3+ 在全部 7 个类上均优于自研模型</strong>；去除 barren 后差距仍在
+（0.4197 vs 0.3378），故不是某一退化类拖累的假象。</p>
+<p><strong>公平性核验（重要）</strong>：为排除"基线享有 ImageNet 预训练"的怀疑，已核对代码——
+<code>deeplabv3_resnet50(weights=None)</code>、<code>resnet50(weights=None)</code>、<code>resnet18(weights=None)</code>，
+<strong>全部从零训练</strong>，与自研模型同协议同数据。故 <strong>+0.072 是公平对比下的真实差距</strong>，
+最可能的原因是 DeepLabV3+ 具备本模型缺失的<strong>低层跳连</strong>（5.6.3）与保留分辨率的
+空洞卷积。</p>
+<h3>5.6.7 通道-空间容量比</h3>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>最深特征</th>
+<th style="text-align: right;">元素数</th>
+<th style="text-align: right;">输入元素数</th>
+<th style="text-align: right;">比值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>light <code>[32,64,128,256]</code></td>
+<td>256×32×32</td>
+<td style="text-align: right;">262,144</td>
+<td style="text-align: right;">196,608</td>
+<td style="text-align: right;"><strong>1.33×</strong></td>
+</tr>
+<tr>
+<td>large <code>[64,128,256,512]</code></td>
+<td>512×32×32</td>
+<td style="text-align: right;">524,288</td>
+<td style="text-align: right;">196,608</td>
+<td style="text-align: right;"><strong>2.67×</strong></td>
+</tr>
+</tbody>
+</table>
+<p>即<strong>最深特征图的标量数量超过输入图像本身</strong>（large 达 2.67 倍），而这些表征最终被
+压缩回 256² 输出，其中 29.96% 的参数还不参与前向。此处<strong>并非</strong> transformer 的秩亏
+问题（$N=1024&gt;d_{model}$，$\mathrm{rank}\le d_{model}$），而是<strong>空间侧信息量与
+通道侧容量的失衡</strong>：以 8 像素的粒度承载 256–512 通道。</p>
+<h3>5.6.8 边界质量为何在聚合指标上不可见</h3>
+<table>
+<thead>
+<tr>
+<th>距类边界</th>
+<th style="text-align: right;">像素占比</th>
+<th style="text-align: right;">共识 vs 标签</th>
+<th style="text-align: right;">模型间分歧</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（边界像素）</td>
+<td style="text-align: right;"><strong>2.36%</strong></td>
+<td style="text-align: right;">0.4577</td>
+<td style="text-align: right;">0.2881</td>
+</tr>
+<tr>
+<td>1–2 px</td>
+<td style="text-align: right;">5.34%</td>
+<td style="text-align: right;">0.4891</td>
+<td style="text-align: right;">0.2877</td>
+</tr>
+<tr>
+<td>3–4 px</td>
+<td style="text-align: right;">5.17%</td>
+<td style="text-align: right;">0.5327</td>
+<td style="text-align: right;">0.2847</td>
+</tr>
+<tr>
+<td>5–8 px</td>
+<td style="text-align: right;">8.75%</td>
+<td style="text-align: right;">0.5882</td>
+<td style="text-align: right;">0.2789</td>
+</tr>
+<tr>
+<td><strong>&gt;8 px（内部）</strong></td>
+<td style="text-align: right;"><strong>78.39%</strong></td>
+<td style="text-align: right;">0.7294</td>
+<td style="text-align: right;">0.2294</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kappa 归属上限</strong>（oracle 作弊实验）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th style="text-align: right;">K_base</th>
+<th style="text-align: right;">完美解决边界</th>
+<th style="text-align: right;">Δ边界</th>
+<th style="text-align: right;">完美解决内部</th>
+<th style="text-align: right;">Δ内部</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSSACT-Net</td>
+<td style="text-align: right;">0.5774</td>
+<td style="text-align: right;">0.5936</td>
+<td style="text-align: right;"><strong>+0.0161</strong></td>
+<td style="text-align: right;">0.8700</td>
+<td style="text-align: right;"><strong>+0.2925</strong></td>
+</tr>
+<tr>
+<td>DeepLabV3+</td>
+<td style="text-align: right;">0.6495</td>
+<td style="text-align: right;">0.6654</td>
+<td style="text-align: right;">+0.0159</td>
+<td style="text-align: right;">0.8800</td>
+<td style="text-align: right;">+0.2306</td>
+</tr>
+<tr>
+<td>FPN-Seg</td>
+<td style="text-align: right;">0.5440</td>
+<td style="text-align: right;">0.5602</td>
+<td style="text-align: right;">+0.0162</td>
+<td style="text-align: right;">0.8644</td>
+<td style="text-align: right;">+0.3204</td>
+</tr>
+<tr>
+<td>FCN</td>
+<td style="text-align: right;">0.5416</td>
+<td style="text-align: right;">0.5579</td>
+<td style="text-align: right;">+0.0163</td>
+<td style="text-align: right;">0.8615</td>
+<td style="text-align: right;">+0.3199</td>
+</tr>
+<tr>
+<td>U-Net</td>
+<td style="text-align: right;">0.5348</td>
+<td style="text-align: right;">0.5512</td>
+<td style="text-align: right;">+0.0163</td>
+<td style="text-align: right;">0.8644</td>
+<td style="text-align: right;">+0.3296</td>
+</tr>
+<tr>
+<td>Swin-Unet</td>
+<td style="text-align: right;">0.5041</td>
+<td style="text-align: right;">0.5211</td>
+<td style="text-align: right;">+0.0170</td>
+<td style="text-align: right;">0.8587</td>
+<td style="text-align: right;">+0.3546</td>
+</tr>
+</tbody>
+</table>
+<p>完美预测全部边界像素（2.36%）<strong>最多</strong>换来 <strong>+0.016</strong> Kappa；内部像素（78.39%）则值
+<strong>+0.23 ~ +0.35</strong>。<strong>聚合 Kappa 主要由内部区域的语义分类决定</strong>，边界锐化类模块
+（多尺度融合、坐标注意力、可学习上采样）的可见空间被限制在 ≈0.016 以内——与观测
+到的消融散布 0.006 <strong>同量级</strong>。</p>
+<p>DeepLabV3+ 优势的分带归因显示 <strong>86.6% 的 ΔOA 来自内部像素</strong>（内部 +0.0529 / 合计
++0.0611），边界带仅贡献 +0.0003。</p>
+<h3>5.6.9 可验证的修复路径</h3>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>修复</th>
+<th>预期效果</th>
+<th>验证方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>FPN 改为<strong>真正使用</strong>多尺度输出（解码器接收全部 4 层，或至少做跳连）</td>
+<td>恢复多尺度融合语义</td>
+<td>消融应出现可测差异</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td>解码器加入 <strong>encoder→decoder 跳连</strong>（U-Net 式或 DeepLabV3+ 单条低层跳连）</td>
+<td>直接修正 5.6.3 的粒度瓶颈</td>
+<td>边界带 OA 应显著上升</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Transformer 加入<strong>位置编码</strong>（2D sincos / 可学习 / 相对位置偏置）</td>
+<td>恢复空间邻近建模能力</td>
+<td>置换等变性检验应被打破</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>重新定义消融语义：先修实现，再评估"模块是否有效"</td>
+<td>使消融结论可解释</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>容量重新配比，修正 2.67× 容量膨胀</td>
+<td>参数效率</td>
+<td>参数量-Kappa 曲线</td>
+</tr>
+</tbody>
+</table>
+<h3>5.6.10 本节局限（诚实声明）</h3>
+<ol>
+<li><strong>随机种子方差尚未测量</strong>。本节所有 ΔKappa 均来自<strong>单次运行</strong>（seed=42）。
+   文献建议 ≥10 个种子（GEO-Bench, NeurIPS 2023 D&amp;B），并指出 3–5 个种子不足以
+   给出可靠置信区间。<strong>故"ΔKappa 0.006 落在噪声内"目前是推断，不是测量。</strong>
+   多种子队列（完整模型 + DeepLabV3+ × 3 个种子）已在 <code>run_queue_final.py</code> 排队。</li>
+<li><strong>等效性检验（TOST）尚未完成</strong>。严格区分"无证据有差异"与"有证据无差异"需要
+   预指定 SESOI 的 TOST。本节已实现配对 bootstrap CI，待全部变体推理缓存完成后补齐。</li>
+<li>D1/D2/D3 的缺陷检验在 <strong>light 配置</strong>上完成；大配置结构相同、结论可直接推广，
+   但未逐一复跑。</li>
+<li>分带与 Kappa 归属基于<strong>已缓存的 6 个模型预测</strong>；8 个消融变体的逐带分解待补齐。</li>
+<li>完整的推导、复现脚本与文献核验见 <code>docs/架构有效性分析.md</code>。</li>
+</ol>
 <hr />
 <h2>6. 关键结论</h2>
 <ol>

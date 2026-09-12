@@ -77,6 +77,7 @@ F["consensus"] = None
 if os.path.exists(f"{CONS}/consistency.json"):
     c = json.load(open(f"{CONS}/consistency.json"))
     b = json.load(open(f"{CONS}/boundary_analysis.json")) if os.path.exists(f"{CONS}/boundary_analysis.json") else {}
+    hr = json.load(open(f"{CONS}/headroom.json")) if os.path.exists(f"{CONS}/headroom.json") else {}
     F["consensus"] = dict(
         n_models=len(c["models"]), n_tiles=c["n_tiles"],
         mean_model_model=round(float(np.mean(list(c["model_model_agreement"].values()))),4),
@@ -84,8 +85,17 @@ if os.path.exists(f"{CONS}/consistency.json"):
         consensus_vs_label=round(c["consensus_vs_label"],4),
         per_model={k: {kk:(round(vv,4) if isinstance(vv,float) else vv) for kk,vv in v.items()}
                    for k,v in c["per_model_on_consensus"].items()},
+        # 边界统计: 见 fix_boundary_analysis.py 的 _correction 说明
+        # (原版把 (N,H,W) 沿 axis=0 求差, 跨图像素差被误判为边界, 误报 0.9296)
         boundary_frac=round(b.get("boundary_frac",0),4) if b else None,
-        consensus_vs_label_by_band=b.get("consensus_vs_label") if b else None)
+        boundary_frac_within8px=b.get("boundary_frac_within8px") if b else None,
+        band_frac=b.get("band_frac") if b else None,
+        consensus_vs_label_by_band=b.get("consensus_vs_label_by_band") if b else None,
+        per_model_vs_label_by_band=b.get("per_model_vs_label_by_band") if b else None,
+        pair_disagreement_by_band=b.get("pair_disagreement_by_band") if b else None,
+        # Kappa 归属上限: 完美解决某一部分像素所能获得的 Kappa 增量
+        headroom=hr.get("oracle_kappa") if hr else None,
+        headroom_band_frac=hr.get("band_frac") if hr else None)
 
 # ========== 收敛速度分析 ==========
 F["convergence"] = None

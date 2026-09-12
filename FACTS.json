@@ -536,11 +536,138 @@
     "delta": 0.1996
    }
   },
-  "boundary_frac": 0.9296,
+  "boundary_frac": 0.0236,
+  "boundary_frac_within8px": 0.2161,
+  "band_frac": {
+   "0 (边界像素)": {
+    "frac": 0.0236,
+    "n": 3478241
+   },
+   "1-2": {
+    "frac": 0.0534,
+    "n": 7860438
+   },
+   "3-4": {
+    "frac": 0.0517,
+    "n": 7609482
+   },
+   "5-8": {
+    "frac": 0.0875,
+    "n": 12881887
+   },
+   ">8 (内部)": {
+    "frac": 0.7839,
+    "n": 115433613
+   }
+  },
   "consensus_vs_label_by_band": {
-   "all": 0.6815283778664174,
-   "boundary": 0.6880446988280265,
-   "interior": 0.595537646588165
+   "0 (边界像素)": 0.4577,
+   "1-2": 0.4891,
+   "3-4": 0.5327,
+   "5-8": 0.5882,
+   ">8 (内部)": 0.7294
+  },
+  "per_model_vs_label_by_band": {
+   "MSSACT-light 6.1M": {
+    "0 (边界像素)": 0.4517,
+    "1-2": 0.4805,
+    "3-4": 0.5213,
+    "5-8": 0.5727,
+    ">8 (内部)": 0.7032
+   },
+   "DeepLabV3+ 39.6M": {
+    "0 (边界像素)": 0.4657,
+    "1-2": 0.5059,
+    "3-4": 0.5595,
+    "5-8": 0.6237,
+    ">8 (内部)": 0.7707
+   },
+   "U-Net 2.4M": {
+    "0 (边界像素)": 0.4397,
+    "1-2": 0.4654,
+    "3-4": 0.5005,
+    "5-8": 0.5445,
+    ">8 (内部)": 0.6643
+   },
+   "FCN 23.7M": {
+    "0 (边界像素)": 0.4375,
+    "1-2": 0.4566,
+    "3-4": 0.4865,
+    "5-8": 0.531,
+    ">8 (内部)": 0.6729
+   },
+   "FPN 27.2M": {
+    "0 (边界像素)": 0.4414,
+    "1-2": 0.4661,
+    "3-4": 0.5005,
+    "5-8": 0.5423,
+    ">8 (内部)": 0.6732
+   },
+   "Swin-Unet 32.6M": {
+    "0 (边界像素)": 0.4237,
+    "1-2": 0.4484,
+    "3-4": 0.481,
+    "5-8": 0.5202,
+    ">8 (内部)": 0.6418
+   }
+  },
+  "pair_disagreement_by_band": {
+   "0 (边界像素)": 0.2881,
+   "1-2": 0.2877,
+   "3-4": 0.2847,
+   "5-8": 0.2789,
+   ">8 (内部)": 0.2294
+  },
+  "headroom": {
+   "full_all_v2": {
+    "kappa_base": 0.5774,
+    "kappa_oracle_boundary": 0.5936,
+    "d_boundary": 0.0161,
+    "kappa_oracle_interior": 0.87,
+    "d_interior": 0.2925
+   },
+   "nd_deeplab": {
+    "kappa_base": 0.6495,
+    "kappa_oracle_boundary": 0.6654,
+    "d_boundary": 0.0159,
+    "kappa_oracle_interior": 0.88,
+    "d_interior": 0.2306
+   },
+   "nd_fpn_seg": {
+    "kappa_base": 0.544,
+    "kappa_oracle_boundary": 0.5602,
+    "d_boundary": 0.0162,
+    "kappa_oracle_interior": 0.8644,
+    "d_interior": 0.3204
+   },
+   "nd_fcn": {
+    "kappa_base": 0.5416,
+    "kappa_oracle_boundary": 0.5579,
+    "d_boundary": 0.0163,
+    "kappa_oracle_interior": 0.8615,
+    "d_interior": 0.3199
+   },
+   "nd_unet": {
+    "kappa_base": 0.5348,
+    "kappa_oracle_boundary": 0.5512,
+    "d_boundary": 0.0163,
+    "kappa_oracle_interior": 0.8644,
+    "d_interior": 0.3296
+   },
+   "nd_swin_unet": {
+    "kappa_base": 0.5041,
+    "kappa_oracle_boundary": 0.5211,
+    "d_boundary": 0.017,
+    "kappa_oracle_interior": 0.8587,
+    "d_interior": 0.3546
+   }
+  },
+  "headroom_band_frac": {
+   "0 (边界)": 0.0236,
+   "1-2": 0.0534,
+   "3-4": 0.0517,
+   "5-8": 0.0875,
+   ">8 (内部)": 0.7839
   }
  },
  "convergence": [

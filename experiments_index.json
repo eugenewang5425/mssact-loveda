@@ -1,140 +1,2172 @@
 {
-  "_meta": {
-    "generated_at": "2026-09-07",
-    "protocol": "AdamW+OneCycle+EMA+earlystop(patience=15/20)",
-    "val_split": "train957/val199/test100(held-out)",
-    "note": "mssact构造核验: 统一关键字参数"
+ "_meta": {
+  "generated_at": "2026-09-12 17:44:10",
+  "generated_by": "build_index.py",
+  "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
+  "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
+  "splits": {
+   "A-957": "train957/val199/test100 (早期子集, REMAP 含 no-data bug)",
+   "B-2257": "官方全量去重 2821 池 8:1:1 (REMAP 含 no-data bug)",
+   "C-final": "train1768/val221/test221/test_clean141 (no-data<=10% 筛选 + MD5 去重 + REMAP 修复)"
   },
-  "checkpoints_verified": {
-    "v3_s256": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "mssact_full60": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "ablate_trans4l": {
-      "arch": {
-        "layers": 4,
-        "embed": 256
-      }
-    },
-    "ablate_trans6l": {
-      "arch": {
-        "layers": 6,
-        "embed": 256
-      }
-    },
-    "ablate_no_emr": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "ablate_no_ecsam": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "ablate_no_fpn": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "ablate_no_trans": {
-      "arch": {
-        "layers": 0,
-        "embed": 0
-      }
-    },
-    "ablate_no_adapter": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    },
-    "mssact_v2": {
-      "arch": {
-        "layers": 2,
-        "embed": 256
-      }
-    }
+  "pipeline_generations": {
+   "C-final": "正式对比/消融结果 (train_v3 原管线增强)",
+   "lg-old": "架构实验旧管线, 已被 lgR 取代",
+   "lgF-det": "确定性增强管线, 已否决 (Kappa -0.0246)",
+   "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
-  "cross_scores": {
-    "v3_s256": {
-      "4corner": 0.3862294010933797,
-      "fulltile": 0.38566921968821766,
-      "heldout": 0.36700403020311956
-    },
-    "mssact_full60": {
-      "4corner": 0.40646157982966036,
-      "fulltile": 0.4025845525663687,
-      "heldout": 0.37657012572490695
-    },
-    "ablate_trans4l": {
-      "4corner": 0.3906768413442347
-    },
-    "ablate_trans6l": {
-      "4corner": 0.4026465111118123
-    },
-    "ablate_no_emr": {
-      "4corner": 0.00035692471092825946
-    },
-    "ablate_no_ecsam": {
-      "4corner": 0.31342503373954167
-    },
-    "ablate_no_fpn": {
-      "4corner": 0.3759827747148773
-    },
-    "ablate_no_trans": {
-      "4corner": 0.3635711612756739
-    },
-    "ablate_no_adapter": {
-      "4corner": 0.3452466354277304
-    },
-    "deeplab": {
-      "4corner": 0.3805932304521133,
-      "fulltile": 0.3860380852389048,
-      "heldout": 0.362821339344593
-    },
-    "fcn": {
-      "4corner": 0.28368532125446705,
-      "fulltile": 0.27905898903052967,
-      "heldout": 0.2581550633794765
-    },
-    "segformer": {
-      "4corner": 0.17753382135928433,
-      "fulltile": 0.16732512666562874,
-      "heldout": 0.15689721904577875
-    },
-    "pspnet": {
-      "4corner": 0.2512791697757463,
-      "fulltile": 0.23995860102836292,
-      "heldout": 0.21714082067804155
-    },
-    "fpn_seg": {
-      "4corner": 0.2981857384510766,
-      "fulltile": 0.2897039997243398,
-      "heldout": 0.27184864538955555
-    },
-    "swin_unet": {
-      "4corner": 0.2682389807954675,
-      "fulltile": 0.2589019093820814,
-      "heldout": 0.24219978071529344
-    },
-    "unet_lr1e4": {
-      "4corner": 0.08868212504833599
-    },
-    "unet_matrix": {
-      "fulltile": 0.09018911692517703,
-      "heldout": 0.09826310849155925
-    }
+  "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
+  "n_tags": 69,
+  "unregistered_tags": []
+ },
+ "comparable_groups": {
+  "G1-PNG-60ep": {
+   "pipeline": "P-PNG",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr2e-4",
+   "members": [
+    "full_all_v2",
+    "nd_abl_no_emr",
+    "nd_abl_no_ecsam",
+    "nd_abl_no_fpn",
+    "nd_abl_no_trans",
+    "nd_abl_no_adapter",
+    "nd_abl_bilinear",
+    "nd_abl_trans4l",
+    "nd_abl_trans6l",
+    "lg_D1_join_nofpn_notrans",
+    "lg_D2_decoder_ca",
+    "lg_D3_ch_tiny",
+    "lg_D4_ch_large"
+   ],
+   "note": "对比实验基线组 (nd_unet/pspnet/fcn/deeplab/segformer/fpn_seg/swin_unet) 同为 P-PNG/60ep/pt20/bs8/lr2e-4, 与本组可比较"
+  },
+  "G2-MEM-ROLL-60ep": {
+   "pipeline": "P-MEM-ROLL",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr2e-4",
+   "members": [
+    "lgR_bs8_full_lr2e4",
+    "lgR_D1_join_nofpn_notrans",
+    "lgR_D2_decoder_ca",
+    "lgR_D3_ch_tiny",
+    "lgR_D4_ch_large"
+   ],
+   "note": "架构结论的复现组; 与 G1 的差异仅为数据投递后端 (memmap vs PNG), 该差异已实测为 +0.0016 (lgR_D1 0.6293 vs lg_D1 0.6277)"
+  },
+  "G3-b15": {
+   "pipeline": "P-PNG",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr2e-4",
+   "members": [
+    "lg_b15_full",
+    "lg_b15_noecsam",
+    "lg_b15_noemr",
+    "lg_b15_unet",
+    "lg_b15_deeplab"
+   ],
+   "note": "预算攻击: 检验'充足预算是否掩盖模块差异'"
+  },
+  "REJECTED": {
+   "pipeline": "P-MEM-DET",
+   "members": [
+    "lgF_D1_join_nofpn_notrans",
+    "lgF_D2_decoder_ca",
+    "lgF_D3_ch_tiny",
+    "lgF_D4_ch_large",
+    "lgF_bs8_full_lr2e4",
+    "lgF_bs16_full_lr4e4"
+   ],
+   "note": "确定性增强世代, 相对 P-PNG 损失 0.0246 Kappa, 结论一律不引用"
   }
+ },
+ "series_summary": {
+  "A-957": {
+   "n_experiments": 1,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.4065
+  },
+  "A-957/对比+消融(60轮)": {
+   "n_experiments": 15,
+   "n_complete": 6,
+   "best_kappa_in_series": 0.4026
+  },
+  "A-957/尺度策略": {
+   "n_experiments": 4,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.3862
+  },
+  "A-957/消融(120轮)": {
+   "n_experiments": 5,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.4621
+  },
+  "A-957/训练策略": {
+   "n_experiments": 11,
+   "n_complete": 5,
+   "best_kappa_in_series": 0.4186
+  },
+  "B-2257": {
+   "n_experiments": 2,
+   "n_complete": 2,
+   "best_kappa_in_series": 0.6239
+  },
+  "C-final/主模型": {
+   "n_experiments": 2,
+   "n_complete": 2,
+   "best_kappa_in_series": 0.6413
+  },
+  "C-final/对比实验": {
+   "n_experiments": 7,
+   "n_complete": 7,
+   "best_kappa_in_series": 0.6876
+  },
+  "C-final/消融实验": {
+   "n_experiments": 8,
+   "n_complete": 8,
+   "best_kappa_in_series": 0.6369
+  },
+  "DEPRECATED": {
+   "n_experiments": 3,
+   "n_complete": 0,
+   "best_kappa_in_series": null
+  },
+  "lg-old/架构(旧管线)": {
+   "n_experiments": 4,
+   "n_complete": 3,
+   "best_kappa_in_series": 0.6341
+  },
+  "lgF-det/架构(确定性增强)": {
+   "n_experiments": 4,
+   "n_complete": 0,
+   "best_kappa_in_series": 0.6031
+  },
+  "lgR-roll/回退验证": {
+   "n_experiments": 1,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.6293
+  },
+  "lgR-roll/架构基线": {
+   "n_experiments": 1,
+   "n_complete": 0,
+   "best_kappa_in_series": 0.462
+  },
+  "lgR-roll/架构消融与容量": {
+   "n_experiments": 1,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.6293
+  }
+ },
+ "experiments": {
+  "abl120_no_adapter": {
+   "series": "A-957/消融(120轮)",
+   "status": "partial(115/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.462127,
+   "best_epoch": 95,
+   "epochs_run": 115,
+   "target_epochs": 120,
+   "params_M": 6.069,
+   "has_weight": true,
+   "script": "legacy/run_abl120.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "REMAP bug; 用户要求训练到收敛",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "abl120_no_ecsam": {
+   "series": "A-957/消融(120轮)",
+   "status": "partial(80/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.358652,
+   "best_epoch": 60,
+   "epochs_run": 80,
+   "target_epochs": 120,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "legacy/run_abl120.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "REMAP bug; 用户要求训练到收敛",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "abl120_no_emr": {
+   "series": "A-957/消融(120轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.40548,
+   "best_epoch": 108,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/run_abl120.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "REMAP bug; 用户要求训练到收敛",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "abl120_no_fpn": {
+   "series": "A-957/消融(120轮)",
+   "status": "partial(105/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.441576,
+   "best_epoch": 85,
+   "epochs_run": 105,
+   "target_epochs": 120,
+   "params_M": 3.618,
+   "has_weight": true,
+   "script": "legacy/run_abl120.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "REMAP bug; 用户要求训练到收敛",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "abl120_no_trans": {
+   "series": "A-957/消融(120轮)",
+   "status": "partial(85/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.458013,
+   "best_epoch": 65,
+   "epochs_run": 85,
+   "target_epochs": 120,
+   "params_M": 4.489,
+   "has_weight": true,
+   "script": "legacy/run_abl120.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "REMAP bug; 用户要求训练到收敛",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_bilinear": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(22/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.041448,
+   "best_epoch": 7,
+   "epochs_run": 22,
+   "target_epochs": 60,
+   "params_M": 5.426,
+   "has_weight": true,
+   "script": "experiment_matrix_v2.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_no_adapter": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(59/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.345247,
+   "best_epoch": 44,
+   "epochs_run": 59,
+   "target_epochs": 60,
+   "params_M": 6.069,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_no_ecsam": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.313425,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_no_emr": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(24/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.000357,
+   "best_epoch": 9,
+   "epochs_run": 24,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_no_fpn": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.375983,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 3.618,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_no_trans": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.363571,
+   "best_epoch": 52,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 4.489,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_trans4l": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.390677,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 7.681,
+   "has_weight": true,
+   "script": "experiment_matrix_v2.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 4,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "ablate_trans6l": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.402647,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 9.261,
+   "has_weight": true,
+   "script": "experiment_matrix_v2.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 6,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "deeplab": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(57/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.380593,
+   "best_epoch": 42,
+   "epochs_run": 57,
+   "target_epochs": 60,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "fcn": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(50/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.283685,
+   "best_epoch": 35,
+   "epochs_run": 50,
+   "target_epochs": 60,
+   "params_M": 23.776,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "fpn_seg": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.298186,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 27.202,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 64,
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "full_all": {
+   "series": "B-2257",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.615539,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/run_queue.py",
+   "root": "DATA_NEWSPLIT",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP 仍含 no-data bug",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "full_all_v2": {
+   "series": "C-final/主模型",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.631245,
+   "best_epoch": 54,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "完整模型基线 = 消融参考系",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgF_D1_join_nofpn_notrans": {
+   "series": "lgF-det/架构(确定性增强)",
+   "status": "REJECTED",
+   "pipeline": "P-MEM-DET",
+   "best_kappa": 0.603131,
+   "best_epoch": 54,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 2.005,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v2)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "确定性增强 -> Kappa 相对 P-PNG -0.0246, 已否决",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgF_D2_decoder_ca": {
+   "series": "lgF-det/架构(确定性增强)",
+   "status": "REJECTED",
+   "pipeline": "P-MEM-DET",
+   "best_kappa": 0.578476,
+   "best_epoch": 52,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.115,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v2)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "确定性增强 -> Kappa 相对 P-PNG -0.0246, 已否决",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgF_D3_ch_tiny": {
+   "series": "lgF-det/架构(确定性增强)",
+   "status": "REJECTED",
+   "pipeline": "P-MEM-DET",
+   "best_kappa": 0.447181,
+   "best_epoch": 19,
+   "epochs_run": 19,
+   "target_epochs": 60,
+   "params_M": 1.547,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v2)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "确定性增强 -> Kappa 相对 P-PNG -0.0246, 已否决",
+   "arch": {
+    "stem_ch": 16,
+    "stage_ch": [
+     16,
+     32,
+     64,
+     128
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgF_bs8_full_lr2e4": {
+   "series": "lgF-det/架构(确定性增强)",
+   "status": "REJECTED",
+   "pipeline": "P-MEM-DET",
+   "best_kappa": 0.576038,
+   "best_epoch": 42,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v2)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "确定性增强 -> Kappa 相对 P-PNG -0.0246, 已否决",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_D1_join_nofpn_notrans": {
+   "series": "lgR-roll/架构消融与容量",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.629275,
+   "best_epoch": 55,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 2.005,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_bs8_full_lr2e4": {
+   "series": "lgR-roll/架构基线",
+   "status": "partial(21/60)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.462028,
+   "best_epoch": 21,
+   "epochs_run": 21,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "★ 完整模型 6.102M 同管线对照",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgV_D1_rollback": {
+   "series": "lgR-roll/回退验证",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.629275,
+   "best_epoch": 55,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 2.005,
+   "has_weight": true,
+   "script": "verify_rollback.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "回退管线性能验证, 已并入 lgR_D1",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lg_D1_join_nofpn_notrans": {
+   "series": "lg-old/架构(旧管线)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.627695,
+   "best_epoch": 53,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 2.005,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v1)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-PNG: 与 nd_* 同管线同协议, 可比较",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lg_D2_decoder_ca": {
+   "series": "lg-old/架构(旧管线)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.634124,
+   "best_epoch": 54,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.115,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v1)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-PNG: 与 nd_* 同管线同协议, 可比较",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lg_D3_ch_tiny": {
+   "series": "lg-old/架构(旧管线)",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.61188,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 1.547,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v1)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-PNG: 与 nd_* 同管线同协议, 可比较",
+   "arch": {
+    "stem_ch": 16,
+    "stage_ch": [
+     16,
+     32,
+     64,
+     128
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lg_D4_ch_large": {
+   "series": "lg-old/架构(旧管线)",
+   "status": "partial(23/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.569626,
+   "best_epoch": 23,
+   "epochs_run": 23,
+   "target_epochs": 60,
+   "params_M": 24.242,
+   "has_weight": true,
+   "script": "run_queue_arch.py(v1)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "P-PNG: 与 nd_* 同管线同协议, 可比较",
+   "arch": {
+    "stem_ch": 64,
+    "stage_ch": [
+     64,
+     128,
+     256,
+     512
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "mssact_full60": {
+   "series": "A-957",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.406462,
+   "best_epoch": 49,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/run_queue.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "mssact_v2": {
+   "series": "DEPRECATED",
+   "status": "no-data",
+   "pipeline": "P-PNG",
+   "best_kappa": null,
+   "best_epoch": null,
+   "epochs_run": 0,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": "DATA_LEGACY",
+   "protocol": "Noneep/ptNone/bs8/lr0.0002",
+   "note": "空 history, 无有效训练记录, 不可引用",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_bilinear": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.636879,
+   "best_epoch": 59,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 5.426,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_no_adapter": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.634196,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.069,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_no_ecsam": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.627171,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_no_emr": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.635546,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_no_fpn": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.631395,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 3.618,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_no_trans": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.63018,
+   "best_epoch": 54,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 4.489,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_trans4l": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.636234,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 7.681,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 4,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_abl_trans6l": {
+   "series": "C-final/消融实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.633499,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 9.261,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 6,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_deeplab": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.687602,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_fcn": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.614399,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 23.776,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_fpn_seg": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.615113,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 27.202,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 64,
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_pspnet": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.51755,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 13.596,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "stem_ch": 64,
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_segformer": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.304294,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 1.231,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_swin_unet": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.585944,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 32.666,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 3
+   }
+  },
+  "nd_unet": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.605399,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "post_all": {
+   "series": "B-2257",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.623945,
+   "best_epoch": 19,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/run_queue.py",
+   "root": "DATA_NEWSPLIT",
+   "protocol": "30ep/pt12/bs8/lr5e-05",
+   "note": "REMAP 仍含 no-data bug",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "post_all_v2": {
+   "series": "C-final/主模型",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.641257,
+   "best_epoch": 27,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_new.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "30ep/pt12/bs8/lr5e-05",
+   "note": "微调自 full_all_v2",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "pspnet": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(52/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.251279,
+   "best_epoch": 37,
+   "epochs_run": 52,
+   "target_epochs": 60,
+   "params_M": 13.596,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "stem_ch": 64,
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "segformer": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(59/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.177534,
+   "best_epoch": 44,
+   "epochs_run": 59,
+   "target_epochs": 60,
+   "params_M": 1.231,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_bilinear_oc30": {
+   "series": "A-957/训练策略",
+   "status": "partial(30/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.162209,
+   "best_epoch": 13,
+   "epochs_run": 30,
+   "target_epochs": 60,
+   "params_M": 5.426,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_bilinear_oc60_lr1e4": {
+   "series": "A-957/训练策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.390293,
+   "best_epoch": 48,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 5.426,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_deeplab_oc30": {
+   "series": "A-957/训练策略",
+   "status": "partial(30/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.333052,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 60,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_mssact_full30m_oc60": {
+   "series": "A-957/训练策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.418622,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 30.547,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 64,
+    "stage_ch": [
+     64,
+     128,
+     256,
+     512
+    ],
+    "transformer_layers": 4,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_mssact_oc30": {
+   "series": "A-957/训练策略",
+   "status": "partial(30/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.103462,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_mssact_oc60_lr5e4": {
+   "series": "A-957/训练策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.385676,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_mssact_sgdr120": {
+   "series": "A-957/训练策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.418343,
+   "best_epoch": 120,
+   "epochs_run": 120,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_no_emr_oc30": {
+   "series": "A-957/训练策略",
+   "status": "partial(30/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.069425,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_no_emr_oc60_lr1e4": {
+   "series": "A-957/训练策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.36326,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_unet_oc12_lr1e3": {
+   "series": "A-957/训练策略",
+   "status": "partial(12/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.109977,
+   "best_epoch": 11,
+   "epochs_run": 12,
+   "target_epochs": 60,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "strat_unet_oc12_lr2e4": {
+   "series": "A-957/训练策略",
+   "status": "partial(12/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.082839,
+   "best_epoch": 5,
+   "epochs_run": 12,
+   "target_epochs": 60,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "run_queue_30m.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt20/bs8/lrNone",
+   "note": "LR/调度/预算 策略对比",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "swin_unet": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(55/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.268239,
+   "best_epoch": 40,
+   "epochs_run": 55,
+   "target_epochs": 60,
+   "params_M": 32.666,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 3
+   }
+  },
+  "unet": {
+   "series": "DEPRECATED",
+   "status": "no-data",
+   "pipeline": "P-PNG",
+   "best_kappa": null,
+   "best_epoch": null,
+   "epochs_run": 0,
+   "target_epochs": 120,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "早期失败运行, 被 nd_unet 取代",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "unet_lr1e4": {
+   "series": "A-957/对比+消融(60轮)",
+   "status": "partial(21/60)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.088682,
+   "best_epoch": 6,
+   "epochs_run": 21,
+   "target_epochs": 60,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "experiment_matrix.py",
+   "root": "DATA_LEGACY",
+   "protocol": "60ep/pt15/bs8/lr0.0002",
+   "note": "REMAP bug + 957 张子集",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "unet_matrix": {
+   "series": "DEPRECATED",
+   "status": "no-data",
+   "pipeline": "P-PNG",
+   "best_kappa": null,
+   "best_epoch": null,
+   "epochs_run": 0,
+   "target_epochs": null,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": null,
+   "root": "DATA_LEGACY",
+   "protocol": "Noneep/ptNone/bs8/lr0.0002",
+   "note": "空 history, 无有效训练记录, 不可引用",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "v3_s1024": {
+   "series": "A-957/尺度策略",
+   "status": "partial(31/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.220301,
+   "best_epoch": 30,
+   "epochs_run": 31,
+   "target_epochs": 120,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/train_v3.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "裁剪尺度对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "v3_s128gf": {
+   "series": "A-957/尺度策略",
+   "status": "partial(38/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.009847,
+   "best_epoch": 22,
+   "epochs_run": 38,
+   "target_epochs": 120,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/train_v3.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "裁剪尺度对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "v3_s256": {
+   "series": "A-957/尺度策略",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.386229,
+   "best_epoch": 109,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/train_v3.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "裁剪尺度对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "v3_s512": {
+   "series": "A-957/尺度策略",
+   "status": "partial(36/120)",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.218685,
+   "best_epoch": 16,
+   "epochs_run": 36,
+   "target_epochs": 120,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "legacy/train_v3.py",
+   "root": "DATA_LEGACY",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "裁剪尺度对比",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  }
+ }
 }
