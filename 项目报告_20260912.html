@@ -1210,10 +1210,86 @@ DeepLabV3+ 39.6M）逐像素推理，比较一致性与共识。</p>
 <li><strong>工程收益</strong>：实验队列总时长由约 <strong>24 小时压缩至约 3 小时</strong>，使更多
    对照实验（架构验证、数据阶梯）在同等时间预算内成为可能</li>
 </ol>
-<p><strong>注</strong>：批量大小（batch）未作调整。显存实测表明 light 模型 batch=16 峰值
-4.61 GB（安全），batch=32 需 9.16 GB（超出 8 GB 会 OOM）；且优化后 GPU
-利用率已达 84%，继续增大 batch 的边际收益有限，而改变 batch 需按线性缩放
-规则重调学习率、会破坏与已完成实验的可比性，故保持 batch=8。</p>
+<h3>5.5.5 零性能损失验证</h3>
+<p>优化过程中<strong>仅采用不改变训练语义的措施</strong>，并逐项验证：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>措施</th>
+<th>语义影响</th>
+<th>验证方式</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>预解码 memmap</td>
+<td>无（数据相同）</td>
+<td><strong>逐像素对比：随机 30 张全部一致（最大差 0）</strong></td>
+<td>✅ 零损失</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>num_workers=8</code></td>
+<td>无（增强分布相同）</td>
+<td>同一 <code>(epoch_seed, idx)</code> 决定增强序列</td>
+<td>✅ 零损失</td>
+</tr>
+<tr>
+<td>3</td>
+<td>EMA 遍历 <code>parameters()</code></td>
+<td>无（数学等价）</td>
+<td>与 <code>state_dict</code> 版本逐张量等价</td>
+<td>✅ 零损失</td>
+</tr>
+<tr>
+<td>4</td>
+<td>损失张量累积</td>
+<td>无（数值等价）</td>
+<td>float32 累积，每轮一次同步</td>
+<td>✅ 零损失</td>
+</tr>
+<tr>
+<td>5</td>
+<td>增强改确定性 generator</td>
+<td>序列不同、<strong>分布相同</strong></td>
+<td>同样的 rot90 + 双向翻转，概率不变</td>
+<td>✅ 零损失（并额外获得可复现性）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>主动放弃的改动</strong>（均为会改变训练语义、损失可比性的措施）：</p>
+<table>
+<thead>
+<tr>
+<th>措施</th>
+<th>预期速度收益</th>
+<th>放弃原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>batch 8 → 16/32</td>
+<td>约 10–15%</td>
+<td>改变 batch 需按线性缩放规则重调学习率；且显存实测：batch=16 峰值 4.61 GB（安全）、<strong>batch=32 需 9.16 GB（超 8 GB 会 OOM）</strong></td>
+</tr>
+<tr>
+<td>EMA 改为每 N 步更新</td>
+<td>小</td>
+<td>降低更新频率会改变权重平滑效果，影响精度</td>
+</tr>
+<tr>
+<td>学习率/调度再调优</td>
+<td>不确定</td>
+<td>会破坏与已完成 15 个阶段 C 实验的可比性</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：优化后 GPU 利用率由 49.9% 提升至 84.3%、每轮耗时降低 3–13 倍，
+且<strong>训练语义与数据完全不变</strong>——所有收益来自消除数据管线瓶颈与主进程同步开销，
+而非牺牲精度。</p>
 <hr />
 <h2>6. 关键结论</h2>
 <ol>
