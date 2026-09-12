@@ -190,7 +190,7 @@ if os.path.exists(_idx):
 F["data_ladder"] = None
 _lad_rows = {}
 for _n in (250, 500, 1000):
-    for _m in ("full", "noecsam", "unet", "deeplab"):
+    for _m in ("full", "noecsam", "unet", "deeplab", "deeplab_scr"):
         _t = f"lgR_n{_n}_{_m}"
         _hp = f"{CKPT}/{_t}_history.json"
         if not os.path.exists(_hp):

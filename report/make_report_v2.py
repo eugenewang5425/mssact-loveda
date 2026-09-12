@@ -200,10 +200,12 @@ def _sec_ladder():
     if not rows:
         return "**（数据量阶梯结果待补齐）** 由 queues/run_queue_arch.py 的阶梯段产出。"
     NAME = {"full": "MSSACT-Net 完整（6.10M）", "noecsam": "MSSACT-Net w/o ECSAM（6.04M）",
-            "unet": "U-Net（2.45M）", "deeplab": "DeepLabV3+（39.69M）"}
+            "unet": "U-Net（2.45M）",
+            "deeplab": "DeepLabV3+（39.69M，**预训练主干**）",
+            "deeplab_scr": "DeepLabV3+（39.69M，**从零训练**）"}
     out = []
     for n in (250, 500, 1000):
-        sub = {m: rows.get(f"lgR_n{n}_{m}") for m in ("full", "noecsam", "unet", "deeplab")}
+        sub = {m: rows.get(f"lgR_n{n}_{m}") for m in ("full", "noecsam", "unet", "deeplab", "deeplab_scr")}
         sub = {m: r for m, r in sub.items() if r}
         if not sub:
             continue
@@ -969,11 +971,38 @@ test_clean（141 张）池化 Kappa 与配对 bootstrap（1000 次图像级重�
 逐类 mIoU：**DeepLabV3+ 在全部 7 个类上均优于自研模型**；去除 barren 后差距仍在
 （0.4197 vs 0.3378），故不是某一退化类拖累的假象。
 
-**公平性核验（重要）**：为排除"基线享有 ImageNet 预训练"的怀疑，已核对代码——
-`deeplabv3_resnet50(weights=None)`、`resnet50(weights=None)`、`resnet18(weights=None)`，
-**全部从零训练**，与自研模型同协议同数据。故 **+0.072 是公平对比下的真实差距**，
-最可能的原因是 DeepLabV3+ 具备本模型缺失的**低层跳连**（5.6.3）与保留分辨率的
-空洞卷积。
+**公平性核验（已更正，2026-09-13）**：
+
+初稿此处声称"已核对代码，`deeplabv3_resnet50(weights=None)`… **全部从零训练**"。
+**该核验是错的，`weights=None` 并不足以关闭主干预训练。**
+
+torchvision 的 `deeplabv3_resnet50` 有**两个互相独立**的权重参数：
+`weights`（整体/分割头）与 `weights_backbone`（主干），**后者的默认值是
+`ResNet50_Weights.IMAGENET1K_V1`**。因此只传 `weights=None` 时，
+**ImageNet 预训练的 ResNet-50 主干仍会被加载**。
+
+**实测证据**（首个 BatchNorm 的 `weight` 均值——新初始化必为 1.0）：
+
+| 模型 | 首个 BN weight 均值 | 判定 |
+|---|---:|---|
+| U-Net / PSPNet / FCN / SegFormerLite / FPN-Seg | **1.0000** | 确为从零训练 |
+| **DeepLabV3+** | **0.2574** | **加载了 ImageNet 预训练主干** |
+
+（`resnet18` / `resnet50` 没有 `weights_backbone` 参数，故 `weights=None` 确实等于
+从零训练；混淆**仅**存在于分割工厂 `deeplabv3_resnet50`。权重文件的缓存时间
+（Sep 6）也早于 DeepLab 基线开训时间（Sep 11），佐证其确实被加载。）
+
+**因此 +0.0720 的性质必须重新表述**：
+
+> 该差距**不是**"从零训练条件下的架构对比"，而是
+> "**6.10M 从零训练的模型** vs **39.69M + ImageNet 预训练主干的模型**"。
+> 预训练特征在仅 1,768 张训练样本的条件下是极大的优势，
+> 因此这 0.072 中**架构（低层跳连、空洞卷积）与预训练两项贡献无法分离**。
+> 初稿把它归因于"低层跳连"是**过度归因**。
+
+**已在代码中显式区分**：`DeepLabV3Plus(pretrained_backbone=...)`。
+既有 `deeplab*` 结果为 `True`（预训练）；从零训练对照以新 tag 后缀 `_scr` 运行
+（`deeplab_scr` / `lgR_n*_deeplab_scr`），用于分离预训练的贡献。
 
 ### 5.6.7 通道-空间容量比
 

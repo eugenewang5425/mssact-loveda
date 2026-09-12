@@ -81,13 +81,35 @@ class FCN(nn.Module):
         return self.up(x)
 
 class DeepLabV3Plus(nn.Module):
-    """DeepLabV3+ (ResNet50 backbone, torch.hub hub)"""
-    def __init__(self, in_ch=3, nc=7):
+    """DeepLabV3+ (ResNet-50 backbone)
+
+    ⚠️ 重要更正（2026-09-13）: torchvision 的 `deeplabv3_resnet50` 有两个**互相独立**
+    的权重参数 —— `weights`（分割头/整体）与 `weights_backbone`（主干）。
+    后者的默认值是 `ResNet50_Weights.IMAGENET1K_V1`，因此**只传 `weights=None`
+    并不会关闭主干预训练**。此前误以为 `weights=None` 即"从零训练"，导致
+    DeepLabV3+ 基线实际带着 ImageNet 预训练主干，而报告中却声称"全部从零训练"。
+
+    实测证据（首个 BatchNorm 的 weight 均值，新初始化必为 1.0）:
+        UNet/PSPNet/FCN/SegFormerLite/FPNSeg = 1.0000  -> 确为从零
+        DeepLabV3Plus                        = 0.2574  -> 加载了预训练
+    （`resnet18` / `resnet50` 没有 weights_backbone 参数，故 `weights=None` 确实
+      等于从零训练 —— 混淆仅存在于分割工厂 deeplabv3_resnet50。）
+
+    参数
+    ----
+    pretrained_backbone : True  = 复现既有 `deeplab*` 结果（ImageNet 预训练主干）
+                          False = 从零训练（新 tag 后缀 `_scr`，用于公平对照）
+    """
+    def __init__(self, in_ch=3, nc=7, pretrained_backbone=True):
         super().__init__()
         import torchvision.models as tvm
-        m = tvm.segmentation.deeplabv3_resnet50(weights=None, num_classes=nc)
+        from torchvision.models import ResNet50_Weights
+        wb = ResNet50_Weights.IMAGENET1K_V1 if pretrained_backbone else None
+        m = tvm.segmentation.deeplabv3_resnet50(weights=None, weights_backbone=wb,
+                                               num_classes=nc)
         m.backbone.conv1 = nn.Conv2d(in_ch, 64, 7, 2, 3, bias=False)
         self.m = m
+        self.pretrained_backbone = bool(pretrained_backbone)
     def forward(self, x): return self.m(x)['out']
 
 class SegFormerLite(nn.Module):

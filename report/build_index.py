@@ -133,6 +133,15 @@ reg(_lgR[:1], "lgR-roll/架构基线", "queues/run_queue_arch.py (v3)", "DATA_NE
     "★ 完整模型 6.102M 同管线对照", pipeline="P-MEM-ROLL")
 reg(_lgR[1:], "lgR-roll/架构消融与容量", "queues/run_queue_arch.py (v3)", "DATA_NEWSPLIT2",
     60, 20, 8, 2e-4, "P-MEM-ROLL", pipeline="P-MEM-ROLL")
+# DeepLabV3+ 从零训练对照（分离 ImageNet 预训练贡献）
+reg(["lgR_deeplab_scr"], "lgR-roll/DeepLab从零对照", "queues/run_queue_deeplab_scr.py",
+    "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "★ pretrained_backbone=False；对照 lgR_bs8_full_lr2e4(0.6320, 从零)", pipeline="P-MEM-ROLL")
+for _n in (250, 500, 1000):
+    reg([f"lgR_n{_n}_deeplab_scr"], f"lgR-roll/数据阶梯 n{_n}", "queues/run_queue_deeplab_scr.py",
+        f"data_ladder/n{_n}", 30, 30, 8, 2e-4,
+        "从零训练；与同档预训练版 lgR_n%d_deeplab 配对可分离预训练贡献" % _n,
+        pipeline="P-MEM-ROLL")
 reg(["lgR_b15_full", "lgR_b15_noecsam", "lgR_b15_noemr", "lgR_b15_unet", "lgR_b15_deeplab"],
     "lgR-roll/预算攻击(15轮)", "queues/run_queue_arch.py (v3)", "DATA_NEWSPLIT2", 15, 15, 8, 2e-4,
     "P-MEM-ROLL", pipeline="P-MEM-ROLL")

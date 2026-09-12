@@ -144,7 +144,14 @@ DeepLabV3+ 仍领先，但其参数量为 MSSACT 的 **6.5 倍**。
 不存在（FPN）或不可用（Transformer 的位置感知）。故这组消融**不能**作为"模块
 有效性"的证据。同时，DeepLabV3+ 的 **+0.0720**（配对 bootstrap 95% CI
 [+0.0525, +0.0929]，显著）也有了机制解释：它**拥有**本模型缺失的低层跳连。
-（公平性已核验：所有基线 `weights=None` 从零训练，非预训练优势。）
+（**已更正**：初稿称"所有基线 `weights=None` 从零训练"——该核验是错的。
+torchvision 的 `deeplabv3_resnet50` 另有独立的 `weights_backbone` 参数，默认即
+`IMAGENET1K_V1`，故只传 `weights=None` **仍会加载预训练主干**。实测首个 BN 的
+`weight` 均值：U-Net/PSPNet/FCN/SegFormerLite/FPN-Seg 均为 **1.0000**（确为从零），
+而 **DeepLabV3+ 为 0.2574**（预训练）。故 +0.0720 实为
+"6.10M 从零模型 vs 39.69M **+预训练主干**"，**架构贡献与预训练贡献无法分离**，
+初稿归因于"低层跳连"属过度归因。已加 `pretrained_backbone` 参数并用 `_scr`
+后缀的从零对照来分离二者。）
 
 **已给出可验证的修复路径**（P0 解码器加跳连、FPN 真正使用多尺度输出；P1
 Transformer 加位置编码；P2 修正 2.67× 容量膨胀）。
