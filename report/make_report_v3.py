@@ -21,9 +21,9 @@ import markdown
 
 BASE = paths.REPO
 FIG = paths.FIGURES
-FACTS = json.load(open(os.path.join(BASE, "FACTS.json"), encoding="utf-8"))
-IX = json.load(open(os.path.join(BASE, "experiments_index.json"), encoding="utf-8"))
-SV = json.load(open(os.path.join(BASE, "seed_variance.json"), encoding="utf-8"))
+FACTS = json.load(open(paths.FACTS_JSON, encoding="utf-8"))
+IX = json.load(open(paths.INDEX_JSON, encoding="utf-8"))
+SV = json.load(open(paths.SEEDVAR_JSON, encoding="utf-8"))
 CD = json.load(open(os.path.join(paths.RESULTS, "artifacts", "class_distribution.json"),
                     encoding="utf-8"))
 ET = json.load(open(os.path.join(paths.RESULTS, "artifacts", "epoch_times.json"),
@@ -1398,6 +1398,6 @@ pre {{ background:#f5f5f5; padding:12px; border-radius:5px; overflow-x:auto; }}
 blockquote {{ border-left:4px solid #b30000; padding-left:12px; color:#555; background:#fafafa; }}
 </style></head><body>{body}</body></html>"""
 
-out_html = f"{BASE}/项目报告_{TODAY}.html"
+out_html = os.path.join(paths.REPORTS, f"项目报告_{TODAY}.html")
 open(out_html, "w", encoding="utf-8").write(html)
 print(f"HTML: {out_html}")

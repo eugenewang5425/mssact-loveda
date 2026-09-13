@@ -375,7 +375,7 @@ def main():
         "series_summary": summary,
         "experiments": exps,
     }
-    dst = os.path.join(REPO, "experiments_index.json")
+    dst = paths.INDEX_JSON
     json.dump(out, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"\n写入 {dst}", flush=True)
     print(f"  已登记 {len(exps) - len(unregistered)} / {len(exps)} 个 tag", flush=True)

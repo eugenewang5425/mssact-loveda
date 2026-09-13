@@ -40,9 +40,10 @@ import subprocess
 BASE = _BASE
 sys.path.insert(0, BASE)
 
+import paths
 from queue_guard import queues_running, POLL_INTERVAL, _no_window_kwargs   # noqa: E402
 
-LOG = os.path.join(BASE, "chain.log")
+LOG = os.path.join(paths.LOGS, "chain.log")
 STEPS = ["queues/run_queue_final.py", "queues/run_queue_crop.py"]
 
 

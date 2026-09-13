@@ -125,8 +125,8 @@ if os.path.exists(f"{paths.OVERFIT}/overfit_summary.json"):
 
 # ========== 随机种子噪声底线 ==========
 F["seed_variance"] = None
-if os.path.exists(f"{BASE}/seed_variance.json"):
-    F["seed_variance"] = json.load(open(f"{BASE}/seed_variance.json"))
+if os.path.exists(paths.SEEDVAR_JSON):
+    F["seed_variance"] = json.load(open(paths.SEEDVAR_JSON, encoding="utf-8"))
 
 # ========== 解码器伪影 / 边缘密度 ==========
 F["artifact"] = None
@@ -162,7 +162,7 @@ F["arch_defects"] = {
 # ========== 架构实验 (lgR_* 回退管线) 汇总 ==========
 # 来源: experiments_index.json (参数量直读张量, 由 build_index.py 生成)
 F["arch_experiments"] = None
-_idx = f"{BASE}/experiments_index.json"
+_idx = paths.INDEX_JSON
 if os.path.exists(_idx):
     _d = json.load(open(_idx, encoding="utf-8"))
     _e = _d.get("experiments", {})
@@ -320,7 +320,7 @@ if _svp or _sc is not None:
                                             if (_sc is not None and _ours is not None) else None)),
         note="同管线 P-MEM-ROLL / 60ep 主数据集；σ_seed=0.0050（见 5.7）")
 
-json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
+json.dump(F, open(paths.FACTS_JSON, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 
 # 打印摘要
 print("="*90)

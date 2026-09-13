@@ -5,7 +5,13 @@ land-cover semantic segmentation, with systematic evaluation on the public
 **LoveDA** benchmark: baseline comparison, module ablation, training-strategy
 search, and an empirical study on the **label-quality ceiling** of model evaluation.
 
-> **项目报告**：[项目报告_20260912.pdf](项目报告_20260912.pdf)（22 页，含全部实验与图表）
+> 📄 **项目报告**：[项目报告_20260913.pdf](reports/项目报告_20260913.pdf)（44 页）——
+> 含全部实验、图表与公式；[HTML 版](reports/项目报告_20260913.html)（可再生）
+>
+> 🧭 **导航**：[核心结果](#核心结果) · [重要发现](#重要发现) ·
+> [项目结构](#项目结构) · [快速开始](#快速开始) · [后续工作](#后续工作) ·
+> [目录整理记录](docs/整理记录_20260913.md) · [报告问题研究](docs/报告问题研究_20260913.md) ·
+> [项目阶段评估](docs/项目阶段评估_20260913.md)
 >
 > **数据来源声明**：本 README 全部数字由仓库实验记录自动汇总生成
 > （`build_facts.py` → `FACTS.json` ← `checkpoints/*_history.json` + 评估结果 JSON），
@@ -247,26 +253,27 @@ AdamW(lr=2e-4, wd=0.02) + OneCycle(6% warmup + 余弦退火, 60 轮) + EMA(0.999
 
 ## 项目结构
 
-脚本按用途分目录；**仓库根目录只保留路径枢纽、核心库、权威事实与交付件**。
+根目录**只保留** 5 个核心模块与文档；脚本按用途分 7 个子目录；
+全部产物集中在 `results/`；报告交付件在 `reports/`。
 
 ```
 loveda/
-├── paths.py                    # 路径配置中心（环境变量 / .env / 默认值）
+├── paths.py                    # ★ 路径枢纽：全部路径的唯一来源（含 FACTS/REPORTS/LOGS）
 ├── train_v3.py                 # 数据集 + 训练循环 + REMAP（核心）
 ├── experiment_matrix.py        # 通用训练入口 train_one() + 基线模型
 ├── experiment_matrix_v2.py     # 扩展基线(FPN/Swin-Unet) + 消融构造
 ├── train_full_data.py          # 全量数据训练（主模型 + 后训练）
 ├── models/msscactnet.py        # MSSACT-Net 定义（模块可开关）
 │
-├── queues/                     # 实验队列（自动串行、断点续跑）
+├── queues/                     # 实验队列（自动串行、断点续跑、互斥、无窗口）
 │   ├── run_chain.py            #   统一等待链：静默等待 → final → crop
+│   ├── run_chain_scr.py        #   收尾链：DeepLab 从零对照
 │   ├── run_queue_new.py        #   主模型重训 + 对比(7) + 消融(8)
 │   ├── run_queue_arch.py       #   架构实验 D1-D4 + 预算攻击 + 数据阶梯
-│   ├── run_queue_final.py      #   多种子噪声底线 + 22 tag 全量推理
+│   ├── run_queue_final.py      #   多种子噪声底线 + 全量推理
 │   ├── run_queue_crop.py       #   裁剪策略对比（256/384/512、随机/固定）
-│   ├── run_queue_30m.py        #   30.5M 原版架构 + 后训练 + TTA
-│   ├── run_queue_interaction.py#   预算攻击 + 固定 LR
-│   ├── run_queue_batch.py      #   batch 缩放对照（bs8 vs bs16）
+│   ├── run_queue_deeplab_scr.py / _protocol.py   # 从零 DeepLab 对照与协议内基线
+│   ├── run_queue_30m.py / _interaction.py / _batch.py   # 早期队列（历史）
 │   ├── monitor_queue.py        #   实时进度监控（动态刷新 + ETA）
 │   ├── eta_queue.py            #   剩余时间估算（按实测每轮耗时累加）
 │   └── queue_guard.py          #   队列互斥守卫（CREATE_NO_WINDOW，避免弹窗）
@@ -274,92 +281,84 @@ loveda/
 ├── analysis/                   # 评估与分析
 │   ├── eval_rigor.py           #   严格性评估：逐类 IoU / 配对 bootstrap / TOST
 │   ├── eval_ladder.py          #   数据阶梯评价（泛化 / 过拟合 / 学习速率）
-│   ├── eval_complete.py        #   val/test × TTA
-│   ├── eval_tta_new.py         #   新数据（newsplit2）TTA
 │   ├── consensus_analysis.py   #   标签质量一致性分析
 │   ├── headroom_analysis.py    #   Kappa 归属分解（oracle 作弊实验）
-│   ├── artifact_analysis.py    #   解码器伪影 / 边缘密度
+│   ├── artifact_analysis.py    #   解码器伪影 / 边缘密度 / FFT 周期
+│   ├── convergence_amount.py   #   累计学习量（分离调度效应与架构效应）
+│   ├── seed_variance.py        #   随机种子噪声底线（σ_seed）
 │   ├── fix_boundary_analysis.py#   修正边界分层定义（原实现有跨图求差缺陷）
 │   ├── overfit_diag.py         #   过拟合诊断（logits 熵）
-│   └── seed_variance.py        #   随机种子噪声底线（σ_seed）
+│   └── eval_complete.py / eval_tta_new.py    # 早期评估
 │
-├── verify/                     # 校验与基准
-│   ├── verify_experiments.py   #   实验产物核验（架构/完整性/交叉一致）
+├── verify/                     # 核验与审核
+│   ├── pre_push_audit.py       #   ★ 推送前审核（本机路径/敏感语境/大文件/误提交）
+│   ├── verify_experiments.py   #   实验产物核验
 │   ├── verify_rollback.py      #   回退管线性能验证
 │   ├── verify_split2.py        #   划分泄漏校验
-│   ├── bench_parity.py         #   PNG vs memmap 数值一致性
-│   ├── bench_pipeline.py       #   管线提速基准
-│   └── sample_gpu_now.py       #   GPU 利用率采样
+│   └── bench_parity.py / bench_pipeline.py / sample_gpu_now.py   # 基准与采样
 │
 ├── prep/                       # 数据准备
 │   ├── resplit_filtered.py     #   no-data 筛选 + MD5 去重 + 8:1:1 划分
 │   ├── build_data_ladder.py    #   嵌套数据阶梯子集（250/500/1000）
-│   ├── build_fast_dataset.py   #   预解码主数据集 memmap（消除 PNG 解码瓶颈）
-│   └── build_ladder_memmap.py  #   预解码阶梯子集 memmap（ladder_n250/500/1000）
+│   └── build_fast_dataset.py / build_ladder_memmap.py   # 预解码 memmap
 │
 ├── viz/                        # 图表
-│   ├── make_figures.py         #   学习曲线 / 消融 / 每类 F1 / 同 tile 对比
-│   └── make_stats_figures.py   #   混淆矩阵 / PRF / 参数效率 / LR 调度
+│   ├── make_report_figures.py  #   ★ 报告全部图（从权威数据源生成，22 张）
+│   ├── make_figures.py         #   早期图（阶段 A/B，历史）
+│   └── make_stats_figures.py   #   早期统计图（历史）
 │
-├── report/                     # 汇总与报告
-│   ├── build_index.py          #   实验索引 → experiments_index.json
-│   ├── build_facts.py          #   事实汇总 → FACTS.json（报告唯一数据源）
-│   ├── make_report_v2.py       #   报告 Markdown → HTML
-│   └── make_pdf.py             #   HTML → PDF（Chrome headless）+ 内容自检
+├── report/                     # 汇总与报告生成
+│   ├── build_index.py          #   实验索引 → results/facts/experiments_index.json
+│   ├── build_facts.py          #   事实汇总 → results/facts/FACTS.json（唯一数据源）
+│   ├── make_report_v3.py       #   ★ 当前报告生成器（Markdown → HTML）
+│   └── make_pdf.py             #   HTML → PDF（含 25 项内容自检 + 页脚泄露检查）
 │
 ├── mapping/inference_fullmap.py# 全图滑窗推理 + shp 裁剪成图（制图管线）
 │
 ├── docs/                       # 文档
 │   ├── 架构有效性分析.md         #   三项已数值证实的架构缺陷 + 文献 + 修复路径
-│   ├── verify_report.txt       #   实验产物核验输出
+│   ├── 报告问题研究_20260913.md  #   报告 7 类 27 条问题的审查与处置
+│   ├── 整理记录_20260913.md      #   目录整理记录 + 路径适配 + 验证
+│   ├── 项目阶段评估_20260913.md  #   三阶段划分与本项目定位
 │   └── archive/                #   历史文档归档
-├── legacy/                     # 历史脚本归档（18 个早期脚本 + 说明）
+├── legacy/                     # 历史脚本归档（含被 v3 取代的 make_report_v2.py）
 │
-├── docs/                       # 文档
-│   ├── 架构有效性分析.md         #   三项已数值证实的架构缺陷 + 文献 + 修复路径
-│   ├── 整理记录_20260913.md     #   目录整理记录 + 路径依赖适配 + 验证
-│   └── archive/                #   历史文档归档
-├── legacy/                     # 历史脚本归档（18 个早期脚本）
-│
+├── reports/                    # ★ 报告交付件
+│   ├── 项目报告_20260913.pdf    #   当前报告（44 页）
+│   └── 项目报告_20260913.html   #   HTML 版（可再生，不入库）
 ├── figures/                    # 报告图（入库）
-├── FACTS.json                  # 全部结果的结构化汇总（报告唯一数据源）
-├── experiments_index.json      # 全部实验登记 + 管线世代 + 可比性分组
-├── seed_variance.json          # 多种子噪声底线结果
-├── 项目报告_20260913.pdf        # 项目报告（交付件）
 │
-└── results/                    # ★ 全部产物集中于此（目录整理后新增）
+└── results/                    # ★ 全部产物集中于此
+    ├── facts/                  #   权威事实：FACTS.json / experiments_index.json / seed_variance.json
+    ├── logs/                   #   运行日志（不入库）
     ├── checkpoints/            #   权重 + 训练历史（约 5.2 GB）
     ├── fast_dataset/           #   预解码 memmap（约 17 GB）
     ├── consensus_analysis/     #   一致性分析（汇总 JSON 入库）
-    ├── overfit_diag/  ladder_eval/
-    ├── fulltile_eval/  tta_eval/  heldout_test/  tta_eval2/
-    └── artifacts/              #   中间分析产物
+    ├── overfit_diag/  ladder_eval/  fulltile_eval/  tta_eval/  heldout_test/
+    └── artifacts/              #   中间分析产物（类别分布、收敛量、每轮耗时等）
 ```
 
-> **结果目录为什么集中到 `results/`**：所有脚本一律通过 `paths.py` 的常量取路径
-> （`paths.CKPT` / `paths.CONSENSUS` / …），因此重组目录**只需改 `paths.py`**。
-> 本次整理据此把全部产物收进 `results/`，修正了 12 个脚本里的 22 处路径引用，
-> 并实跑验证（`FACTS.json` 14 节无 null、报告 27 项自检全过）。
-> 详见 [docs/整理记录_20260913.md](docs/整理记录_20260913.md)。
-
 > **为什么核心库留在根目录**：`paths.py` 以 `REPO = dirname(abspath(__file__))`
-> 作为**所有相对路径的基准**（`checkpoints/`、`figures/`、`FACTS.json` …）。
-> 它一旦移动，全部输出路径都会错位。因此 `paths.py` 与 4 个核心模块
-> （`train_v3.py` / `experiment_matrix*.py` / `train_full_data.py`）固定留在根目录；
-> 子目录脚本通过注入的**路径引导块**（把仓库根与自身目录加入 `sys.path`）导入它们。
+> 作为**所有相对路径的基准**。它一旦移动，全部输出路径都会错位。因此 `paths.py`
+> 与 4 个核心模块固定留在根目录；子目录脚本通过注入的**路径引导块**
+> （把仓库根与自身目录加入 `sys.path`）导入它们。
+>
+> **为什么其余一切都进子目录**：脚本一律通过 `paths.py` 取路径，
+> 因此重组只需改 `paths.py` 一处。本次把产物收进 `results/`、事实收进
+> `results/facts/`、报告收进 `reports/`、日志收进 `results/logs/`，
+> 修正了 12 个脚本的路径引用，并**端到端实跑验证**（FACTS 14 节无 null、
+> 报告 44 页自检全过）。详见 [docs/整理记录_20260913.md](docs/整理记录_20260913.md)。
 
 > **路径配置**：代码中不含本地绝对路径。本地使用时创建 `.env` 提供数据根目录
 > （详见 [STRUCTURE.md](STRUCTURE.md) 第四节）。
 
-**不入库**（体积大 / 可复现生成）：`results/checkpoints/`（权重与训练历史，约 5.2 GB）、
-`results/fast_dataset/`（预解码 memmap，约 17 GB）、
+**不入库**（体积大 / 可复现生成）：`results/checkpoints/`、
+`results/fast_dataset/`、`results/logs/`、
 各评估目录下的预测数组与 PNG（`results/*/pred_*.npz`、`*.png`）、
-`_local_archive/`（历史产物归档）、`backups/`（覆盖前备份）、
-`项目报告_*.html`（可再生）、原始 LoveDA 数据。
+`reports/*.html`、`_local_archive/`、`backups/`、原始 LoveDA 数据。
 
-**入库的**：`FACTS.json` / `experiments_index.json` / `seed_variance.json`（三项权威事实）、
-`figures/`（报告图）、`results/*/` 下的**汇总性统计 JSON**（如 `ladder_summary.json`、
-`*_conf.json`、`convergence_learning_amount.json`）。
+**入库**：`results/facts/` 三项权威事实、`reports/项目报告_*.pdf`、`figures/`、
+`results/*/` 下的汇总性统计 JSON（如 `ladder_summary.json`、`*_conf.json`）。
 
 ---
 

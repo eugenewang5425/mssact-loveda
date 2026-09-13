@@ -32,6 +32,9 @@ results/consensus_analysis/pred_*.npz
 results/consensus_analysis/labels.npz
 results/consensus_analysis/*.bak_*.json
 
+# ================= 运行日志 =================
+results/logs/
+
 # ================= 临时与剖析产物 =================
 check_*.png
 stdout.txt
@@ -49,5 +52,5 @@ results/artifacts/bench_*.json
 *.pth
 
 # ================= 报告产物（带日期的 PDF 为交付件；HTML 可再生）=================
-项目报告_*.html
-项目报告.pdf
+reports/项目报告_*.html
+reports/项目报告.pdf

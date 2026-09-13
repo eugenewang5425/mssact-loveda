@@ -175,7 +175,7 @@ def main():
     print("3. 裁剪位置由 epoch_seed 决定, 与 seed 无关; seed 控制的是")
     print("   模型初始化 / DataLoader 打乱顺序 / _geom 增强抽样")
 
-    dst = os.path.join(paths.REPO, "seed_variance.json")
+    dst = paths.SEEDVAR_JSON
     json.dump(out, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"\n写入 {dst}")
 

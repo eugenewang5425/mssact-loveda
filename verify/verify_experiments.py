@@ -25,7 +25,7 @@ BASE = paths.REPO
 CKPT = paths.CKPT
 FT = paths.FULLTILE
 HO = paths.HELDOUT
-OUT = f"{BASE}/experiments_index.json"
+OUT = paths.INDEX_JSON
 REPORT = f"{BASE}/verify_report.txt"
 NUM_CLASSES = 7
 

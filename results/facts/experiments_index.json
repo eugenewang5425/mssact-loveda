@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-13 17:04:09",
+  "generated_at": "2026-09-13 18:36:36",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 104,
+  "n_tags": 102,
   "unregistered_tags": [
    "lgR_c256_center",
    "lgR_c384_rand",
@@ -137,7 +137,7 @@
    "best_kappa_in_series": 0.6369
   },
   "DEPRECATED": {
-   "n_experiments": 3,
+   "n_experiments": 1,
    "n_complete": 0,
    "best_kappa_in_series": null
   },
@@ -1885,37 +1885,6 @@
     "deconv_kernels": 0
    }
   },
-  "mssact_v2": {
-   "series": "DEPRECATED",
-   "status": "no-data",
-   "pipeline": "P-PNG",
-   "best_kappa": null,
-   "best_epoch": null,
-   "epochs_run": 0,
-   "target_epochs": null,
-   "params_M": 6.102,
-   "has_weight": true,
-   "script": null,
-   "root": "DATA_LEGACY",
-   "protocol": "Noneep/ptNone/bs8/lr0.0002",
-   "note": "空 history, 无有效训练记录, 不可引用",
-   "arch": {
-    "stem_ch": 32,
-    "stage_ch": [
-     32,
-     64,
-     128,
-     256
-    ],
-    "transformer_layers": 2,
-    "has_transformer": true,
-    "has_fpn": true,
-    "has_ecsam": true,
-    "has_adapter": true,
-    "has_emr": false,
-    "deconv_kernels": 0
-   }
-  },
   "nd_abl_bilinear": {
    "series": "C-final/消融实验",
    "status": "complete",
@@ -2976,30 +2945,6 @@
     "has_adapter": false,
     "has_emr": false,
     "deconv_kernels": 3
-   }
-  },
-  "unet": {
-   "series": "DEPRECATED",
-   "status": "no-data",
-   "pipeline": "P-PNG",
-   "best_kappa": null,
-   "best_epoch": null,
-   "epochs_run": 0,
-   "target_epochs": 120,
-   "params_M": 2.446,
-   "has_weight": true,
-   "script": "experiment_matrix.py",
-   "root": "DATA_LEGACY",
-   "protocol": "120ep/pt20/bs8/lr0.0002",
-   "note": "早期失败运行, 被 nd_unet 取代",
-   "arch": {
-    "transformer_layers": 0,
-    "has_transformer": false,
-    "has_fpn": false,
-    "has_ecsam": false,
-    "has_adapter": false,
-    "has_emr": false,
-    "deconv_kernels": 0
    }
   },
   "unet_lr1e4": {

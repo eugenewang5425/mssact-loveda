@@ -16,7 +16,7 @@ REPO = os.path.dirname(os.path.abspath(__file__))
 ```
 
 作为**所有相对路径的基准**。它一旦移动，全部输出路径都会错位。因此以下 5 个文件
-**固定留在仓库根目录**：
+**固定留在仓库根目录**（根目录除此之外只有文档与子目录）：
 
 | 文件 | 作用 |
 |---|---|
@@ -59,7 +59,7 @@ queues/run_chain.py                     （静默等待 → 串行驱动下面�
         │                                analysis/seed_variance.py
         │                                report/build_index.py
         │                                report/build_facts.py
-        │                                report/make_report_v2.py
+        │                                report/make_report_v3.py
         │                                report/make_pdf.py
         └─→ queues/run_queue_crop.py  ──→ （同上后置步骤）
 
@@ -89,7 +89,14 @@ verify/*.py   ──────────────────────
 **结果目录已全部集中到 `results/` 下**（2026-09-13 整理），并由 `paths.py`
 提供常量：`results/{checkpoints, fast_dataset, consensus_analysis, overfit_diag,
 ladder_eval, fulltile_eval, tta_eval, tta_eval2, heldout_test, artifacts}`。
-`figures/` 单独留在根目录（报告图需入库，与结果区分）。
+另有三处单独区分：
+
+| 位置 | 内容 | 常量 | 入库 |
+|---|---|---|---|
+| `results/facts/` | 三项权威事实（FACTS / index / seed_variance） | `paths.FACTS_JSON` 等 | ✅ |
+| `results/logs/` | 队列与监控运行日志 | `paths.LOGS` | ❌ |
+| `reports/` | 报告交付件（PDF + 可再生 HTML） | `paths.REPORTS` | PDF ✅ / HTML ❌ |
+| `figures/` | 报告图（与结果区分） | `paths.FIGURES` | ✅ |
 
 ⚠️ **新增代码禁止写 `f"{BASE}/checkpoints"` 这类字面路径**，一律用 `paths.XXX`。
 本次整理正是为了消除这类引用——整理时它曾导致 `FACTS.json` 全部 Kappa 变 null。
@@ -189,7 +196,7 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 | `viz/make_stats_figures.py` | 混淆矩阵 / PRF / 参数效率 / LR 调度图 |
 | `report/build_index.py` | **实验索引** → `experiments_index.json`（参数量直读张量 / 架构形状反推 / 管线世代与可比性分组） |
 | `report/build_facts.py` | **事实汇总** → `FACTS.json`（报告与 README 的唯一数据源） |
-| `report/make_report_v2.py` | 报告生成（Markdown → HTML） |
+| `report/make_report_v3.py` | 报告生成（Markdown → HTML） |
 | `report/make_pdf.py` | HTML → PDF（Chrome headless）+ **内容自检** |
 
 > ⚠️ `make_pdf.py` 必须显式传 `--user-data-dir`：用户自身的 Chrome 占用默认
@@ -207,6 +214,9 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 
 | 路径 | 内容 | 入库 |
 |---|---|---|
+| `results/facts/` | **三项权威事实**：`FACTS.json` / `experiments_index.json` / `seed_variance.json` | ✅ |
+| `reports/` | 报告交付件（`项目报告_*.pdf` 入库；HTML 可再生不入库） | PDF ✅ |
+| `results/logs/` | 队列与监控运行日志 | ❌ |
 | `results/checkpoints/` | 权重（`*_best.pt`）+ 训练历史（`*_history.json`） | ❌ |
 | `results/fast_dataset/` | 预解码 memmap：主数据集 + 阶梯子集（合计约 17 GB） | ❌ |
 | `results/{fulltile_eval, tta_eval*, heldout_test}/` | 全图/TTA/持有测试评估 + 预测 PNG | ❌（汇总 JSON ✅） |
@@ -308,7 +318,8 @@ LDA_GF_SHP=<行政区矢量>
    **但若被队列按文件名调用，必须同步更新 `queues/` 中的路径字符串**
 4. **结果更新后**：依次运行
    `report/build_index.py` → `report/build_facts.py` →
-   `report/make_report_v2.py` → `report/make_pdf.py`
+   `report/make_report_v3.py` → `report/make_pdf.py`
+   （事实产物写在 `results/facts/`，报告写在 `reports/`）
    （`build_index` 必须在前：`build_facts` 会读取它；顺序颠倒会读到过期索引）
 5. **不移动**：`paths.py`、4 个核心模块、结果目录（见第一节）
 6. **历史归档**：旧版报告、旧 README 放入 `docs/archive/`；

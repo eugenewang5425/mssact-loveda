@@ -86,6 +86,22 @@ PATCHES = os.path.join(REPO, "_local_archive", "patches")   # 历史产物，已
 VIS = os.path.join(REPO, "_local_archive", "vis")           # 历史产物，已归档
 FAST_DATA = os.path.join(RESULTS, "fast_dataset")           # 预解码 memmap
 
+# ---- 权威事实（报告与 README 的唯一数据源）----
+# 三项事实集中一处，便于与"产物"区分：它们入库，且任何文档数字都出自这里
+FACTS_DIR = os.path.join(RESULTS, "facts")
+FACTS_JSON = os.path.join(FACTS_DIR, "FACTS.json")
+INDEX_JSON = os.path.join(FACTS_DIR, "experiments_index.json")
+SEEDVAR_JSON = os.path.join(FACTS_DIR, "seed_variance.json")
+
+# ---- 报告交付件（PDF 与可再生 HTML）----
+REPORTS = os.path.join(REPO, "reports")
+
+# ---- 运行日志（队列与监控写入此处，不入库）----
+LOGS = os.path.join(RESULTS, "logs")
+
 if __name__ == "__main__":
     for k in ["REPO","DATA_ROOT","DATA_NEWSPLIT2","CKPT","GF_DATA"]:
         print(f"{k:18s} = {globals()[k]}")
+
+for _d in (RESULTS, FACTS_DIR, REPORTS, LOGS, FIGURES):
+    os.makedirs(_d, exist_ok=True)

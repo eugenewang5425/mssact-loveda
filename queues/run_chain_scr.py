@@ -28,9 +28,10 @@ BASE = os.path.dirname(HERE)
 sys.path.insert(0, BASE)
 sys.path.insert(0, HERE)
 
+import paths
 from queue_guard import queues_running, POLL_INTERVAL, _no_window_kwargs   # noqa: E402
 
-LOG = os.path.join(BASE, "chain_scr.log")
+LOG = os.path.join(paths.LOGS, "chain_scr.log")
 SCR_QUEUE = os.path.join(HERE, "run_queue_deeplab_scr.py")
 POLLUTED_TILDE = os.path.join(BASE, "~")          # torch 在 HOME 缺失时建的字面 ~
 

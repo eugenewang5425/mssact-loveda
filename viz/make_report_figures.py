@@ -44,9 +44,9 @@ plt.rcParams["savefig.bbox"] = "tight"
 
 FIG = paths.FIGURES
 os.makedirs(FIG, exist_ok=True)
-F = json.load(open(os.path.join(paths.REPO, "FACTS.json"), encoding="utf-8"))
-IX = json.load(open(os.path.join(paths.REPO, "experiments_index.json"), encoding="utf-8"))
-SV = json.load(open(os.path.join(paths.REPO, "seed_variance.json"), encoding="utf-8"))
+F = json.load(open(paths.FACTS_JSON, encoding="utf-8"))
+IX = json.load(open(paths.INDEX_JSON, encoding="utf-8"))
+SV = json.load(open(paths.SEEDVAR_JSON, encoding="utf-8"))
 CONS = paths.CONSENSUS
 ART = os.path.join(paths.RESULTS, "artifacts")
 SIGMA = SV.get("sigma_seed_used") or 0.0050
