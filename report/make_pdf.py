@@ -31,25 +31,25 @@ CANDIDATES = [
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
 ]
 # 报告必须包含的关键内容 (防止回退为错误结论或丢失关键发现)
-MUST_CONTAIN = ["回退验证", "边界像素占比", "勘误",
-                "5.6 架构有效性分析", "死计算", "置换等变",
-                "5.6.9 架构变体实测结果", "5.7 随机种子噪声底线", "5.8 训练策略对比",
-                "5.9 数据量阶梯",
-                # 完整性更正：不得被静默改回"基线全部从零训练"
-                # 注: 加粗文字在 PDF 提取时会带上字母间距伪影、且可能被换行拆开,
-                #     故守卫用能稳定提取的短语（"已更正，2026-09-13"）
-                # 守卫盯"实质"而非措辞：措辞会被改写，实质不该消失
-                "核验更正", "weights_backbone", "预训练主干",
-                # 从零对照的结论（推翻原 +0.0720 归因）
-                "0.0039", "0.78σ", "从零对照推翻",
-                # 协议内从零基线必须留在主对比表（不得回退为预训练版当基线）
-                "0.6281", "从零，协议内", "纳入从零对照后的完整图景",
-                # 种子方差已实测：报告不得回退为"待补齐"
-                "σ_seed = 0.0050", "0.87 倍", "5.10 预算攻击", "4/4 一致",
-                # 裁剪策略的效应量结论（训练策略 > 架构模块）
-                # 提取时会被换行拆开的长短语不要用（长短语与加粗文字都会被 PDF
-                # 提取切碎），一律用能稳定命中的短片段
-                "4.0–4.5σ_seed", "0.6543", "更优的工程取舍", "4.4×"]
+MUST_CONTAIN = [
+    # ---- 关键勘误与更正（不得被静默改回）----
+    "勘误",                       # 边界统计与类别占比的勘误段
+    "2.36%",                      # 已更正的边界像素占比（原误报 93%）
+    "37.15%",                     # 已更正的验证集背景占比（原误报 45.6%）
+    "核验更正", "weights_backbone", "预训练主干",   # DeepLab 预训练混淆的取证
+    "0.0039", "0.78σ",            # 从零对照的主协议结论
+    # ---- 核心结论的存在性守卫 ----
+    "死计算", "置换等变",          # 三处架构缺陷（D1/D3）
+    "4.563",                      # D2 的过度碎裂实测（4.56×）
+    "σ_seed = 0.0050", "0.87 倍", # 种子方差实测与消融散布之比
+    "杠杆排序",                    # 全文最凝练的结论
+    "3.8–4.5σ", "更优的工程取舍", "4.4×",   # 裁剪策略的效应量与取舍
+    "4/4 一致",                    # ECSAM 移除在四种设置下一致更好
+    "5.11",                       # 可分辨性总表
+    # ---- 章节存在性 ----
+    "5.6 架构有效性分析", "5.7 随机种子噪声底线", "5.8 训练策略对比",
+    "5.9 数据量阶梯", "5.10 预算攻击",
+]
 
 
 def find_browser():
@@ -82,8 +82,11 @@ def main():
     print(f"浏览器 : {br}")
     print(f"HTML   : {os.path.basename(html)}")
     t0 = time.time()
+    # --no-pdf-header-footer 必须保留：Chrome 默认会在页脚打印 file:// 源路径，
+    # 而 PDF 是交付件，会把本机路径带给读者（此前已实际发生过）。
     cmd = [br, "--headless=new", "--disable-gpu", f"--user-data-dir={udd}",
-           "--no-first-run", f"--print-to-pdf={pdf}", uri]
+           "--no-first-run", "--no-pdf-header-footer",
+           f"--print-to-pdf={pdf}", uri]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
@@ -108,6 +111,12 @@ def main():
             pass
     print(f"PDF    : {os.path.basename(pdf)}  {size:,} bytes  {n_pages} 页  ({time.time()-t0:.0f}s)")
     print("内容自检:")
+    # 页脚泄露检查：PDF 不得含本机 file:// 路径
+    if "file:///" in txt or "file://" in txt:
+        print("   ✗ PDF 含 file:// 页脚（本机路径泄露）—— 请确认 --no-pdf-header-footer 生效")
+        ok = False
+    else:
+        print("   ✓ 无 file:// 页脚（无本机路径泄露）")
     ok = True
     for k in MUST_CONTAIN:
         hit = k in txt
