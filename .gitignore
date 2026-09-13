@@ -57,3 +57,9 @@ results/artifacts/bench_*.json
 reports/项目报告_*.html
 reports/项目报告.pdf
 项目报告.pdf
+# 备份产物一律不入库（约定放 backups/，该目录本身已在上方忽略）
+# 这三条是兜底：曾因"没有规则覆盖 .bak"而被 git add -A 扫进仓库
+*.bak
+*.bak_*
+*_bak_*.pdf
+_compat_check/

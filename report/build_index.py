@@ -159,6 +159,37 @@ for _n in (250, 500, 1000):
 reg(["lgV_D1_rollback"], "lgR-roll/回退验证", "verify/verify_rollback.py", "DATA_NEWSPLIT2",
     60, 20, 8, 2e-4, "回退管线性能验证, 已并入 lgR_D1", pipeline="P-MEM-ROLL")
 
+# ---- 缺陷修复验证 (lgR120_*): 120 轮收敛协议 ----
+# D1 FPN 死支路 / D2 无跳连 / D3 无位置编码 —— 三处已在数值上证实的缺陷, 修复后重评
+reg(["lgR120_full"], "lgR120/修复归因", "queues/run_queue_fix.py", "DATA_NEWSPLIT2",
+    120, 20, 8, 2e-4,
+    "120 轮同调度基线; 60 轮与 120 轮是不同的 OneCycle 退火终点, 不可直接比较",
+    pipeline="P-MEM-ROLL")
+reg(["lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all"], "lgR120/修复归因",
+    "queues/run_queue_fix.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
+    "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
+    pipeline="P-MEM-ROLL")
+reg(["lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn", "lgR120_abl_no_trans",
+     "lgR120_abl_no_adapter", "lgR120_abl_bilinear", "lgR120_abl_trans4l",
+     "lgR120_abl_trans6l"],
+    "lgR120/修复后消融", "queues/run_queue_fix.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
+    "★ 以 use_skip=True+pos_enc=True 为底: 修复缺陷后的首次可解释消融",
+    pipeline="P-MEM-ROLL")
+
+# ---- 种子方差与裁剪策略 (原为 UNREGISTERED, 补齐以免索引里出现无法归类的桶) ----
+reg(["lgR_c256_center", "lgR_c384_rand", "lgR_c512_rand"],
+    "lgR-roll/裁剪策略", "queues/run_queue_crop.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "裁剪尺度与随机/中心裁剪; **裁剪边长改变即改变协议**, 不可并入 G2 比较",
+    pipeline="P-MEM-ROLL")
+reg(["sd7_full", "sd2024_full", "sd31337_full"],
+    "lgR-roll/种子方差(完整模型)", "queues/run_queue_final.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "sigma_seed 的实测来源 (n=4, 并入 seed=42 的 lgR_bs8_full_lr2e4)",
+    pipeline="P-MEM-ROLL")
+reg(["sd7_deeplab", "sd2024_deeplab", "sd31337_deeplab"],
+    "lgR-roll/种子方差(DeepLab)", "queues/run_queue_final.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "DeepLabV3+ 种子方差; 注意其主干为 ImageNet 预训练, 见 deeplab 预训练混淆",
+    pipeline="P-MEM-ROLL")
+
 # ---- 废弃/失败运行 (保留记录, 明确不可引用) ----
 reg(["mssact_v2", "unet_matrix"], "DEPRECATED", None, "DATA_LEGACY", None, None, 8, 2e-4,
     "空 history, 无有效训练记录, 不可引用")
@@ -175,7 +206,11 @@ COMPARABLE_GROUPS = {
                    [f"nd_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
                                             "no_adapter", "bilinear", "trans4l", "trans6l")] +
                    ["lg_D1_join_nofpn_notrans", "lg_D2_decoder_ca", "lg_D3_ch_tiny",
-                    "lg_D4_ch_large"],
+                    "lg_D4_ch_large"] +
+                   # 对比基线: 原先只写在 note 里说"可比较", 现改为正式成员,
+                   # 使分组检查可机械执行 (tost_equivalence 依赖 members 判组)
+                   ["nd_unet", "nd_pspnet", "nd_fcn", "nd_deeplab", "nd_deeplab_scr",
+                    "nd_segformer", "nd_fpn_seg", "nd_swin_unet"],
         "note": "对比实验基线组 (nd_unet/pspnet/fcn/deeplab/segformer/fpn_seg/swin_unet) "
                 "同为 P-PNG/60ep/pt20/bs8/lr2e-4, 与本组可比较",
     },
@@ -192,6 +227,16 @@ COMPARABLE_GROUPS = {
         "members": ["lg_b15_full", "lg_b15_noecsam", "lg_b15_noemr", "lg_b15_unet",
                     "lg_b15_deeplab"],
         "note": "预算攻击: 检验'充足预算是否掩盖模块差异'",
+    },
+    "G4-MEM-ROLL-120ep": {
+        "pipeline": "P-MEM-ROLL", "root": "DATA_NEWSPLIT2",
+        "protocol": "120ep/pt20/bs8/lr2e-4",
+        "members": ["lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all"] +
+                   [f"lgR120_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
+                                                "no_adapter", "bilinear", "trans4l", "trans6l")],
+        "note": "缺陷修复后的收敛协议组。120 轮的 OneCycle 退火终点与 60 轮不同, 故"
+                "**禁止**把本组 Kappa 与 G2-MEM-ROLL-60ep 直接相减当作'预算效应'——"
+                "两者差值是调度变化与训练量的联合结果, 需用累计学习量 S=Sigma(eta) 分离",
     },
     "REJECTED": {
         "pipeline": "P-MEM-DET", "members": _lgF,
@@ -217,7 +262,14 @@ def param_counts(tags):
                 sd = sd.state_dict()
             if isinstance(sd, dict) and "model" in sd and isinstance(sd["model"], dict):
                 sd = sd["model"]
-            out[t] = sum(int(v.numel()) for v in sd.values() if hasattr(v, "numel"))
+            # 只计 nn.Parameter, 排除 BN 的 buffer (running_mean/running_var/
+            # num_batches_tracked) —— 否则 "参数量" 会含 buffer, 系统性高估
+            # (light 配置实测高估 2640 个 = 0.0433%)。
+            out[t] = sum(int(v.numel()) for k, v in sd.items()
+                         if hasattr(v, "numel")
+                         and not k.endswith("num_batches_tracked")
+                         and ".running_" not in k and not k.endswith("running_mean")
+                         and not k.endswith("running_var"))
             del sd
         except Exception as e:
             out[t] = None

@@ -45,10 +45,10 @@ import paths
 CKPT = paths.CKPT
 
 GROUPS = {
-    "完整模型 MSSACT 6.10M (P-MEM-ROLL)": [
+    "完整模型 MSSACT (P-MEM-ROLL)": [
         ("lgR_bs8_full_lr2e4", 42), ("sd7_full", 7), ("sd2024_full", 2024),
         ("sd31337_full", 31337)],
-    "DeepLabV3+ 39.69M (P-MEM-ROLL)": [
+    "DeepLabV3+ (P-MEM-ROLL)": [
         ("sd7_deeplab", 7), ("sd2024_deeplab", 2024), ("sd31337_deeplab", 31337)],
     "参照: 完整模型/DeepLab 的 P-PNG 单次结果": [
         ("full_all_v2", 42), ("nd_deeplab", 42)],

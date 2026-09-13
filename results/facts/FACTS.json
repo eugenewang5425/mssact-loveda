@@ -1105,7 +1105,7 @@
  },
  "seed_variance": {
   "groups": {
-   "完整模型 MSSACT 6.10M (P-MEM-ROLL)": {
+   "完整模型 MSSACT (P-MEM-ROLL)": {
     "n": 4,
     "mean": 0.6362,
     "std": 0.005,
@@ -1119,7 +1119,7 @@
      "sd31337_full": 0.6399
     }
    },
-   "DeepLabV3+ 39.69M (P-MEM-ROLL)": {
+   "DeepLabV3+ (P-MEM-ROLL)": {
     "n": 3,
     "mean": 0.6931,
     "std": 0.0034,
@@ -1726,7 +1726,7 @@
     "kappa": 0.632045,
     "best_epoch": 58,
     "epochs_run": 60,
-    "params_M": 6.102,
+    "params_M": 6.099,
     "epochs_total": 60
    },
    "lgR_D1_join_nofpn_notrans": {
@@ -1736,7 +1736,7 @@
     "kappa": 0.629275,
     "best_epoch": 55,
     "epochs_run": 60,
-    "params_M": 2.005,
+    "params_M": 2.002,
     "epochs_total": 60
    },
    "lgR_D2_decoder_ca": {
@@ -1746,7 +1746,7 @@
     "kappa": 0.637508,
     "best_epoch": 51,
     "epochs_run": 60,
-    "params_M": 6.115,
+    "params_M": 6.112,
     "epochs_total": 60
    },
    "lgR_D3_ch_tiny": {
@@ -1756,7 +1756,7 @@
     "kappa": 0.610295,
     "best_epoch": 60,
     "epochs_run": 60,
-    "params_M": 1.547,
+    "params_M": 1.545,
     "epochs_total": 60
    },
    "lgR_D4_ch_large": {
@@ -1766,7 +1766,7 @@
     "kappa": 0.636479,
     "best_epoch": 56,
     "epochs_run": 60,
-    "params_M": 24.242,
+    "params_M": 24.237,
     "epochs_total": 60
    },
    "lg_D1_join_nofpn_notrans": {
@@ -1776,7 +1776,7 @@
     "kappa": 0.627695,
     "best_epoch": 53,
     "epochs_run": 60,
-    "params_M": 2.005,
+    "params_M": 2.002,
     "epochs_total": 60
    },
    "lg_D2_decoder_ca": {
@@ -1786,7 +1786,7 @@
     "kappa": 0.634124,
     "best_epoch": 54,
     "epochs_run": 60,
-    "params_M": 6.115,
+    "params_M": 6.112,
     "epochs_total": 60
    },
    "lg_D3_ch_tiny": {
@@ -1796,7 +1796,7 @@
     "kappa": 0.61188,
     "best_epoch": 60,
     "epochs_run": 60,
-    "params_M": 1.547,
+    "params_M": 1.545,
     "epochs_total": 60
    },
    "lg_D4_ch_large": {
@@ -1806,7 +1806,7 @@
     "kappa": 0.569626,
     "best_epoch": 23,
     "epochs_run": 23,
-    "params_M": 24.242,
+    "params_M": 24.237,
     "epochs_total": 60
    },
    "lgR_b15_full": {
@@ -1816,7 +1816,7 @@
     "kappa": 0.489907,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 6.102,
+    "params_M": 6.099,
     "epochs_total": 15
    },
    "lgR_b15_noecsam": {
@@ -1826,7 +1826,7 @@
     "kappa": 0.509202,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 6.047,
+    "params_M": 6.044,
     "epochs_total": 15
    },
    "lgR_b15_noemr": {
@@ -1836,7 +1836,7 @@
     "kappa": 0.478978,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 6.102,
+    "params_M": 6.099,
     "epochs_total": 15
    },
    "lgR_b15_unet": {
@@ -1846,7 +1846,7 @@
     "kappa": 0.48836,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 2.446,
+    "params_M": 2.443,
     "epochs_total": 15
    },
    "lgR_b15_deeplab": {
@@ -1856,7 +1856,7 @@
     "kappa": 0.635781,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 39.692,
+    "params_M": 39.635,
     "epochs_total": 15
    },
    "lgR_b15_deeplab_scr": {
@@ -1866,8 +1866,18 @@
     "kappa": 0.468234,
     "best_epoch": 15,
     "epochs_run": 15,
-    "params_M": 39.692,
+    "params_M": 39.635,
     "epochs_total": 15
+   },
+   "lgR120_full": {
+    "series": "lgR120/修复归因",
+    "pipeline": "P-MEM-ROLL",
+    "status": "partial(26/120)",
+    "kappa": 0.483918,
+    "best_epoch": 26,
+    "epochs_run": 26,
+    "params_M": 6.099,
+    "epochs_total": 120
    }
   },
   "comparable_groups": {
@@ -1888,7 +1898,15 @@
      "lg_D1_join_nofpn_notrans",
      "lg_D2_decoder_ca",
      "lg_D3_ch_tiny",
-     "lg_D4_ch_large"
+     "lg_D4_ch_large",
+     "nd_unet",
+     "nd_pspnet",
+     "nd_fcn",
+     "nd_deeplab",
+     "nd_deeplab_scr",
+     "nd_segformer",
+     "nd_fpn_seg",
+     "nd_swin_unet"
     ],
     "note": "对比实验基线组 (nd_unet/pspnet/fcn/deeplab/segformer/fpn_seg/swin_unet) 同为 P-PNG/60ep/pt20/bs8/lr2e-4, 与本组可比较"
    },
@@ -1917,6 +1935,26 @@
      "lg_b15_deeplab"
     ],
     "note": "预算攻击: 检验'充足预算是否掩盖模块差异'"
+   },
+   "G4-MEM-ROLL-120ep": {
+    "pipeline": "P-MEM-ROLL",
+    "root": "DATA_NEWSPLIT2",
+    "protocol": "120ep/pt20/bs8/lr2e-4",
+    "members": [
+     "lgR120_full",
+     "lgR120_fx_skip",
+     "lgR120_fx_pos",
+     "lgR120_fx_all",
+     "lgR120_abl_no_emr",
+     "lgR120_abl_no_ecsam",
+     "lgR120_abl_no_fpn",
+     "lgR120_abl_no_trans",
+     "lgR120_abl_no_adapter",
+     "lgR120_abl_bilinear",
+     "lgR120_abl_trans4l",
+     "lgR120_abl_trans6l"
+    ],
+    "note": "缺陷修复后的收敛协议组。120 轮的 OneCycle 退火终点与 60 轮不同, 故**禁止**把本组 Kappa 与 G2-MEM-ROLL-60ep 直接相减当作'预算效应'——两者差值是调度变化与训练量的联合结果, 需用累计学习量 S=Sigma(eta) 分离"
    },
    "REJECTED": {
     "pipeline": "P-MEM-DET",

@@ -138,6 +138,19 @@ def infer_tag(tag, labels_meta):
         "lgR_D4_ch_large": lambda: MSSACTNet(in_channels=3, num_classes=7,
                                              embed_dims=[64, 128, 256, 512],
                                              transformer_layers=2, transformer_heads=4),
+        # ---- 缺陷修复验证 (120 轮收敛协议) ----
+        "lgR120_full": light,
+        "lgR120_fx_skip": lambda: light(use_skip=True),
+        "lgR120_fx_pos": lambda: light(pos_enc=True),
+        "lgR120_fx_all": lambda: light(use_skip=True, pos_enc=True),
+        "lgR120_abl_no_emr": lambda: light(use_skip=True, pos_enc=True, use_emr=False),
+        "lgR120_abl_no_ecsam": lambda: light(use_skip=True, pos_enc=True, use_ecsam=False),
+        "lgR120_abl_no_fpn": lambda: light(use_skip=True, pos_enc=True, use_fpn=False),
+        "lgR120_abl_no_trans": lambda: light(use_skip=True, pos_enc=True, use_transformer=False),
+        "lgR120_abl_no_adapter": lambda: light(use_skip=True, pos_enc=True, use_adapter=False),
+        "lgR120_abl_bilinear": lambda: light(use_skip=True, pos_enc=True, upsample_mode="bilinear"),
+        "lgR120_abl_trans4l": lambda: light(use_skip=True, pos_enc=True, transformer_layers=4),
+        "lgR120_abl_trans6l": lambda: light(use_skip=True, pos_enc=True, transformer_layers=6),
     }
     if tag not in REG:
         print(f"  [skip] {tag}: 未注册构造函数", flush=True)
@@ -241,7 +254,12 @@ def main():
              "nd_abl_no_emr", "nd_abl_no_ecsam", "nd_abl_no_fpn", "nd_abl_no_trans",
              "nd_abl_no_adapter", "nd_abl_bilinear", "nd_abl_trans4l", "nd_abl_trans6l",
              "lgR_bs8_full_lr2e4", "lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
-             "lgR_D3_ch_tiny", "lgR_D4_ch_large"]
+             "lgR_D3_ch_tiny", "lgR_D4_ch_large",
+             # 缺陷修复验证组 (120 轮)
+             "lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all",
+             "lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn",
+             "lgR120_abl_no_trans", "lgR120_abl_no_adapter", "lgR120_abl_bilinear",
+             "lgR120_abl_trans4l", "lgR120_abl_trans6l"]
     tags = args.only or CANON
 
     # 逐图计算边界距离场 (必须逐图, 见 distance_bands 注释)

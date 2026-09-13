@@ -1,0 +1,129 @@
+{
+ "sesoi": 0.02,
+ "n_boot": 1000,
+ "seed": 12345,
+ "n_images": 141,
+ "sigma_seed": 0.005,
+ "sigma_seed_n_runs": 4,
+ "sigma_seed_source": "results/facts/seed_variance.json",
+ "threshold_rule": "|dKappa| >= 2*sigma_seed 记为可分辨; 1-2 sigma 弱; <1 sigma 不可分辨",
+ "two_error_models_note": "种子层回答'换种子重训差异还在吗'(误差 = sqrt(2)*sigma_seed); 测试集层回答'取样了哪些测试图造成的差异'(图像级配对 bootstrap)。两者不可混用; 合并 SE 仅用于描述单次观测 dKappa 的总误差。",
+ "metric_def": "kappa_pooled = 由逐图混淆矩阵合并后的 Kappa (与报告口径一致)",
+ "rows": [
+  {
+   "ref": "full_all_v2",
+   "tag": "nd_unet",
+   "group": "G1-PNG-60ep",
+   "kappa_ref": 0.577442,
+   "kappa_tag": 0.534821,
+   "delta": -0.042621,
+   "delta_in_sigma_seed": -8.524,
+   "resolvable_2sigma_seed": true,
+   "boot_ci95": [
+    -0.053168,
+    -0.031763
+   ],
+   "boot_ci90": [
+    -0.051502,
+    -0.033598
+   ],
+   "boot_se": 0.005344,
+   "combined_se": 0.008864,
+   "tost_equivalent_at_SESOI": false,
+   "tost_margin": 0.02,
+   "note": "boot CI 半宽 0.0107 > SESOI 0.02, 测试集取样误差不足以认证等效"
+  },
+  {
+   "ref": "full_all_v2",
+   "tag": "nd_fcn",
+   "group": "G1-PNG-60ep",
+   "kappa_ref": 0.577442,
+   "kappa_tag": 0.541627,
+   "delta": -0.035816,
+   "delta_in_sigma_seed": -7.163,
+   "resolvable_2sigma_seed": true,
+   "boot_ci95": [
+    -0.045285,
+    -0.026434
+   ],
+   "boot_ci90": [
+    -0.043881,
+    -0.028253
+   ],
+   "boot_se": 0.004814,
+   "combined_se": 0.008554,
+   "tost_equivalent_at_SESOI": false,
+   "tost_margin": 0.02,
+   "note": "boot CI 半宽 0.0094 > SESOI 0.02, 测试集取样误差不足以认证等效"
+  },
+  {
+   "ref": "full_all_v2",
+   "tag": "nd_deeplab",
+   "group": "G1-PNG-60ep",
+   "kappa_ref": 0.577442,
+   "kappa_tag": 0.649467,
+   "delta": 0.072025,
+   "delta_in_sigma_seed": 14.405,
+   "resolvable_2sigma_seed": true,
+   "boot_ci95": [
+    0.052543,
+    0.092933
+   ],
+   "boot_ci90": [
+    0.05519,
+    0.089615
+   ],
+   "boot_se": 0.010315,
+   "combined_se": 0.012506,
+   "tost_equivalent_at_SESOI": false,
+   "tost_margin": 0.02,
+   "note": "boot CI 半宽 0.0202 > SESOI 0.02, 测试集取样误差不足以认证等效"
+  },
+  {
+   "ref": "full_all_v2",
+   "tag": "nd_fpn_seg",
+   "group": "G1-PNG-60ep",
+   "kappa_ref": 0.577442,
+   "kappa_tag": 0.543981,
+   "delta": -0.033461,
+   "delta_in_sigma_seed": -6.692,
+   "resolvable_2sigma_seed": true,
+   "boot_ci95": [
+    -0.043235,
+    -0.023132
+   ],
+   "boot_ci90": [
+    -0.042063,
+    -0.025063
+   ],
+   "boot_se": 0.00509,
+   "combined_se": 0.008713,
+   "tost_equivalent_at_SESOI": false,
+   "tost_margin": 0.02,
+   "note": "boot CI 半宽 0.0101 > SESOI 0.02, 测试集取样误差不足以认证等效"
+  },
+  {
+   "ref": "full_all_v2",
+   "tag": "nd_swin_unet",
+   "group": "G1-PNG-60ep",
+   "kappa_ref": 0.577442,
+   "kappa_tag": 0.504078,
+   "delta": -0.073364,
+   "delta_in_sigma_seed": -14.673,
+   "resolvable_2sigma_seed": true,
+   "boot_ci95": [
+    -0.089066,
+    -0.056368
+   ],
+   "boot_ci90": [
+    -0.086686,
+    -0.059734
+   ],
+   "boot_se": 0.00823,
+   "combined_se": 0.010851,
+   "tost_equivalent_at_SESOI": false,
+   "tost_margin": 0.02,
+   "note": "boot CI 半宽 0.0163 > SESOI 0.02, 测试集取样误差不足以认证等效"
+  }
+ ]
+}

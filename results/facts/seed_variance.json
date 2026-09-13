@@ -1,6 +1,6 @@
 {
  "groups": {
-  "完整模型 MSSACT 6.10M (P-MEM-ROLL)": {
+  "完整模型 MSSACT (P-MEM-ROLL)": {
    "n": 4,
    "mean": 0.6362,
    "std": 0.005,
@@ -14,7 +14,7 @@
     "sd31337_full": 0.6399
    }
   },
-  "DeepLabV3+ 39.69M (P-MEM-ROLL)": {
+  "DeepLabV3+ (P-MEM-ROLL)": {
    "n": 3,
    "mean": 0.6931,
    "std": 0.0034,
