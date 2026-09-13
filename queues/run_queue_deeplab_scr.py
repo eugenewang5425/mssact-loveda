@@ -96,7 +96,7 @@ if __name__ == "__main__":
             print(f"SKIP {tag} (complete)", flush=True); continue
         kw = {}
         if n is not None:
-            fd = os.path.join(BASE, "fast_dataset", f"ladder_n{n}")
+            fd = os.path.join(paths.FAST_DATA, f"ladder_n{n}")
             if not os.path.isdir(fd):
                 print(f"SKIP {tag}: 缺子集 memmap {fd}", flush=True); continue
             kw = dict(root=os.path.join(LADDER, f"n{n}"), val_root=ROOT_MAIN,

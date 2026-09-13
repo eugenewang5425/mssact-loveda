@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 BASE = paths.REPO
-CKPT = f"{BASE}/checkpoints"
-FT = f"{BASE}/fulltile_eval"
+CKPT = paths.CKPT
+FT = paths.FULLTILE
 ROOT = paths.DATA_ROOT
 FIG = f"{BASE}/figures"
 os.makedirs(FIG, exist_ok=True)

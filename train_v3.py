@@ -51,7 +51,7 @@ class LoveDADataset(Dataset):
         # 注意: fast 后端固定对应主数据集（newsplit2）; 若 root 指向其他目录
         # （如数据阶梯子集），调用方须显式传 fast=False
         if fast:
-            fd = fast_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fast_dataset")
+            fd = fast_dir or paths.FAST_DATA      # 结果目录统一由 paths.py 提供
             self._fast_dir = fd
             self._split = split
             self._imgs = None      # 懒加载: worker 首次访问时才打开 memmap

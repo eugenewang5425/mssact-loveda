@@ -78,7 +78,7 @@ if __name__ == "__main__":
     print("=== 基准测试 (2 轮/配置, batch=8, 256²) ===", flush=True)
     res.append(run("旧: PNG + workers=0", False, 0))
     res.append(run("新: memmap + workers=8", True, 8))
-    json.dump(res, open(os.path.join(paths.REPO, "artifacts", "bench_pipeline.json"), "w"), indent=1)
+    json.dump(res, open(os.path.join(paths.RESULTS, "artifacts", "bench_pipeline.json"), "w"), indent=1)
     a, b = res[0], res[1]
     print(f"\n加速比: {a['per_epoch']/b['per_epoch']:.2f}x "
           f"(每轮 {a['per_epoch']}s -> {b['per_epoch']}s, 省 {a['per_epoch']-b['per_epoch']:.0f}s/轮)")

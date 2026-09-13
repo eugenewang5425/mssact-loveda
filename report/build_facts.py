@@ -13,14 +13,15 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
+import paths
 import os, re, json, glob
 import numpy as np
 
 BASE = _BASE
-CKPT = f"{BASE}/checkpoints"
-TT = f"{BASE}/tta_eval"
+CKPT = paths.CKPT
+TT = paths.TTA
 TT2 = f"{BASE}/tta_eval2"
-CONS = f"{BASE}/consensus_analysis"
+CONS = paths.CONSENSUS
 
 def best_of(tag):
     p = f"{CKPT}/{tag}_history.json"
@@ -114,13 +115,13 @@ if os.path.exists(f"{CONS}/consistency.json"):
 # ========== 收敛速度分析 ==========
 F["convergence"] = None
 # 收敛速度分析: 原始产物已归入 artifacts/（根目录只留 FACTS/index/seed_variance 三项权威事实）
-if os.path.exists(f"{BASE}/artifacts/convergence_learning_amount.json"):
-    F["convergence"] = json.load(open(f"{BASE}/artifacts/convergence_learning_amount.json"))
+if os.path.exists(f"{paths.RESULTS}/artifacts/convergence_learning_amount.json"):
+    F["convergence"] = json.load(open(f"{paths.RESULTS}/artifacts/convergence_learning_amount.json"))
 
 # ========== 过拟合诊断 ==========
 F["overfit"] = None
-if os.path.exists(f"{BASE}/overfit_diag/overfit_summary.json"):
-    F["overfit"] = json.load(open(f"{BASE}/overfit_diag/overfit_summary.json"))
+if os.path.exists(f"{paths.OVERFIT}/overfit_summary.json"):
+    F["overfit"] = json.load(open(f"{paths.OVERFIT}/overfit_summary.json"))
 
 # ========== 随机种子噪声底线 ==========
 F["seed_variance"] = None

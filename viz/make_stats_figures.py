@@ -11,6 +11,7 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
+import paths
 import os, sys, json
 import numpy as np
 import matplotlib
@@ -21,7 +22,7 @@ plt.rcParams["font.sans-serif"] = ["Microsoft YaHei","SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
 BASE = _BASE
-FIG = f"{BASE}/figures"; TT = f"{BASE}/tta_eval"; CKPT = f"{BASE}/checkpoints"
+FIG = paths.FIGURES; TT = paths.TTA; CKPT = paths.CKPT
 NAMES = ["背景","建筑","道路","水域","裸地","森林","农田"]
 
 def load(tag):

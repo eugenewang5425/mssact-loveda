@@ -33,8 +33,8 @@ from experiment_matrix import UNet, FCN, DeepLabV3Plus
 from experiment_matrix_v2 import FPNSeg
 
 BASE = _BASE
-CKPT = f"{BASE}/checkpoints"
-OUT = f"{BASE}/consensus_analysis"
+CKPT = paths.CKPT
+OUT = paths.CONSENSUS
 os.makedirs(OUT, exist_ok=True)
 MAIN = paths.DATA_NEWSPLIT2
 NUM_CLASSES, IGNORE, S, STRIDE = 7, 255, 256, 128

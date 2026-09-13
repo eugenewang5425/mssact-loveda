@@ -19,7 +19,7 @@ import paths  # 集中路径配置 (环境变量/.env)
 
 sys.path.insert(0, _HERE)
 BASE = paths.REPO
-CKPT = f"{BASE}/checkpoints"
+CKPT = paths.CKPT
 ROOT_NEW = paths.DATA_NEWSPLIT2
 
 def main_queue_running():

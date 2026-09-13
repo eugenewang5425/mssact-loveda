@@ -315,14 +315,32 @@ loveda/
 │   └── archive/                #   历史文档归档
 ├── legacy/                     # 历史脚本归档（18 个早期脚本 + 说明）
 │
-├── artifacts/                  # 中间分析产物（非权威事实）
-├── figures/                    # 图表输出
-├── checkpoints/                # 权重 + 训练历史（不入库）
+├── docs/                       # 文档
+│   ├── 架构有效性分析.md         #   三项已数值证实的架构缺陷 + 文献 + 修复路径
+│   ├── 整理记录_20260913.md     #   目录整理记录 + 路径依赖适配 + 验证
+│   └── archive/                #   历史文档归档
+├── legacy/                     # 历史脚本归档（18 个早期脚本）
+│
+├── figures/                    # 报告图（入库）
 ├── FACTS.json                  # 全部结果的结构化汇总（报告唯一数据源）
 ├── experiments_index.json      # 全部实验登记 + 管线世代 + 可比性分组
 ├── seed_variance.json          # 多种子噪声底线结果
-└── 项目报告_20260912.pdf        # 项目报告（交付件）
+├── 项目报告_20260913.pdf        # 项目报告（交付件）
+│
+└── results/                    # ★ 全部产物集中于此（目录整理后新增）
+    ├── checkpoints/            #   权重 + 训练历史（约 5.2 GB）
+    ├── fast_dataset/           #   预解码 memmap（约 17 GB）
+    ├── consensus_analysis/     #   一致性分析（汇总 JSON 入库）
+    ├── overfit_diag/  ladder_eval/
+    ├── fulltile_eval/  tta_eval/  heldout_test/  tta_eval2/
+    └── artifacts/              #   中间分析产物
 ```
+
+> **结果目录为什么集中到 `results/`**：所有脚本一律通过 `paths.py` 的常量取路径
+> （`paths.CKPT` / `paths.CONSENSUS` / …），因此重组目录**只需改 `paths.py`**。
+> 本次整理据此把全部产物收进 `results/`，修正了 12 个脚本里的 22 处路径引用，
+> 并实跑验证（`FACTS.json` 14 节无 null、报告 27 项自检全过）。
+> 详见 [docs/整理记录_20260913.md](docs/整理记录_20260913.md)。
 
 > **为什么核心库留在根目录**：`paths.py` 以 `REPO = dirname(abspath(__file__))`
 > 作为**所有相对路径的基准**（`checkpoints/`、`figures/`、`FACTS.json` …）。
@@ -333,10 +351,15 @@ loveda/
 > **路径配置**：代码中不含本地绝对路径。本地使用时创建 `.env` 提供数据根目录
 > （详见 [STRUCTURE.md](STRUCTURE.md) 第四节）。
 
-**不入库**（体积大 / 可复现生成）：`checkpoints/`（权重与训练历史）、
-`fast_dataset/`（预解码 memmap，约 9.9 GB）、
-`fulltile_eval/` `tta_eval*/` `heldout_test/` `consensus_analysis/`（评估结果与预测数组）、
+**不入库**（体积大 / 可复现生成）：`results/checkpoints/`（权重与训练历史，约 5.2 GB）、
+`results/fast_dataset/`（预解码 memmap，约 17 GB）、
+各评估目录下的预测数组与 PNG（`results/*/pred_*.npz`、`*.png`）、
+`_local_archive/`（历史产物归档）、`backups/`（覆盖前备份）、
 `项目报告_*.html`（可再生）、原始 LoveDA 数据。
+
+**入库的**：`FACTS.json` / `experiments_index.json` / `seed_variance.json`（三项权威事实）、
+`figures/`（报告图）、`results/*/` 下的**汇总性统计 JSON**（如 `ladder_summary.json`、
+`*_conf.json`、`convergence_learning_amount.json`）。
 
 ---
 

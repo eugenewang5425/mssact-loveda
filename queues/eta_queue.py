@@ -33,10 +33,11 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
+import paths
 import os, sys, json, re, time, glob
 
 BASE = _BASE
-CKPT = os.path.join(BASE, "checkpoints")
+CKPT = paths.CKPT
 LOGDIR = r"C:/Users/Administrator/.zcode/cli/exec/sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2"
 MAIN_LOG = os.path.join(LOGDIR, "call_00_p2ZpXJD7LuBTVfXsAVqp0139-stdout.log")
 

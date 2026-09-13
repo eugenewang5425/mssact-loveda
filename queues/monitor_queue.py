@@ -17,7 +17,7 @@ import os, sys, json, time, re, subprocess, datetime, glob
 import paths  # 集中路径配置 (环境变量/.env)
 
 BASE = paths.REPO
-CKPT = f"{BASE}/checkpoints"
+CKPT = paths.CKPT
 SESSION_DIR = r"C:\Users\Administrator\.zcode\cli\exec\sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2"
 
 ABL120 = [("abl120_no_emr",120,100),("abl120_no_ecsam",120,95),("abl120_no_fpn",120,88),

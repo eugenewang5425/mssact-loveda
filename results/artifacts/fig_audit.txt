@@ -1,0 +1,32 @@
+报告占位符                  图片文件                           生成脚本
+------------------------------------------------------------------------------------------------
+FIG_CURVES_NEWDATA     fig_curves_newdata.png         legacy <<< 仅 legacy 生成
+FIG_LABEL_LIMIT        fig_label_limit.png            legacy <<< 仅 legacy 生成
+FIG_DATASCALE          fig_datascale.png              **无生成脚本** <<< 不可复现
+FIG_FINAL_PERCLASS     fig_final_perclass.png         legacy <<< 仅 legacy 生成
+FIG_CM_NORM            fig_confusion_norm.png         legacy,viz/make_stats_figures.py
+FIG_CM_COUNT           fig_confusion_count.png        legacy,viz/make_stats_figures.py
+FIG_PRF                fig_prf_perclass.png           legacy,viz/make_stats_figures.py
+FIG_TEST1              fig_test_showcase_00006.png    legacy <<< 仅 legacy 生成
+FIG_ABLATION           fig_ablation.png               legacy,viz/make_figures.py
+FIG_CURVES             fig_curves.png                 viz/make_figures.py
+FIG_STRATEGY           fig_strategy_curves.png        legacy,viz/make_figures.py
+FIG_EFF                fig_efficiency.png             legacy,viz/make_stats_figures.py
+FIG_NEW_CURVES         fig_new_learning_curves.png    legacy <<< 仅 legacy 生成
+
+有问题的图: 6 / 13
+
+=== 目录下实际存在但未被报告引用的图 ===
+  未引用: fig_confusion_final.png
+  未引用: fig_final_comparison.png
+  未引用: fig_fulltile_bars.png
+  未引用: fig_lr_schedule.png
+  未引用: fig_oa_curves.png
+  未引用: fig_perclass.png
+  未引用: fig_perclass_datascale.png
+  未引用: fig_showcase_2522.png
+  未引用: fig_showcase_2665.png
+  未引用: fig_showcase_2671.png
+  未引用: fig_showcase_2820.png
+  未引用: fig_test_showcase_00000.png
+  未引用: fig_test_showcase_00014.png

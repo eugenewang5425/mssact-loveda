@@ -42,7 +42,7 @@ import os, sys, json, time, subprocess
 
 sys.path.insert(0, _HERE)
 BASE = _BASE
-CKPT = os.path.join(BASE, "checkpoints")
+CKPT = paths.CKPT
 import paths
 import queue_guard                     # 集中路径配置
 LADDER = paths.DATA_LADDER
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 # 却只裁 256²，解码在 CPU 上，GPU 利用率中位仅 6%、功耗 32W/180W。
                 # 实测 n250 仅 250 张却要 42-49s/轮（约 170ms/张），是主数据集
                 # （约 24ms/张）的 7 倍——纯解码开销。故为三档各建 memmap。
-                _fd = os.path.join(paths.REPO, "fast_dataset", f"ladder_n{n}")
+                _fd = os.path.join(paths.FAST_DATA, f"ladder_n{n}")
                 if not os.path.isdir(_fd):
                     print(f"SKIP {tag}: 缺子集 memmap {_fd}; 请先运行 python prep/build_ladder_memmap.py", flush=True)
                     continue

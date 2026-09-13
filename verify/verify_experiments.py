@@ -22,9 +22,9 @@ import numpy as np
 import torch
 
 BASE = paths.REPO
-CKPT = f"{BASE}/checkpoints"
-FT = f"{BASE}/fulltile_eval"
-HO = f"{BASE}/heldout_test"
+CKPT = paths.CKPT
+FT = paths.FULLTILE
+HO = paths.HELDOUT
 OUT = f"{BASE}/experiments_index.json"
 REPORT = f"{BASE}/verify_report.txt"
 NUM_CLASSES = 7

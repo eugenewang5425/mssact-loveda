@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print("=== 可比性验证 (同一模型/数据/种子, 3 轮) ===", flush=True)
     a = run("旧 PNG w=0", False, 0)
     b = run("新 memmap w=8", True, 8)
-    json.dump({"png": a, "memmap": b}, open(os.path.join(paths.REPO,"artifacts","bench_parity.json"),"w"), indent=1)
+    json.dump({"png": a, "memmap": b}, open(os.path.join(paths.RESULTS,"artifacts","bench_parity.json"),"w"), indent=1)
     print("\n=== 对比 ===")
     print(f"{'轮':>3s} {'旧Kappa':>9s} {'新Kappa':>9s} {'差':>8s}")
     for x, y in zip(a, b):

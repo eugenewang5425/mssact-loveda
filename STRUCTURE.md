@@ -15,8 +15,7 @@
 REPO = os.path.dirname(os.path.abspath(__file__))
 ```
 
-作为**所有相对路径的基准**（`checkpoints/`、`figures/`、`consensus_analysis/`、
-`FACTS.json` …）。它一旦移动，全部输出路径都会错位。因此以下 5 个文件
+作为**所有相对路径的基准**。它一旦移动，全部输出路径都会错位。因此以下 5 个文件
 **固定留在仓库根目录**：
 
 | 文件 | 作用 |
@@ -87,8 +86,14 @@ verify/*.py   ──────────────────────
 
 ### 1.5 目录名被脚本引用（同样不可移动）
 
-`figures/`、`checkpoints/`、`fast_dataset/`、`fulltile_eval/`、`tta_eval/`、
-`tta_eval2/`、`heldout_test/`、`consensus_analysis/`、`overfit_diag/`、`ladder_eval/`。
+**结果目录已全部集中到 `results/` 下**（2026-09-13 整理），并由 `paths.py`
+提供常量：`results/{checkpoints, fast_dataset, consensus_analysis, overfit_diag,
+ladder_eval, fulltile_eval, tta_eval, tta_eval2, heldout_test, artifacts}`。
+`figures/` 单独留在根目录（报告图需入库，与结果区分）。
+
+⚠️ **新增代码禁止写 `f"{BASE}/checkpoints"` 这类字面路径**，一律用 `paths.XXX`。
+本次整理正是为了消除这类引用——整理时它曾导致 `FACTS.json` 全部 Kappa 变 null。
+详见 [docs/整理记录_20260913.md](docs/整理记录_20260913.md)。
 
 ---
 
@@ -169,8 +174,8 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 |---|---|
 | `resplit_filtered.py` | no-data ≤10% 筛选 + MD5 去重 + 8:1:1 划分 |
 | `build_data_ladder.py` | 嵌套数据阶梯子集（250/500/1000），分层抽样 |
-| `build_fast_dataset.py` | 预解码主数据集 memmap（`fast_dataset/`），消除 PNG 解码瓶颈 |
-| `build_ladder_memmap.py` | 预解码**数据阶梯子集** memmap（`fast_dataset/ladder_n{250,500,1000}/`） |
+| `build_fast_dataset.py` | 预解码主数据集 memmap（`results/fast_dataset/`），消除 PNG 解码瓶颈 |
+| `build_ladder_memmap.py` | 预解码**数据阶梯子集** memmap（`results/fast_dataset/ladder_n{250,500,1000}/`） |
 
 > ⚠️ 两个预解码脚本都是**重量级磁盘 I/O**（解码 PNG + 写数 GB），会与训练的
 > memmap 随机读争抢磁盘——实测可使轮次耗时恶化约 10 倍（D4 从 87 s/轮 到 866 s/轮）。
@@ -202,13 +207,14 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 
 | 路径 | 内容 | 入库 |
 |---|---|---|
-| `checkpoints/` | 权重（`*_best.pt`）+ 训练历史（`*_history.json`） | ❌ |
-| `fast_dataset/` | 预解码 memmap：主数据集（约 9.9 GB）+ 阶梯子集 `ladder_n*`（约 7.3 GB） | ❌ |
-| `fulltile_eval/` `tta_eval*/` `heldout_test/` | 全图/TTA/持有测试评估 + 预测 PNG | ❌ |
-| `consensus_analysis/` | 一致性分析 + 预测数组 + `boundary_analysis.json`（含 `.bak_*`）+ `rigor.json` + `headroom.json` + `artifact.json` | ❌（仅汇总 JSON ✅） |
-| `overfit_diag/` `ladder_eval/` | 诊断与阶梯评价结果 | ❌ |
+| `results/checkpoints/` | 权重（`*_best.pt`）+ 训练历史（`*_history.json`） | ❌ |
+| `results/fast_dataset/` | 预解码 memmap：主数据集 + 阶梯子集（合计约 17 GB） | ❌ |
+| `results/{fulltile_eval, tta_eval*, heldout_test}/` | 全图/TTA/持有测试评估 + 预测 PNG | ❌（汇总 JSON ✅） |
+| `results/consensus_analysis/` | 一致性分析 + 预测数组 + `boundary_analysis.json`（含 `.bak_*`）+ `rigor.json` + `headroom.json` + `artifact.json` | ❌（仅汇总 JSON ✅） |
+| `results/{overfit_diag, ladder_eval}/` | 诊断与阶梯评价结果 | ✅ |
 | `figures/` | 图表（报告/README 引用） | ✅ |
-| `artifacts/` | 中间分析产物（`convergence_learning_amount.json` 等） | ✅ |
+| `results/artifacts/` | 中间分析产物（`convergence_learning_amount.json` 等） | ✅ |
+| `_local_archive/` | 历史产物归档（patches / vis / genhe_map / eval） | ❌ |
 | `FACTS.json` | **权威事实**：全部结果结构化汇总 | ✅ |
 | `experiments_index.json` | **权威事实**：实验登记 + 管线世代 + 可比性分组 | ✅ |
 | `seed_variance.json` | **权威事实**：多种子噪声底线 | ✅ |
@@ -232,7 +238,7 @@ OOM 自动降 batch、训练后校验、**互斥等待**（检测到其他 `run_
 ### 三之二、训练管线世代（⚠️ 决定"哪些实验可以比较"）
 
 Kappa **禁止跨管线世代比较**。各世代由 checkpoint/日志时间戳核实
-（`fast_dataset/*.npy` 建立于 2026-09-12 14:51–14:53）：
+（`results/fast_dataset/*.npy` 建立于 2026-09-12 14:51–14:53）：
 
 | 世代 | 数据投递 | 增强随机性 | `num_workers` | 实验前缀 | 地位 |
 |---|---|---|---|---|---|

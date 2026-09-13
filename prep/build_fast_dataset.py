@@ -28,7 +28,7 @@ sys.path.insert(0, _HERE)
 import paths
 
 SRC = paths.DATA_NEWSPLIT2          # 含 train/ val/ test/ test_clean/
-OUT = os.path.join(paths.REPO, "fast_dataset")
+OUT = paths.FAST_DATA
 SIZE = 1024
 
 # 官方标签映射: 1..7 -> 0..6; 0(no-data) 及其他 -> 255(ignore)

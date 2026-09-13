@@ -11,6 +11,7 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
+import paths
 import subprocess, time, json, statistics as st
 N, IV = 100, 1.0   # 100 样本 × 1s
 utils, powers = [], []
@@ -33,7 +34,7 @@ res = dict(samples=len(utils), seconds=round(el,1),
            busy_gt90=round(pct(utils,90),1),
            power_mean=round(st.mean(powers),1), power_min=min(powers), power_max=max(powers))
 print(json.dumps(res, indent=1, ensure_ascii=False))
-json.dump(res, open(os.path.join(_BASE, "artifacts", "gpu_sample_after.json"), "w"), indent=1)
+json.dump(res, open(os.path.join(paths.RESULTS, "artifacts", "gpu_sample_after.json"), "w"), indent=1)
 # 时序字符图
 chars = "".join("_" if u<10 else ("-" if u<30 else ("=" if u<60 else ("+" if u<90 else "#"))) for u in utils)
 print("\n时序图 (每字符=1秒; _ <10%, - <30%, = <60%, + <90%, # >=90%):")

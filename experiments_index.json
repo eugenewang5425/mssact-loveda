@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-13 15:40:33",
+  "generated_at": "2026-09-13 17:04:09",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",

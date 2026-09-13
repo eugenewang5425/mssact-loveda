@@ -26,7 +26,7 @@ import queue_guard  # 集中路径配置 (环境变量/.env)
 
 sys.path.insert(0, _HERE)
 BASE = paths.REPO
-CKPT = f"{BASE}/checkpoints"
+CKPT = paths.CKPT
 ROOT_MAIN = paths.DATA_NEWSPLIT2      # 1768 训练
 LADDER = paths.DATA_LADDER        # 阶梯子集
 

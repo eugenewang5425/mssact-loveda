@@ -83,7 +83,7 @@ def build(n, src_root, out_root):
 
 if __name__ == "__main__":
     src_root = paths.DATA_LADDER
-    out_root = os.path.join(paths.REPO, "fast_dataset")
+    out_root = paths.FAST_DATA
     print(f"源目录: {src_root}")
     print(f"输出  : {out_root}/ladder_n*/")
     if not os.path.isdir(src_root):

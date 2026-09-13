@@ -18,7 +18,7 @@ import os, sys, json, time, subprocess
 sys.path.insert(0, _HERE)
 import paths
 BASE = _BASE
-CKPT = os.path.join(BASE, "checkpoints")
+CKPT = paths.CKPT
 ROOT_MAIN = paths.DATA_NEWSPLIT2
 
 def queues_running():

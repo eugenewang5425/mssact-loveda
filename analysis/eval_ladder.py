@@ -25,8 +25,8 @@ from models.msscactnet import MSSACTNet
 from experiment_matrix import UNet, FCN, DeepLabV3Plus
 
 BASE = _BASE
-CKPT = f"{BASE}/checkpoints"
-OUT = f"{BASE}/ladder_eval"
+CKPT = paths.CKPT
+OUT = paths.LADDER_EVAL
 os.makedirs(OUT, exist_ok=True)
 MAIN = paths.DATA_NEWSPLIT2
 NUM_CLASSES, IGNORE, S, STRIDE = 7, 255, 256, 128

@@ -64,24 +64,27 @@ DATA_LADDER = os.environ.get("LDA_DATA_LADDER", os.path.join(DATA_ROOT, "data_la
 DATA_LEGACY = os.environ.get("LDA_DATA_LEGACY", DATA_ROOT)   # 早期版本(train/val/test 直挂)
 
 # ---- 训练产物 ----
-CKPT = os.environ.get("LDA_CKPT", os.path.join(REPO, "checkpoints"))
+CKPT = os.environ.get("LDA_CKPT", os.path.join(REPO, "results", "checkpoints"))
 
 # ---- GF 影像（可选，制图管线用）----
 GF_DATA = os.environ.get("LDA_GF_DATA", os.path.join(REPO, "_gf_data"))
 GF_TIF = os.environ.get("LDA_GF_TIF", os.path.join(GF_DATA, "gf_multiband_labeled.tif"))
 GF_SHP = os.environ.get("LDA_GF_SHP", os.path.join(GF_DATA, "admin_boundary.shp"))
 
-# ---- 结果目录（均位于仓库内，可复现生成）----
-FIGURES = os.path.join(REPO, "figures")
-FULLTILE = os.path.join(REPO, "fulltile_eval")
-TTA = os.path.join(REPO, "tta_eval")
-TTA2 = os.path.join(REPO, "tta_eval2")
-HELDOUT = os.path.join(REPO, "heldout_test")
-CONSENSUS = os.path.join(REPO, "consensus_analysis")
-OVERFIT = os.path.join(REPO, "overfit_diag")
-LADDER_EVAL = os.path.join(REPO, "ladder_eval")
-PATCHES = os.path.join(REPO, "patches")
-VIS = os.path.join(REPO, "vis")
+# ---- 结果目录（统一挂在 results/ 下，便于与脚本分离；均由本模块提供路径）----
+# 说明: 所有脚本一律通过 paths.XXX 取路径，故重组只需改这里，无需改调用方
+RESULTS = os.environ.get("LDA_RESULTS", os.path.join(REPO, "results"))
+FIGURES = os.path.join(REPO, "figures")          # 报告图（与结果分开，需入库）
+FULLTILE = os.path.join(RESULTS, "fulltile_eval")
+TTA = os.path.join(RESULTS, "tta_eval")
+TTA2 = os.path.join(RESULTS, "tta_eval2")
+HELDOUT = os.path.join(RESULTS, "heldout_test")
+CONSENSUS = os.path.join(RESULTS, "consensus_analysis")
+OVERFIT = os.path.join(RESULTS, "overfit_diag")
+LADDER_EVAL = os.path.join(RESULTS, "ladder_eval")
+PATCHES = os.path.join(REPO, "_local_archive", "patches")   # 历史产物，已归档
+VIS = os.path.join(REPO, "_local_archive", "vis")           # 历史产物，已归档
+FAST_DATA = os.path.join(RESULTS, "fast_dataset")           # 预解码 memmap
 
 if __name__ == "__main__":
     for k in ["REPO","DATA_ROOT","DATA_NEWSPLIT2","CKPT","GF_DATA"]:
