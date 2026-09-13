@@ -169,6 +169,11 @@ reg(["lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all"], "lgR120/修复归因",
     "queues/run_queue_fix.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
     "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
     pipeline="P-MEM-ROLL")
+reg(["lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4"], "lgR120/判别实验",
+    "queues/run_queue_fix2.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
+    "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); "
+    "H2: lr1e4 两个 = 同配置降到 lr=1e-4, 与 2e-4 版直接对照",
+    pipeline="P-MEM-ROLL")
 reg(["lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn", "lgR120_abl_no_trans",
      "lgR120_abl_no_adapter", "lgR120_abl_bilinear", "lgR120_abl_trans4l",
      "lgR120_abl_trans6l"],
@@ -231,7 +236,8 @@ COMPARABLE_GROUPS = {
     "G4-MEM-ROLL-120ep": {
         "pipeline": "P-MEM-ROLL", "root": "DATA_NEWSPLIT2",
         "protocol": "120ep/pt20/bs8/lr2e-4",
-        "members": ["lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all"] +
+        "members": ["lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all",
+                    "lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4"] +
                    [f"lgR120_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
                                                 "no_adapter", "bilinear", "trans4l", "trans6l")],
         "note": "缺陷修复后的收敛协议组。120 轮的 OneCycle 退火终点与 60 轮不同, 故"

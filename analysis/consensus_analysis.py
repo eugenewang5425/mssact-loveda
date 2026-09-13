@@ -58,15 +58,22 @@ def gauss2d(s, sigma):
     return np.outer(g,g).astype(np.float32)
 
 def build(kind):
-    if kind == "light":
-        return MSSACTNet(in_channels=3, num_classes=7, embed_dims=[32,64,128,256],
-                         transformer_layers=2, transformer_heads=4)
-    if kind == "deeplab": return DeepLabV3Plus()
-    if kind == "unet": return UNet()
-    if kind == "fcn": return FCN()
-    if kind == "fpn": return FPNSeg()
-    if kind == "swin": return SwinUnetLite() if False else __import__("experiment_matrix_v2").SwinUnetLite()
-    raise ValueError(kind)
+    """按 tag 构造模型。
+
+    2026-09-14: 本地 build(kind) 的 kind 是**架构成分**的字符串, 与 tag 不是一对一,
+    故新增 tag 必须改这里 —— 这正是 G1 消融/lg_D1..D4/lgR_D1..D4 长期无法推理的
+    一部分原因。现改为直接复用 analysis/model_registry.py 的 tag -> 模型登记表
+    （实验/评估/推理三处共用一份映射）。保留 kind 形式的调用以兼容旧调用点。
+    """
+    from model_registry import build_for_tag, TAG_CFG
+    if kind in TAG_CFG:                 # 直接传 tag
+        return build_for_tag(kind)
+    # 兼容旧的 kind 字符串
+    _alias = {"light": "full_all_v2", "deeplab": "nd_deeplab", "unet": "nd_unet",
+              "fcn": "nd_fcn", "fpn": "nd_fpn_seg", "swin": "nd_swin_unet"}
+    if kind in _alias:
+        return build_for_tag(_alias[kind])
+    raise ValueError("未知 kind/tag: %r" % kind)
 
 @torch.no_grad()
 def infer_tile(model, img_u8, batch=4):
@@ -88,6 +95,72 @@ def infer_tile(model, img_u8, batch=4):
     wsum[wsum==0]=1
     return (prob/wsum).argmax(0).astype(np.uint8)
 
+def test_clean_names():
+    """test_clean 的 (images ∩ masks) 文件名, 已排序"""
+    d = f"{MAIN}/test_clean"
+    return sorted(set(os.listdir(f"{d}/images")) & set(os.listdir(f"{d}/masks")))
+
+
+def expected_shape():
+    """labels.npz 的形状; 缺失返回 None"""
+    lp = f"{OUT}/labels.npz"
+    if not os.path.exists(lp):
+        return None
+    return np.load(lp, allow_pickle=True)["labels"].shape
+
+
+def cache_is_valid(tag):
+    """缓存存在且形状与 labels 一致才算有效。
+
+    历史遗留: 早期 eval_rigor.infer_tag 走 LoveDADataset(train=False)
+    (n_val_patches=4, crop=256) 会产出 (564,256,256) 的**分块**布局, 与
+    labels.npz 的 (141,1024,1024) 永远不一致。那种缓存必须判为无效并重推 ——
+    否则它既不重推、又被形状检查跳过, 该 tag 就永远进不了测试集协议。
+    """
+    p = f"{OUT}/pred_{tag}.npz"
+    if not os.path.exists(p):
+        return False, "无缓存"
+    want = expected_shape()
+    if want is None:
+        return True, "无 labels.npz 可校验"
+    got = np.load(p)["pred"].shape
+    if got != want:
+        return False, "缓存形状 %s != 标签 %s" % (got, want)
+    return True, "有效"
+
+
+def infer_and_cache(tag, names=None, force=False, batch=4):
+    """对任意**已登记** tag 做整图滑窗推理, 写 pred_{tag}.npz, 返回预测数组。
+
+    这是全项目整图推理的**唯一实现**（eval_rigor 与 run_post_fix 都调用它）:
+      * 滑窗 S=256 / STRIDE=128 + 高斯加权, 与训练裁剪尺度一致
+      * 输出 (141, 1024, 1024), 与 labels.npz 同布局
+    """
+    ok, why = cache_is_valid(tag)
+    if ok and not force:
+        return np.load(f"{OUT}/pred_{tag}.npz")["pred"]
+    if (not ok) and os.path.exists(f"{OUT}/pred_{tag}.npz"):
+        print("    %s: %s -> 重新推理" % (tag, why), flush=True)
+    ck = f"{CKPT}/{tag}_best.pt"
+    if not os.path.exists(ck):
+        print("    %s: 无权重, 跳过" % tag, flush=True)
+        return None
+    from model_registry import build_for_tag
+    names = names or test_clean_names()
+    d = f"{MAIN}/test_clean"
+    model = build_for_tag(tag).to("cuda").eval()
+    sd = torch.load(ck, map_location="cuda", weights_only=True)
+    model.load_state_dict(sd, strict=False)
+    t0 = time.time()
+    P = np.stack([infer_tile(model, np.array(Image.open(f"{d}/images/{n}").convert("RGB")),
+                             batch=batch) for n in names])
+    np.savez_compressed(f"{OUT}/pred_{tag}.npz", pred=P)
+    print("    %s: 推理完成 %s (%.0fs)" % (tag, P.shape, time.time() - t0), flush=True)
+    del model
+    torch.cuda.empty_cache()
+    return P
+
+
 def main():
     d = f"{MAIN}/test_clean"
     names = sorted(set(os.listdir(f"{d}/images")) & set(os.listdir(f"{d}/masks")))
@@ -101,10 +174,12 @@ def main():
     for tag, label, kind in MODELS:
         ckpt = f"{CKPT}/{tag}_best.pt"
         if not os.path.exists(ckpt): print(f"SKIP {tag} (no ckpt)", flush=True); continue
-        cache = f"{OUT}/pred_{tag}.npz"
-        if os.path.exists(cache):
-            preds[label] = np.load(cache)["pred"]; print(f"  {tag} (cached)", flush=True); continue
-        model = build(kind).to("cuda").eval()
+        ok, why = cache_is_valid(tag)
+        if ok:
+            preds[label] = np.load(f"{OUT}/pred_{tag}.npz")["pred"]
+            print(f"  {tag} (cached)", flush=True); continue
+        print(f"  {tag}: {why} -> 重新推理", flush=True)
+        model = build(tag).to("cuda").eval()
         model.load_state_dict(torch.load(ckpt, map_location="cuda"), strict=False)
         t0 = time.time()
         P = np.stack([infer_tile(model, np.array(Image.open(f"{d}/images/{n}").convert("RGB"))) for n in names])

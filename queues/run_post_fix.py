@@ -52,6 +52,7 @@ TAGS = (
      "lgR_bs8_full_lr2e4", "lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
      "lgR_D3_ch_tiny", "lgR_D4_ch_large", "lgR_deeplab_scr", "lg_deeplab_scr",
      "lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all",
+     "lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4",
      "lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn",
      "lgR120_abl_no_trans", "lgR120_abl_no_adapter", "lgR120_abl_bilinear",
      "lgR120_abl_trans4l", "lgR120_abl_trans6l",

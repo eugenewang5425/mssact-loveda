@@ -105,81 +105,20 @@ def load_cached(tag):
 
 
 def infer_tag(tag, labels_meta):
-    """GPU 推理: 用该 tag 的 best.pt 在 test_clean 上滑窗/整图预测"""
-    import torch
-    from train_v3 import LoveDADataset, compute_stats
-    from torch.utils.data import DataLoader
-    import experiment_matrix as EM
-    from experiment_matrix_v2 import FPNSeg, SwinUnetLite, mssact_light
-    from models.msscactnet import MSSACTNet
+    """整图滑窗推理并写缓存; 委托给 consensus_analysis.infer_and_cache
 
-    def light(**kw):
-        return mssact_light(**kw)
+    **为什么必须委托**: 原实现走 `LoveDADataset(train=False)`, 该数据集在非训练模式
+    下 `n_val_patches=4`、crop=256, 于是 1024² 图被拆成 4 个 256² 块, 产出
+    `(564, 256, 256)`。而 `labels.npz` 是 `(141, 1024, 1024)` —— 两者**永远不一致**,
+    所以本函数产出的缓存**必定**被调用方的形状检查跳过, `--infer` 实际上从未让任何
+    新 tag 进入测试集协议。
 
-    REG = {
-        "full_all_v2": light, "post_all_v2": light,
-        "nd_unet": EM.UNet, "nd_pspnet": EM.PSPNet, "nd_fcn": EM.FCN,
-        "nd_deeplab": EM.DeepLabV3Plus, "nd_segformer": EM.SegFormerLite,
-        "nd_fpn_seg": FPNSeg, "nd_swin_unet": SwinUnetLite,
-        "nd_abl_no_emr": lambda: light(use_emr=False),
-        "nd_abl_no_ecsam": lambda: light(use_ecsam=False),
-        "nd_abl_no_fpn": lambda: light(use_fpn=False),
-        "nd_abl_no_trans": lambda: light(use_transformer=False),
-        "nd_abl_no_adapter": lambda: light(use_adapter=False),
-        "nd_abl_bilinear": lambda: light(upsample_mode="bilinear"),
-        "nd_abl_trans4l": lambda: light(transformer_layers=4),
-        "nd_abl_trans6l": lambda: light(transformer_layers=6),
-        "lgR_bs8_full_lr2e4": light,
-        "lgR_D1_join_nofpn_notrans": lambda: light(use_fpn=False, use_transformer=False),
-        "lgR_D2_decoder_ca": lambda: light(decoder_ca_stages=(0, 1)),
-        "lgR_D3_ch_tiny": lambda: MSSACTNet(in_channels=3, num_classes=7,
-                                            embed_dims=[16, 32, 64, 128],
-                                            transformer_layers=2, transformer_heads=4),
-        "lgR_D4_ch_large": lambda: MSSACTNet(in_channels=3, num_classes=7,
-                                             embed_dims=[64, 128, 256, 512],
-                                             transformer_layers=2, transformer_heads=4),
-        # ---- 缺陷修复验证 (120 轮收敛协议) ----
-        "lgR120_full": light,
-        "lgR120_fx_skip": lambda: light(use_skip=True),
-        "lgR120_fx_pos": lambda: light(pos_enc=True),
-        "lgR120_fx_all": lambda: light(use_skip=True, pos_enc=True),
-        "lgR120_abl_no_emr": lambda: light(use_skip=True, pos_enc=True, use_emr=False),
-        "lgR120_abl_no_ecsam": lambda: light(use_skip=True, pos_enc=True, use_ecsam=False),
-        "lgR120_abl_no_fpn": lambda: light(use_skip=True, pos_enc=True, use_fpn=False),
-        "lgR120_abl_no_trans": lambda: light(use_skip=True, pos_enc=True, use_transformer=False),
-        "lgR120_abl_no_adapter": lambda: light(use_skip=True, pos_enc=True, use_adapter=False),
-        "lgR120_abl_bilinear": lambda: light(use_skip=True, pos_enc=True, upsample_mode="bilinear"),
-        "lgR120_abl_trans4l": lambda: light(use_skip=True, pos_enc=True, transformer_layers=4),
-        "lgR120_abl_trans6l": lambda: light(use_skip=True, pos_enc=True, transformer_layers=6),
-    }
-    if tag not in REG:
-        print(f"  [skip] {tag}: 未注册构造函数", flush=True)
-        return None
-    ck = os.path.join(CKPT, f"{tag}_best.pt")
-    if not os.path.exists(ck):
-        print(f"  [skip] {tag}: 无权重", flush=True)
-        return None
-
-    DEV = "cuda" if __import__("torch").cuda.is_available() else "cpu"
-    mean, std = compute_stats(root=paths.DATA_NEWSPLIT2)
-    ds = LoveDADataset("test_clean", mean, std, train=False, root=paths.DATA_NEWSPLIT2)
-    dl = DataLoader(ds, batch_size=4, shuffle=False, num_workers=0)
-    model = REG[tag]().to(DEV)
-    sd = torch.load(ck, map_location=DEV, weights_only=True)
-    model.load_state_dict(sd, strict=False)
-    model.eval()
-    preds = []
-    with torch.no_grad():
-        for img, _ in dl:
-            with torch.amp.autocast("cuda"):
-                out = model(img.to(DEV))
-            preds.append(out.argmax(1).to(torch.uint8).cpu().numpy())
-    pred = np.concatenate(preds, 0)
-    np.savez_compressed(os.path.join(CONS, f"pred_{tag}.npz"), pred=pred)
-    del model
-    import torch as _t
-    _t.cuda.empty_cache()
-    return pred
+    正确的整图推理在 `consensus_analysis.infer_tile()`（256² 滑窗 + 高斯加权,
+    与训练裁剪尺度一致）, 现由 `consensus_analysis.infer_and_cache()` 统一提供,
+    模型构造取自 `analysis/model_registry.py` 的 tag→模型登记表。全项目只有这一套实现。
+    """
+    import consensus_analysis as CA
+    return CA.infer_and_cache(tag)
 
 
 # ----------------------------------------------------------- 边界分层
@@ -282,9 +221,18 @@ def main():
     for tag in tags:
         pred = load_cached(tag)
         src = "cache"
+        # 陈旧缓存: 历史版本的 pred_{tag}.npz 是 (564, 256, 256) 的分块布局, 与
+        # labels 的 (141, 1024, 1024) 不一致。此时必须把缓存**判定为无效并重推** ——
+        # 原实现只在"缓存不存在"时推理, 于是陈旧缓存既不重推、又被下面的形状检查
+        # 跳过, 那些 tag 就**永远**进不了测试集协议 (G1 的 8 个消融、lg_D1..D4、
+        # lgR_D1..D4 等均因此长期缺失, 使消融结论只有 val Kappa 单一来源)。
+        if pred is not None and pred.shape != labels.shape:
+            print(f"  ~ {tag}: 缓存形状 {pred.shape} != 标签 {labels.shape}, 视为无效",
+                  flush=True)
+            pred = None
         if pred is None:
             if not args.infer:
-                print(f"  - {tag}: 无缓存 (用 --infer 生成)", flush=True); continue
+                print(f"  - {tag}: 无可用缓存 (用 --infer 生成)", flush=True); continue
             t0 = time.time()
             pred = infer_tag(tag, names)
             src = f"infer {time.time()-t0:.0f}s"

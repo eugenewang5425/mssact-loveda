@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-13 21:36:51",
+  "generated_at": "2026-09-14 03:27:27",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 103,
+  "n_tags": 106,
   "unregistered_tags": []
  },
  "comparable_groups": {
@@ -225,9 +225,9 @@
    "best_kappa_in_series": 0.6358
   },
   "lgR120/修复归因": {
-   "n_experiments": 1,
-   "n_complete": 0,
-   "best_kappa_in_series": 0.4839
+   "n_experiments": 4,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.6716
   }
  },
  "experiments": {
@@ -895,11 +895,11 @@
   },
   "lgR120_full": {
    "series": "lgR120/修复归因",
-   "status": "partial(26/120)",
+   "status": "partial(111/120)",
    "pipeline": "P-MEM-ROLL",
-   "best_kappa": 0.483918,
-   "best_epoch": 26,
-   "epochs_run": 26,
+   "best_kappa": 0.665492,
+   "best_epoch": 91,
+   "epochs_run": 111,
    "target_epochs": 120,
    "params_M": 6.099,
    "has_weight": true,
@@ -907,6 +907,99 @@
    "root": "DATA_NEWSPLIT2",
    "protocol": "120ep/pt20/bs8/lr0.0002",
    "note": "120 轮同调度基线; 60 轮与 120 轮是不同的 OneCycle 退火终点, 不可直接比较",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fx_all": {
+   "series": "lgR120/修复归因",
+   "status": "partial(82/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.632986,
+   "best_epoch": 62,
+   "epochs_run": 82,
+   "target_epochs": 120,
+   "params_M": 6.464,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fx_pos": {
+   "series": "lgR120/修复归因",
+   "status": "partial(116/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.671559,
+   "best_epoch": 96,
+   "epochs_run": 116,
+   "target_epochs": 120,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fx_skip": {
+   "series": "lgR120/修复归因",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.650476,
+   "best_epoch": 114,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 6.464,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
    "arch": {
     "stem_ch": 32,
     "stage_ch": [

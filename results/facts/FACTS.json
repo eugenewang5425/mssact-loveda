@@ -1872,11 +1872,41 @@
    "lgR120_full": {
     "series": "lgR120/修复归因",
     "pipeline": "P-MEM-ROLL",
-    "status": "partial(26/120)",
-    "kappa": 0.483918,
-    "best_epoch": 26,
-    "epochs_run": 26,
+    "status": "partial(111/120)",
+    "kappa": 0.665492,
+    "best_epoch": 91,
+    "epochs_run": 111,
     "params_M": 6.099,
+    "epochs_total": 120
+   },
+   "lgR120_fx_skip": {
+    "series": "lgR120/修复归因",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.650476,
+    "best_epoch": 114,
+    "epochs_run": 120,
+    "params_M": 6.464,
+    "epochs_total": 120
+   },
+   "lgR120_fx_pos": {
+    "series": "lgR120/修复归因",
+    "pipeline": "P-MEM-ROLL",
+    "status": "partial(116/120)",
+    "kappa": 0.671559,
+    "best_epoch": 96,
+    "epochs_run": 116,
+    "params_M": 6.099,
+    "epochs_total": 120
+   },
+   "lgR120_fx_all": {
+    "series": "lgR120/修复归因",
+    "pipeline": "P-MEM-ROLL",
+    "status": "partial(82/120)",
+    "kappa": 0.632986,
+    "best_epoch": 62,
+    "epochs_run": 82,
+    "params_M": 6.464,
     "epochs_total": 120
    }
   },

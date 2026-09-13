@@ -175,6 +175,7 @@ if os.path.exists(_idx):
              "lgR_b15_unet", "lgR_b15_deeplab", "lgR_b15_deeplab_scr",
              # 缺陷修复验证（120 轮收敛协议）
              "lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all",
+             "lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4",
              "lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn",
              "lgR120_abl_no_trans", "lgR120_abl_no_adapter", "lgR120_abl_bilinear",
              "lgR120_abl_trans4l", "lgR120_abl_trans6l"]

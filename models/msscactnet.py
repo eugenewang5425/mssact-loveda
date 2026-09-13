@@ -297,7 +297,7 @@ class SegmentationDecoder(nn.Module):
     - 'bilinear': 双线性插值上采样
     """
     def __init__(self, in_channels, num_classes, upsample_mode='deconv', ca_stages=(),
-                 skip_channels=()):
+                 skip_channels=(), skip_stages=None):
         """ca_stages: 在上采样路径的指定阶段后插入 ECSAM(坐标注意力)
         例: ca_stages=(0,) 表示在第一次上采样后(1/4分辨率)应用;
         默认 () = 不插入, 保持原行为
@@ -314,6 +314,12 @@ class SegmentationDecoder(nn.Module):
         self.upsample_mode = upsample_mode
         self.ca_stages = tuple(ca_stages)
         self.skip_channels = tuple(skip_channels)
+        # skip_stages: 在哪些上采样阶段做融合 (0=64^2, 1=128^2, 2=256^2)。
+        # 默认 None = 覆盖 skip_channels 的全部阶段(保持原行为)。
+        # 用途: 分离"只融合深层语义级"与"融合到全分辨率"两种设计 —— 后者会把主干
+        # 最浅层(仅一个 EMR 块)的纹理直接接到输出, 也会让 FPN 新建的全分辨率
+        # 3x3 卷积支路参与训练。
+        self.skip_stages = tuple(range(len(self.skip_channels))) if skip_stages is None             else tuple(skip_stages)
 
         if upsample_mode == 'deconv':
             # 上采样路径: 32 -> 64 -> 128 -> 256 (3次转置卷积)
@@ -340,11 +346,16 @@ class SegmentationDecoder(nn.Module):
         # 上采样第 k 级后的通道: 0->in//2, 1->in//4, 2->64; 跳连侧先 1x1 降维再拼接
         self.skip_proj = nn.ModuleList()
         self.skip_fuse = nn.ModuleList()
-        if len(self.skip_channels) == 3:
+        # 通道账目有两套索引, 必须分开:
+        #   * fuse_out / keep_ch —— 按**阶段号 k** 索引(描述第 k 级上采样后的通道数)
+        #   * skip_proj / skip_fuse —— 按**启用序号 ci** 存放
+        # 曾经的 bug: 构建时用 ci 取 fuse_out, 于是 skip_stages=(1,2) 会用第 0 级的
+        # 通道规格去建第 1 级的融合层, 报 "weight [128,192,3,3] vs input 128ch"。
+        if self.skip_channels:
             fuse_out = (in_channels // 2, in_channels // 4, 64)   # 与本级上采样后的通道对齐
             keep_ch  = (max(in_channels // 4, 32), max(in_channels // 8, 32), 32)
-            for k in range(3):
-                self.skip_proj.append(nn.Conv2d(self.skip_channels[k], keep_ch[k], 1))
+            for ci, k in enumerate(self.skip_stages):
+                self.skip_proj.append(nn.Conv2d(self.skip_channels[ci], keep_ch[k], 1))
                 self.skip_fuse.append(nn.Sequential(
                     nn.Conv2d(fuse_out[k] + keep_ch[k], fuse_out[k], 3, padding=1, bias=False),
                     nn.BatchNorm2d(fuse_out[k]),
@@ -371,16 +382,20 @@ class SegmentationDecoder(nn.Module):
 
     def _fuse(self, x, skips, k):
         """第 k 级上采样后, 拼接同分辨率的主干特征 (由浅到深索引: 级0 用 skips[-1])"""
-        if not len(self.skip_proj):
+        if not len(self.skip_proj) or k not in self.skip_stages:
             return x
         sk = skips[len(skips) - 1 - k]
         # 空间尺寸必须天然对齐: 若不等, 说明跳连层级接错(而非取整误差), 必须显式报错,
         # 否则 F.interpolate 会把它"悄悄抹平"成一条能跑但语义错误的通路。
         assert sk.shape[-2:] == x.shape[-2:], (
             "跳连层级错位: 第%d级上采样后为 %s, 但接入的跳连为 %s" % (k, tuple(x.shape[-2:]), tuple(sk.shape[-2:])))
-        assert sk.shape[1] == self.skip_channels[k], (
-            "跳连通道约定不符: 第%d级期望 %d 通道, 实得 %d" % (k, self.skip_channels[k], sk.shape[1]))
-        return F.relu(self.skip_fuse[k](torch.cat([x, self.skip_proj[k](sk)], dim=1)))
+        # _ci = k 在**已启用阶段**中的序号 —— 层列表是按启用阶段建的, 必须用 _ci
+        # 索引, 不能用阶段号 k 本身 (曾因此对 skip_stages=(1,2) 取到越界/错层)。
+        _ci = self.skip_stages.index(k)
+        assert sk.shape[1] == self.skip_channels[_ci], (
+            "跳连通道约定不符: 第%d级期望 %d 通道, 实得 %d"
+            % (k, self.skip_channels[_ci], sk.shape[1]))
+        return F.relu(self.skip_fuse[_ci](torch.cat([x, self.skip_proj[_ci](sk)], dim=1)))
 
     def forward(self, x, skips=None):
         if skips is not None and len(self.skip_proj) == 0:
@@ -423,7 +438,7 @@ class MSSACTNet(nn.Module):
                  use_transformer=True, use_adapter=True,
                  transformer_layers=4, transformer_heads=8,
                  upsample_mode='deconv', decoder_ca_stages=(),
-                 use_skip=False, pos_enc=False, ecsam_stage0=False):
+                 use_skip=False, pos_enc=False, ecsam_stage0=False, skip_stages=None):
         super(MSSACTNet, self).__init__()
 
         self.in_channels = in_channels
@@ -489,8 +504,13 @@ class MSSACTNet(nn.Module):
 
         # 解码器跳连通道数: 用 FPN 时三级输出等宽; 不用 FPN 时直接取编码器浅三层
         # 顺序 = 解码器使用顺序(深->浅): FPN 三级等宽; 不用 FPN 时编码器浅三层倒序
+        # skip_stages 可只启用其中部分阶段(如仅 1,2 = 不融合到 256^2)
         if use_skip:
-            skip_channels = tuple([embed_dims[-1]] * 3) if use_fpn else tuple(list(embed_dims[:3])[::-1])
+            _all = tuple([embed_dims[-1]] * 3) if use_fpn else tuple(list(embed_dims[:3])[::-1])
+            if skip_stages is None:
+                skip_channels = _all
+            else:
+                skip_channels = tuple(_all[i] for i in skip_stages)
         else:
             skip_channels = ()
 
@@ -500,6 +520,7 @@ class MSSACTNet(nn.Module):
             upsample_mode=upsample_mode,
             ca_stages=decoder_ca_stages,
             skip_channels=skip_channels,
+            skip_stages=skip_stages,
         )
 
     def forward(self, x):

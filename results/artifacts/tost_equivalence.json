@@ -4,7 +4,7 @@
  "seed": 12345,
  "n_images": 141,
  "sigma_seed": 0.005,
- "sigma_seed_n_runs": 4,
+ "sigma_seed_n_runs": 0,
  "sigma_seed_source": "results/facts/seed_variance.json",
  "threshold_rule": "|dKappa| >= 2*sigma_seed 记为可分辨; 1-2 sigma 弱; <1 sigma 不可分辨",
  "two_error_models_note": "种子层回答'换种子重训差异还在吗'(误差 = sqrt(2)*sigma_seed); 测试集层回答'取样了哪些测试图造成的差异'(图像级配对 bootstrap)。两者不可混用; 合并 SE 仅用于描述单次观测 dKappa 的总误差。",

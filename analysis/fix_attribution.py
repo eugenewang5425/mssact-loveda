@@ -44,6 +44,11 @@ FIX_ROWS = [
     ("lgR120_fx_pos", "修 D3：2D 正弦位置编码", "pos_enc=True"),
     ("lgR120_fx_all", "三处全修", "use_skip=True, pos_enc=True"),
 ]
+DIAG_ROWS = [
+    ("lgR120_fx_d2", "H1 判别：只融合 128²/64²（不做 256² 全分辨率融合）"),
+    ("lgR120_fxskip_lr1e4", "H2 判别：修 skip + lr 降到 1e-4"),
+    ("lgR120_fxall_lr1e4", "H2 判别：全修 + lr 降到 1e-4"),
+]
 ABL_ROWS = [
     ("lgR120_abl_no_emr", "去掉 EMR（换标准残差块）"),
     ("lgR120_abl_no_ecsam", "去掉 ECSAM 坐标注意力"),
@@ -145,6 +150,11 @@ def main():
         if s:
             s["desc"], s["config"] = desc, cfg
         rows[tag] = s
+    for tag, desc in DIAG_ROWS:
+        s = summarise(tag)
+        if s:
+            s["desc"], s["config"] = desc, "判别实验"
+        rows[tag] = s
     for tag, desc in ABL_ROWS:
         s = summarise(tag)
         if s:
@@ -188,7 +198,8 @@ def main():
                   "不是修复效应。" % (base["kappa_best"] - base60["kappa_best"]))
 
     for title, specs in (("阶段一：修复归因（对照 = 同为 120 轮的基线）", FIX_ROWS),
-                         ("阶段二：修复后消融（底 = use_skip + pos_enc）", ABL_ROWS)):
+                         ("阶段 A：判别实验（H1 全分辨率融合 / H2 学习率）", DIAG_ROWS),
+                         ("阶段 B：修复后消融（底 = use_skip + pos_enc）", ABL_ROWS)):
         print()
         print("--- %s ---" % title)
         print("%-24s %8s %8s %9s %10s %-18s" % (

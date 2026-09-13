@@ -132,15 +132,24 @@ PHASE1 = [
      "三处全修 (D1+D2+D3)"),
 ]
 
+# 注意: 第二个元素必须是**可调用对象** —— run_table 会直接把它传给 train_one 当
+# model_fn。首版误写成 dict(use_emr=False), 于是 8 个实验全部
+# `TypeError: 'dict' object is not callable` 秒失败。预检脚本当时用
+# `mssact_light(**kw)` 自己解包, 只验证了配置、没验证调用约定, 故未能发现。
+def _abl(**flags):
+    """消融变体的构造函数: 以 use_skip+pos_enc 为底"""
+    return lambda: mssact_light(use_skip=True, pos_enc=True, **flags)
+
+
 PHASE2 = [
-    ("lgR120_abl_no_emr",     dict(use_emr=False),          "消融: EMR -> 标准残差块"),
-    ("lgR120_abl_no_ecsam",   dict(use_ecsam=False),        "消融: 去掉 ECSAM 空间注意力"),
-    ("lgR120_abl_no_fpn",     dict(use_fpn=False),          "消融: 去掉 FPN (跳连改接编码器浅三层)"),
-    ("lgR120_abl_no_trans",   dict(use_transformer=False),  "消融: 去掉 Transformer 全局上下文"),
-    ("lgR120_abl_no_adapter", dict(use_adapter=False),      "消融: 去掉 Adapter-Scale"),
-    ("lgR120_abl_bilinear",   dict(upsample_mode="bilinear"), "消融: 转置卷积 -> 双线性上采样"),
-    ("lgR120_abl_trans4l",    dict(transformer_layers=4),   "深度: Transformer 2 -> 4 层"),
-    ("lgR120_abl_trans6l",    dict(transformer_layers=6),   "深度: Transformer 2 -> 6 层"),
+    ("lgR120_abl_no_emr",     _abl(use_emr=False),           "消融: EMR -> 标准残差块"),
+    ("lgR120_abl_no_ecsam",   _abl(use_ecsam=False),         "消融: 去掉 ECSAM 空间注意力"),
+    ("lgR120_abl_no_fpn",     _abl(use_fpn=False),           "消融: 去掉 FPN (跳连改接编码器浅三层)"),
+    ("lgR120_abl_no_trans",   _abl(use_transformer=False),   "消融: 去掉 Transformer 全局上下文"),
+    ("lgR120_abl_no_adapter", _abl(use_adapter=False),       "消融: 去掉 Adapter-Scale"),
+    ("lgR120_abl_bilinear",   _abl(upsample_mode="bilinear"), "消融: 转置卷积 -> 双线性上采样"),
+    ("lgR120_abl_trans4l",    _abl(transformer_layers=4),    "深度: Transformer 2 -> 4 层"),
+    ("lgR120_abl_trans6l",    _abl(transformer_layers=6),    "深度: Transformer 2 -> 6 层"),
 ]
 
 
