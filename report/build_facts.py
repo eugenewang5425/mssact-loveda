@@ -13,7 +13,7 @@ for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
-import os, json, glob
+import os, re, json, glob
 import numpy as np
 
 BASE = _BASE
@@ -222,6 +222,65 @@ if _lad_rows:
         rows=_lad_rows,
         protocol="30ep/pt30/bs8/lr2e-4, memmap 子集预解码, val 固定为 newsplit2/val",
         note="e50rel/e90rel = 首次达到自身 k_max 的 50%/90% 的轮次（绝对阈值在低数据档不可达）")
+
+# ========== 训练策略：裁剪尺度与随机/固定 ==========
+# Kappa 读 history；每轮耗时**解析队列日志**（history 不记时间），
+# 因为大裁剪的计算代价是平方级增长的，只报 Kappa 会误导工程取舍。
+F["crop_strategy"] = None
+_crop_tags = [("lgR_bs8_full_lr2e4", "256 随机（基准）", 256, "随机"),
+              ("lgR_c256_center", "256 固定中心", 256, "固定中心"),
+              ("lgR_c384_rand", "384 随机", 384, "随机"),
+              ("lgR_c512_rand", "512 随机", 512, "随机")]
+# 两个日志都要解析: 基准 lgR_bs8_full_lr2e4 由架构队列训练，其耗时只在那边的日志里
+_times = {}
+for _log in (f"{BASE}/queues/run_queue_crop.log",):
+    try:
+        _txt = open(_log, encoding="utf-8", errors="replace").read()
+        for _line in _txt.splitlines():
+            _p = re.search(r"\[ep\s*\d+\]\s+(\S+).*?\((\d+)s\)", _line)
+            if _p and _p.group(1).startswith("lgR_"):
+                _times.setdefault(_p.group(1), []).append(int(_p.group(2)))
+    except Exception as _e:
+        print(f"  [warn] 解析 {os.path.basename(_log)} 失败: {type(_e).__name__}")
+_crop_rows = {}
+for _t, _desc, _crop, _pos in _crop_tags:
+    _hp = f"{CKPT}/{_t}_history.json"
+    if not os.path.exists(_hp):
+        continue
+    try:
+        _h = json.load(open(_hp, encoding="utf-8"))
+        _b = max(_h, key=lambda r: r.get("kappa", -9))
+        # 优先用 history 里的 sec（永久可追溯）；否则退回日志解析
+        _secs = sorted(r["sec"] for r in _h if "sec" in r)
+        _med = _secs[len(_secs) // 2] if _secs else None
+        if _med is None:
+            _ts = sorted(_times.get(_t, []))
+            _med = _ts[len(_ts) // 2] if _ts else None
+        _crop_rows[_t] = dict(desc=_desc, crop=_crop, pos=_pos,
+                              kappa=round(float(_b.get("kappa", 0)), 4),
+                              best_epoch=_b.get("epoch"), n_epochs=len(_h),
+                              s_per_epoch=_med,
+                              total_min=(round(_med * len(_h) / 60.0, 1) if _med else None),
+                              complete=(len(_h) >= 60))
+    except Exception as _e:
+        print(f"  [warn] crop {_t}: {type(_e).__name__}")
+if _crop_rows:
+    # 基准 lgR_bs8_full_lr2e4 由架构队列训练，其日志不在此处；但它与
+    # lgR_c256_center 是**完全同配置**（256² / batch8 / memmap 管线），
+    # 故可直接沿用其实测耗时——比解析易失的外部日志可靠。
+    _base = _crop_rows.get("lgR_bs8_full_lr2e4")
+    _peer = _crop_rows.get("lgR_c256_center") or {}
+    if _base is not None and _base.get("s_per_epoch") is None and _peer.get("s_per_epoch"):
+        _base["s_per_epoch"] = _peer["s_per_epoch"]
+        _base["total_min"] = round(_peer["s_per_epoch"] * _base["n_epochs"] / 60.0, 1)
+        _base["timing_note"] = "耗时为同配置(lgR_c256_center)实测值"
+    _ref = _crop_rows.get("lgR_bs8_full_lr2e4", {}).get("kappa")
+    for _r in _crop_rows.values():
+        _r["delta"] = round(_r["kappa"] - _ref, 4) if _ref else None
+    F["crop_strategy"] = dict(
+        rows=_crop_rows,
+        protocol="60ep/pt20/bs8/lr2e-4, P-MEM-ROLL 管线（memmap）",
+        note="batch 随裁剪面积下调(8/4/2)以避免 OOM；每轮耗时取自队列日志实测中位数")
 
 json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
 

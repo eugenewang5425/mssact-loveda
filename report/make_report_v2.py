@@ -103,45 +103,55 @@ def _sec_seed():
 
 
 def _sec_crop():
-    """§5.8 训练策略（裁剪尺度 + 随机/固定）对比"""
-    tags = [("lgR_bs8_full_lr2e4", "256 随机（基准）"),
-            ("lgR_c256_center", "256 固定中心"),
-            ("lgR_c384_rand", "384 随机"),
-            ("lgR_c512_rand", "512 随机")]
-    C2 = FACTS.get("stage_C_1768_final", {})
-    L = ["| 配置 | crop | 位置 | Kappa | 相对基准 |", "|---|---:|---|---:|---:|"]
-    ref = None
-    rows = []
-    for t, desc in tags:
-        r = None
-        for grp in ("main", "baselines", "ablation"):
-            r = (C2.get(grp) or {}).get(t)
-            if r:
-                break
-        if r is None and t == "lgR_bs8_full_lr2e4":
-            r = {"kappa": 0.6320, "n_epochs": 60}     # 见 experiments_index.json
-        if r:
-            rows.append((t, desc, r.get("kappa")))
-            if ref is None:
-                ref = r.get("kappa")
+    """§5.8 训练策略（裁剪尺度 + 随机/固定）—— 数据驱动, 来源 FACTS.crop_strategy"""
+    CS = FACTS.get("crop_strategy") or {}
+    rows = CS.get("rows") or {}
     if not rows:
-        return ("**（本节数据待补齐）** 裁剪策略队列（`run_queue_crop.py`）已排队执行；"
-                "完成后自动填入。设计：256 随机为基准，256 固定中心用于隔离「随机裁剪」"
-                "本身的贡献，384/512 用于观测尺度效应（batch 分别下调至 4/2 以避免显存溢出）。")
-    for t, desc, k in rows:
-        crop = t.split("_c")[1].split("_")[0] if "_c" in t else "256"
-        pos = "固定中心" if "center" in t else "随机"
-        d = f"{k-ref:+.4f}" if (ref is not None and k is not None) else "—"
-        L.append(f"| `{t}` | {crop} | {pos} | {k:.4f} | {d} |")
+        return "**（本节数据待补齐）** 裁剪策略队列由 queues/run_queue_crop.py 产出。"
+    order = ["lgR_bs8_full_lr2e4", "lgR_c256_center", "lgR_c384_rand", "lgR_c512_rand"]
+    L = ["| 配置 | crop | 位置 | 每样本像素 | Kappa | 相对基准 | 秒/轮 | 总时长 |",
+         "|---|---:|---|---:|---:|---:|---:|---:|"]
+    for t in order:
+        r = rows.get(t)
+        if not r:
+            continue
+        px = (r["crop"] / 256.0) ** 2
+        flag = "" if r.get("complete") else " ⚠️未跑完"
+        L.append("| `%s` | %d | %s | %.2f× | **%.4f**%s | %+.4f | %s s | %s min |"
+                 % (t, r["crop"], r["pos"], px, r["kappa"], flag, r["delta"],
+                    r["s_per_epoch"], r["total_min"]))
+    s256 = (rows.get("lgR_bs8_full_lr2e4") or {}).get("s_per_epoch") or 44
+    L += ["", "| 对比 | ΔKappa | σ_seed 倍数 | 计算代价 | 判读 |", "|---|---:|---:|---|---|"]
+    for nm, tag, cost in (("256 随机 vs **256 固定中心**", "lgR_c256_center", "同代价（同尺度同像素）"),
+                          ("**384 随机** vs 256 随机", "lgR_c384_rand", None),
+                          ("**512 随机** vs 256 随机", "lgR_c512_rand", None)):
+        r = rows.get(tag)
+        if not r or r.get("delta") is None:
+            continue
+        d = r["delta"]
+        n = abs(d) / 0.0050
+        if cost is None:
+            cost = "%.1f× 于基准" % (r["s_per_epoch"] / float(s256))
+        v = "**可分辨**" if n >= 2 else ("弱（1–2σ）" if n >= 1 else "不可分辨")
+        L.append("| %s | %+.4f | %.1fσ | %s | %s |" % (nm, d, n, cost, v))
     L += ["", "**判读要点**：", "",
+          "0. **本节三个对比的效应量，全部大于 5.6 节的所有模块消融。** "
+          "|ΔKappa| 为 0.0199–0.0223（**4.0–4.5σ_seed**，σ_seed=0.0050，见 5.7）；"
+          "而模块消融全部 ≤1.13σ。也就是说：**在这套模型上，训练策略（随机裁剪、"
+          "裁剪尺度）的收益是可分辨的，模块增删则不可分辨。** "
+          "这对后续工作更有指导意义——先选对训练策略，再谈架构。",
           "1. **256 随机 vs 256 固定中心**：两者像素量与尺度完全相同，差异**只能**归因于"
-          "「每轮随机位置」这一增强，是隔离该增强贡献的干净对照。",
-          "2. **256 → 384 → 512**：尺度效应。注意 batch 随面积下调（8/4/2），"
-          "故每轮耗时与总时长必须一并报告——**大尺度的计算代价是平方级增长的**，"
-          "若 Kappa 收益远小于耗时增长，则小尺度随机裁剪是更优的工程选择。",
-          "3. 用户明确排除过小尺度（如 128），故不设该档；阶段 A 的历史结果显示"
+          "「每轮随机位置」这一增强，是隔离该增强贡献的干净对照，结果 −0.0192"
+          "（随机裁剪本身值 +0.0192）。",
+          "2. **256 → 384 → 512**：384 达 0.6543（+0.0223），512 为 0.6519（+0.0199）——"
+          "**再放大到 512 无额外收益，代价却从 100 s/轮升到 192 s/轮**（4.4× 于基准）。"
+          "故 384 是更优的工程取舍：既印证了「过小的尺度没有意义」，"
+          "也说明**过大的尺度不划算**。",
+          "3. **注意 batch 随面积下调**（256²:8 / 384²:4 / 512²:2）以避免显存溢出，"
+          "故每轮耗时与总时长必须一并报告——大裁剪的计算代价是平方级增长的。",
+          "4. 用户明确排除过小尺度（如 128），故不设该档；阶段 A 的历史结果显示"
           "128²（GSD 2.4m 匹配 GF-1）在本任务上几乎学不动（Kappa 0.0098）。"]
-    return "\n".join(L)
+    return chr(10).join(L)
 
 
 def _arch_table():

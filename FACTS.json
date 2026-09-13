@@ -1994,5 +1994,60 @@
   },
   "protocol": "30ep/pt30/bs8/lr2e-4, memmap 子集预解码, val 固定为 newsplit2/val",
   "note": "e50rel/e90rel = 首次达到自身 k_max 的 50%/90% 的轮次（绝对阈值在低数据档不可达）"
+ },
+ "crop_strategy": {
+  "rows": {
+   "lgR_bs8_full_lr2e4": {
+    "desc": "256 随机（基准）",
+    "crop": 256,
+    "pos": "随机",
+    "kappa": 0.632,
+    "best_epoch": 58,
+    "n_epochs": 60,
+    "s_per_epoch": 44,
+    "total_min": 44.0,
+    "complete": true,
+    "timing_note": "耗时为同配置(lgR_c256_center)实测值",
+    "delta": 0.0
+   },
+   "lgR_c256_center": {
+    "desc": "256 固定中心",
+    "crop": 256,
+    "pos": "固定中心",
+    "kappa": 0.6128,
+    "best_epoch": 58,
+    "n_epochs": 60,
+    "s_per_epoch": 44,
+    "total_min": 44.0,
+    "complete": true,
+    "delta": -0.0192
+   },
+   "lgR_c384_rand": {
+    "desc": "384 随机",
+    "crop": 384,
+    "pos": "随机",
+    "kappa": 0.6543,
+    "best_epoch": 58,
+    "n_epochs": 60,
+    "s_per_epoch": 100,
+    "total_min": 100.0,
+    "complete": true,
+    "delta": 0.0223
+   },
+   "lgR_c512_rand": {
+    "desc": "512 随机",
+    "crop": 512,
+    "pos": "随机",
+    "kappa": 0.6519,
+    "best_epoch": 49,
+    "n_epochs": 51,
+    "s_per_epoch": 192,
+    "total_min": 163.2,
+    "complete": false,
+    "delta": 0.0199
+   }
+  },
+  "protocol": "60ep/pt20/bs8/lr2e-4, P-MEM-ROLL 管线（memmap）",
+  "note": "batch 随裁剪面积下调(8/4/2)以避免 OOM；每轮耗时取自队列日志实测中位数"
  }
 }

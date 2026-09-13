@@ -311,7 +311,10 @@ def train_one(model_fn, name, max_epochs=120, patience=20, batch=8, lr=2e-4, sch
             else:
                 bad += 1
             print(f"[ep {ep:3d}] {name} loss={tot/len(tr):.4f} OA={oa:.4f} Kappa={k:.4f} mF1={mf1:.4f} best_k={best_k:.4f} bad={bad} ({time.time()-t0:.0f}s){flag}", flush=True)
-            hist.append(dict(epoch=ep, loss=tot/len(tr), oa=oa, kappa=k, mf1=mf1, f1=f1s))
+            # sec: 每轮墙钟秒数。此前只打印到日志，日志一丢就无法追溯——
+            # 而"大裁剪的计算代价是否值得"正是靠这个量判断的，故落进 history。
+            hist.append(dict(epoch=ep, loss=tot/len(tr), oa=oa, kappa=k, mf1=mf1,
+                             f1=f1s, sec=round(time.time()-t0, 1)))
             json.dump(hist, open(f"{CKPT}/{name}_history.json","w"), indent=1)
             if bad >= patience:
                 print(f"  early stop ep {ep}", flush=True); break
