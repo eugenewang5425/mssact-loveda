@@ -142,6 +142,12 @@ for _n in (250, 500, 1000):
         f"data_ladder/n{_n}", 30, 30, 8, 2e-4,
         "从零训练；与同档预训练版 lgR_n%d_deeplab 配对可分离预训练贡献" % _n,
         pipeline="P-MEM-ROLL")
+reg(["lgR_b15_deeplab_scr"], "lgR-roll/预算攻击(15轮)", "queues/run_queue_deeplab_protocol.py",
+    "DATA_NEWSPLIT2", 15, 20, 8, 2e-4,
+    "协议内从零 DeepLab；替代 lgR_b15_deeplab(预训练旁证)", pipeline="P-MEM-ROLL")
+reg(["nd_deeplab_scr"], "C-final/对比实验", "queues/run_queue_deeplab_protocol.py",
+    "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "★ 协议内从零 DeepLab，替代 nd_deeplab 作为对比基线", pipeline="P-PNG")
 reg(["lgR_b15_full", "lgR_b15_noecsam", "lgR_b15_noemr", "lgR_b15_unet", "lgR_b15_deeplab"],
     "lgR-roll/预算攻击(15轮)", "queues/run_queue_arch.py (v3)", "DATA_NEWSPLIT2", 15, 15, 8, 2e-4,
     "P-MEM-ROLL", pipeline="P-MEM-ROLL")

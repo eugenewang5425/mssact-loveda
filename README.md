@@ -26,7 +26,6 @@ search, and an empirical study on the **label-quality ceiling** of model evaluat
 
 | 模型 | 参数量 | Kappa | OA |
 |---|---|---|---|
-| **DeepLabV3+** | 39.6M | **0.6876** | 0.7497 |
 | **MSSACT-Net light + 后训练** | **6.10M** | **0.6413** | 0.7112 |
 | **MSSACT-Net light** | **6.10M** | **0.6312** | 0.7030 |
 | FPN (R50) | 27.2M | 0.6151 | 0.6912 |
@@ -35,9 +34,18 @@ search, and an empirical study on the **label-quality ceiling** of model evaluat
 | Swin-Unet (lite) | 32.6M | 0.5859 | 0.6693 |
 | PSPNet (R18+PPM) | 13.6M | 0.5175 | 0.6160 |
 | SegFormer-Lite | 1.01M | 0.3043 | 0.4441 |
+| DeepLabV3+（从零，协议内） | 39.69M | ⏳ 训练中 | — |
+| ~~DeepLabV3+（预训练主干）~~ | 39.6M | ~~0.6876~~ | 旁证，非协议内 |
 
-**解读**：MSSACT-light 以 **1/4 ~ 1/3 的参数量**达到与 23–27M 基线相当的性能；
-DeepLabV3+ 仍领先，但其参数量为 MSSACT 的 **6.5 倍**。
+**解读**：
+- MSSACT-light 以 **1/4 ~ 1/3 的参数量**达到与 23–27M 基线相当的性能。
+- **DeepLabV3+ 的 0.6876 已从基线表中移除**：那一行是**代码 bug 的产物**——本项目
+  **从未计划使用预训练**，但 `deeplabv3_resnet50(weights=None)` 仍会加载 ImageNet
+  预训练主干（该工厂另有独立的 `weights_backbone`，默认即 `IMAGENET1K_V1`）。
+  它与其余从零训练的模型**不同协议**，不能作为基线。
+- **协议内（从零）对比下，DeepLabV3+ 39.69M 与自研 6.10M 不可分辨**
+  （Δ=+0.0039，0.78σ）。协议内从零版本正在训练（`nd_deeplab_scr`）。
+- 详见 5.6.6：原 +0.0720 中约 **95% 来自预训练主干**，不是架构。
 
 ### 消融实验（8 个变体）
 

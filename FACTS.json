@@ -386,6 +386,7 @@
     "mf1": 0.6887,
     "finalized": true
    },
+   "nd_deeplab_scr": null,
    "nd_deeplab": {
     "tag": "nd_deeplab",
     "n_epochs": 60,

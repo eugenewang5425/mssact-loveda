@@ -97,10 +97,15 @@ class DeepLabV3Plus(nn.Module):
 
     参数
     ----
-    pretrained_backbone : True  = 复现既有 `deeplab*` 结果（ImageNet 预训练主干）
-                          False = 从零训练（新 tag 后缀 `_scr`，用于公平对照）
+    pretrained_backbone : **默认 False = 从零训练**，与本项目"所有模型同协议从零
+                          训练"的设定一致。True 会加载 ImageNet 预训练主干，
+                          仅用于**量化预训练贡献**的旁证实验，不是协议内基线。
+
+    ⚠️ 默认值曾一度设为 True（为了"复现既有 deeplab* 结果"），那等于让一个
+    **未经授权的混淆**继续生效：本项目从未计划使用预训练，`deeplab*` 系列结果
+    是 bug 产物，不应作为基线。故默认改回 False。
     """
-    def __init__(self, in_ch=3, nc=7, pretrained_backbone=True):
+    def __init__(self, in_ch=3, nc=7, pretrained_backbone=False):
         super().__init__()
         import torchvision.models as tvm
         from torchvision.models import ResNet50_Weights

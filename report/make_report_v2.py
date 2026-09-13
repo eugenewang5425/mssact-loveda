@@ -67,7 +67,11 @@ def _sec_seed():
                 "完成后本节的 σ_seed 与折算表将自动填入。\n\n"
                 "在 σ_seed 补齐之前，5.6 节「所有 ΔKappa 均落在噪声内」的表述"
                 "**必须保留为推断而非测量结论**（见 5.6.10 局限 1）。")
-    L = ["| 组（同管线内） | seed 数 | mean | **σ_seed** | range | 区间 |",
+    L = ["> ⚠️ 其中 DeepLabV3+ 组用的是**预训练主干**版本（`sd*_deeplab`，属代码 bug",
+         "> 的产物，见 5.6.6），与本项目「从零训练」的协议不一致，仅作 σ 的旁证参考；",
+         "> σ_seed 的主要依据是**从零训练**的 MSSACT-Net 组（n=4）。",
+         "",
+         "| 组（同管线内） | seed 数 | mean | **σ_seed** | range | 区间 |",
          "|---|---:|---:|---:|---:|---|"]
     for g, r in groups.items():
         # "参照"组混了两个不同架构, 其 σ 是**架构差**而非种子方差, 放进种子表会误导
@@ -246,7 +250,8 @@ def _sec_budget():
         return "**（预算攻击结果待补齐）**"
     NAME = {"full": "MSSACT-Net 完整（6.10M）", "noecsam": "MSSACT-Net w/o ECSAM（6.04M）",
             "noemr": "MSSACT-Net w/o EMR（6.10M）", "unet": "U-Net（2.45M）",
-            "deeplab": "DeepLabV3+（39.69M，**预训练主干**）"}
+            "deeplab": "DeepLabV3+（39.69M，预训练主干，**旁证**）",
+            "deeplab_scr": "DeepLabV3+（39.69M，**从零，协议内**）"}
     ref = (b.get("lgR_b15_full") or {}).get("kappa")
     out = ["| 模型 | 参数量 | Kappa（15 轮） | 相对完整模型 |", "|---|---:|---:|---:|"]
     for k, v in sorted(b.items(), key=lambda kv: -(kv[1].get("kappa") or 0)):
@@ -288,6 +293,41 @@ def _sec_scratch():
 
 
 SCRATCH_TBL = _sec_scratch()
+
+def _tbl_baselines():
+    """§4.3.2 基线表 —— DeepLab 用协议内(从零)结果，预训练版仅作旁证"""
+    B = FACTS["stage_C_1768_final"].get("baselines") or {}
+    M = FACTS["stage_C_1768_final"].get("main") or {}
+    NAME = {"nd_unet": "U-Net", "nd_pspnet": "PSPNet", "nd_fcn": "FCN",
+            "nd_deeplab_scr": "**DeepLabV3+（从零，协议内）**",
+            "nd_deeplab": "DeepLabV3+（预训练主干，**旁证**）",
+            "nd_segformer": "SegFormer-Lite", "nd_fpn_seg": "FPN-Seg",
+            "nd_swin_unet": "Swin-Unet-Lite"}
+    from experiment_matrix import UNet, PSPNet, FCN, DeepLabV3Plus, SegFormerLite
+    from experiment_matrix_v2 import FPNSeg, SwinUnetLite
+    P = {"nd_unet": lambda: UNet(), "nd_pspnet": lambda: PSPNet(), "nd_fcn": lambda: FCN(),
+         "nd_deeplab_scr": lambda: DeepLabV3Plus(), "nd_deeplab": lambda: DeepLabV3Plus(),
+         "nd_segformer": lambda: SegFormerLite(), "nd_fpn_seg": lambda: FPNSeg(),
+         "nd_swin_unet": lambda: SwinUnetLite()}
+    L = ["| 模型 | 参数量 | Kappa | OA | 最优轮/总轮 |", "|---|---:|---:|---:|---|"]
+    if M.get("full_all_v2"):
+        r = M["full_all_v2"]
+        L.append(f"| **MSSACT-Net light（自研）** | 6.10M | **{r['kappa']:.4f}** | "
+                 f"{r['oa']:.4f} | {r['best_epoch']}/{r['n_epochs']} |")
+    for t in ("nd_deeplab_scr", "nd_deeplab", "nd_fpn_seg", "nd_fcn", "nd_unet",
+              "nd_swin_unet", "nd_pspnet", "nd_segformer"):
+        r = B.get(t)
+        if not r:
+            if t == "nd_deeplab_scr":
+                L.append("| **DeepLabV3+（从零，协议内）** | 39.69M | ⏳ 训练中 | — | — |")
+            continue
+        note = "" if t != "nd_deeplab" else " ⚠️非协议内"
+        L.append(f"| {NAME.get(t, t)} | ~ | {r['kappa']:.4f}{note} | {r['oa']:.4f} | "
+                 f"{r['best_epoch']}/{r['n_epochs']} |")
+    return chr(10).join(L)
+
+
+TBL_BASELINES = _tbl_baselines()
 
 ARCH_TABLE = _arch_table()
 
@@ -576,16 +616,16 @@ no-data 像素被错误参与训练与评估。修复后同一模型指标变化
 
 #### 4.3.2 对比实验（7 个基线）
 
-{tbl("stage_C_1768_final", "baselines", ["nd_deeplab","nd_fpn_seg","nd_fcn","nd_unet","nd_swin_unet","nd_pspnet","nd_segformer"], "基线模型（同协议）")}
+{TBL_BASELINES}
 
 **分析**：
-- **DeepLabV3+（39.6M, Kappa {C['baselines']['nd_deeplab']['kappa']:.4f}）领先**，
-  但其参数量为 MSSACT-light 的 **6.5 倍**
-- MSSACT-light（6.10M, {C['main']['full_all_v2']['kappa']:.4f}）位列第二梯队，
-  与 FPN（27.2M）、FCN（23.7M）相当，但参数量仅为它们的 **1/4 ~ 1/3**
-- **参数量-性能关系**：U-Net（2.4M, {C['baselines']['nd_unet']['kappa']:.4f}）用
-  极简结构即达到接近 MSSACT 的水平，说明**在该任务与数据规模下，架构复杂度
-  带来的收益有限**
+- **协议内（全部从零训练）的对比下，DeepLabV3+（39.69M）与自研 6.10M 不可分辨**
+  （见 5.6.6 的数据驱动表）。后者参数仅为其 **1/6.5**。
+- 5.6.6 已用从零对照证明：原报告"DeepLabV3+ 领先 +0.0720"的表述**不成立**——
+  该差距约 95% 来自**预训练主干**，而预训练**从未在本项目计划内**（见 5.6.6 的
+  核验更正）。故上表中 DeepLab 一行使用**协议内从零**结果 `nd_deeplab_scr`。
+- **参数量-性能关系**：U-Net（2.45M）用极简结构即达到与自研相当的水平，
+  说明**在该任务与数据规模下，架构复杂度带来的收益有限**。
 
 #### 4.3.3 消融实验（8 个变体）
 
@@ -1283,9 +1323,11 @@ w/o EMR 0.4790、U-Net 0.4884，散布仅 **0.0109**（约 2σ_seed）；
 合理的解读是：ECSAM 引入的额外参数需要**足够的数据**才能被利用，
 在受限条件下它们只增加优化难度。
 
-> ⚠️ 上表 DeepLabV3+ 一列为**预训练主干**，与其余从零训练的模型不可直接比较
-> （见 5.6.6 的更正）。其在 15 轮下即达 0.6358，正说明预训练在**小预算**下的优势
-> 尤其显著——这也是不能再把该差距归因于架构的原因之一。
+> ⚠️ **上表 DeepLabV3+ 一列为预训练主干**（旁证），与其余从零训练的模型**不可直接
+> 比较**——预训练**从未在本项目计划内**，该行是代码 bug 的产物（见 5.6.6）。
+> 协议内的从零版本 `lgR_b15_deeplab_scr` 已在 `run_queue_deeplab_protocol.py` 中运行；
+> 完成后本表会自动改用该行。预训练版在 15 轮下即达 0.6358，正说明预训练在**小预算**
+> 下的优势尤其显著——这也是不能再把该差距归因于架构的原因之一。
 
 ---
 

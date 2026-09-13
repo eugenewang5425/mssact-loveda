@@ -77,7 +77,10 @@ F["stage_C_1768_final"] = {
     "split": dict(train=1768, val=221, test=221, test_clean=141),
     "main": {t: best_of(t) for t in ["full_all_v2","post_all_v2"]},
     "baselines": {t: best_of(t) for t in
-        ["nd_unet","nd_pspnet","nd_fcn","nd_deeplab","nd_segformer","nd_fpn_seg","nd_swin_unet"]},
+        # nd_deeplab_scr = 协议内(从零)的 DeepLab，用它替代 nd_deeplab 作为对比基线；
+        # nd_deeplab 为 bug 产物(预训练主干)，仅保留作旁证
+        ["nd_unet","nd_pspnet","nd_fcn","nd_deeplab_scr","nd_deeplab",
+         "nd_segformer","nd_fpn_seg","nd_swin_unet"]},
     "ablation": {t: best_of(t) for t in
         ["nd_abl_no_emr","nd_abl_no_ecsam","nd_abl_no_fpn","nd_abl_no_trans",
          "nd_abl_no_adapter","nd_abl_trans4l","nd_abl_trans6l","nd_abl_bilinear"]},
