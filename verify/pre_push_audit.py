@@ -122,6 +122,21 @@ def main():
         elif mb >= 10:
             warnings.append((f, f"{mb:.1f} MB（偏大，建议确认是否必要）"))
 
+    # 2b) 已跟踪、但按 .gitignore 本应被忽略的文件
+    # 成因：先被跟踪 -> 后来才加忽略规则（规则对已跟踪文件不生效），
+    #      或者被移出索引后又被 `git add -A` 扫了回来。本项目实际发生过。
+    # 用 ls-files -i，不能用 check-ignore：后者会**跳过已跟踪文件**，
+    # 因此恰好测不出"已跟踪但本应忽略"这一类（本项目实测验证过）。
+    try:
+        r = subprocess.run(["git", "ls-files", "-i", "-c", "--exclude-standard"],
+                           capture_output=True, text=True, cwd=paths.REPO)
+        for line in r.stdout.splitlines():
+            if line.strip():
+                problems.append((line.strip(),
+                                 "已被跟踪但按 .gitignore 应被忽略（需 git rm --cached）", 0))
+    except Exception:
+        pass
+
     # 3) 结果目录里的异常（figures 之外的图片、字面 ~ 目录）
     for f in files:
         if f.startswith("~") or "/~/" in f:
