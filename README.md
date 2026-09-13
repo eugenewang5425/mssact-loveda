@@ -5,7 +5,7 @@ land-cover semantic segmentation, with systematic evaluation on the public
 **LoveDA** benchmark: baseline comparison, module ablation, training-strategy
 search, and an empirical study on the **label-quality ceiling** of model evaluation.
 
-> 📄 **项目报告**：[项目报告_20260913.pdf](reports/项目报告_20260913.pdf)（42 页）——
+> 📄 **项目报告**：[项目报告_20260914.pdf](reports/项目报告_20260914.pdf)（43 页）——
 > 含全部实验、图表与公式；[HTML 版](reports/项目报告_20260913.html)（可再生）
 >
 > 🧭 **导航**：[核心结果](#核心结果) · [重要发现](#重要发现) ·
@@ -203,8 +203,23 @@ torchvision 的 `deeplabv3_resnet50` 另有独立的 `weights_backbone` 参数�
 五项验证（默认路径**逐位一致**、键集合一致、置换等变性被打破、梯度可达性、
 14 种组合路径可前向反向）由 [`verify/verify_fix_compat.py`](verify/verify_fix_compat.py)
 对修复前快照自动回归。**仍未做**：P2 容量膨胀（2.67×）。
-修复的**性能效果**由 `queues/run_queue_fix.py` 的 120 轮组测定（`lgR120_fx_*` +
-修复后 8 变体消融），**结论待产出**。
+**修复的性能效果是负面的**（第一轮实测，120 轮同协议，σ_seed = 0.0050）：
+
+| 实验 | 修复内容 | Kappa | Δ vs 基线 | 判定 |
+|---|---|---:|---:|---|
+| 未修复（基线） | — | **0.6655** | — | 参照 |
+| `fx_pos` | D3 位置编码 | **0.6716** | +0.0061 | 弱（1.2σ） |
+| `fx_skip` | D1+D2 跳连 | 0.6505 | **−0.0150** | 可分辨（3σ） |
+| `fx_all` | 三处全修 | 0.6330 | **−0.0325** | 可分辨 |
+
+即**修复没有带来收益，全修反而明显更差**，且两项修复合起来比任何单项都差得多（非加性）。
+**过拟合假设已被推翻**：`fx_all` 的训练 loss 是四者中最高的（0.7237 vs 基线 0.6269）——
+训练集拟合更差、验证也更差，属**欠拟合/优化困难**而非过拟合。
+两个假设正在单变量检验：**H1** 256² 全分辨率融合有害（`skip_stages=(1,2)` 对照）、
+**H2** 学习率不再匹配（同配置 1e-4 vs 2e-4）。详见 `queues/run_queue_fix2.py`。
+
+> 这意味着："缺陷导致消融无差异"的诊断成立，但"修好缺陷就能提升精度"的推论
+> **被实测否证**——这本身是一个比前者信息量更大的结论。
 
 **诚实声明**：上表 ΔKappa 均来自**单次运行**（seed=42），但**种子方差已实测**：
 σ_seed = **0.0050**（n=4 次独立训练：seed 42/7/2024/31337），故 |Δ| ≥ 2σ = 0.0100
