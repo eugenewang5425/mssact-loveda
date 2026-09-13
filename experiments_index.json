@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-12 20:06:18",
+  "generated_at": "2026-09-13 11:31:57",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,8 +16,18 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 72,
-  "unregistered_tags": []
+  "n_tags": 98,
+  "unregistered_tags": [
+   "lgR_c256_center",
+   "lgR_c384_rand",
+   "lgR_c512_rand",
+   "sd2024_deeplab",
+   "sd2024_full",
+   "sd31337_deeplab",
+   "sd31337_full",
+   "sd7_deeplab",
+   "sd7_full"
+  ]
  },
  "comparable_groups": {
   "G1-PNG-60ep": {
@@ -131,6 +141,11 @@
    "n_complete": 0,
    "best_kappa_in_series": null
   },
+  "UNREGISTERED": {
+   "n_experiments": 9,
+   "n_complete": 0,
+   "best_kappa_in_series": 0.6961
+  },
   "lg-old/架构(旧管线)": {
    "n_experiments": 4,
    "n_complete": 3,
@@ -146,6 +161,21 @@
    "n_complete": 1,
    "best_kappa_in_series": 0.6293
   },
+  "lgR-roll/数据阶梯 n1000": {
+   "n_experiments": 4,
+   "n_complete": 4,
+   "best_kappa_in_series": 0.631
+  },
+  "lgR-roll/数据阶梯 n250": {
+   "n_experiments": 4,
+   "n_complete": 4,
+   "best_kappa_in_series": 0.2825
+  },
+  "lgR-roll/数据阶梯 n500": {
+   "n_experiments": 4,
+   "n_complete": 4,
+   "best_kappa_in_series": 0.4928
+  },
   "lgR-roll/架构基线": {
    "n_experiments": 1,
    "n_complete": 1,
@@ -153,8 +183,13 @@
   },
   "lgR-roll/架构消融与容量": {
    "n_experiments": 4,
-   "n_complete": 3,
+   "n_complete": 4,
    "best_kappa_in_series": 0.6375
+  },
+  "lgR-roll/预算攻击(15轮)": {
+   "n_experiments": 5,
+   "n_complete": 5,
+   "best_kappa_in_series": 0.6358
   }
  },
  "experiments": {
@@ -915,11 +950,11 @@
   },
   "lgR_D4_ch_large": {
    "series": "lgR-roll/架构消融与容量",
-   "status": "partial(2/60)",
+   "status": "complete",
    "pipeline": "P-MEM-ROLL",
-   "best_kappa": 0.038068,
-   "best_epoch": 2,
-   "epochs_run": 2,
+   "best_kappa": 0.636479,
+   "best_epoch": 56,
+   "epochs_run": 60,
    "target_epochs": 60,
    "params_M": 24.242,
    "has_weight": true,
@@ -940,6 +975,147 @@
     "has_fpn": true,
     "has_ecsam": true,
     "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_deeplab": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.635781,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_full": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.489907,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_noecsam": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.509202,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_noemr": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.478978,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_unet": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.48836,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt15/bs8/lr0.0002",
+   "note": "P-MEM-ROLL",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
     "has_emr": false,
     "deconv_kernels": 0
    }
@@ -971,6 +1147,429 @@
     "has_fpn": true,
     "has_ecsam": true,
     "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_c256_center": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.612838,
+   "best_epoch": 58,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_c384_rand": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.654272,
+   "best_epoch": 58,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_c512_rand": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.651918,
+   "best_epoch": 49,
+   "epochs_run": 49,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n1000_deeplab": {
+   "series": "lgR-roll/数据阶梯 n1000",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.631015,
+   "best_epoch": 29,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n1000",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n1000_full": {
+   "series": "lgR-roll/数据阶梯 n1000",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.508527,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n1000",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n1000_noecsam": {
+   "series": "lgR-roll/数据阶梯 n1000",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.523395,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n1000",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n1000_unet": {
+   "series": "lgR-roll/数据阶梯 n1000",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.491303,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n1000",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n250_deeplab": {
+   "series": "lgR-roll/数据阶梯 n250",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.282454,
+   "best_epoch": 29,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n250",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n250_full": {
+   "series": "lgR-roll/数据阶梯 n250",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.032176,
+   "best_epoch": 28,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n250",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n250_noecsam": {
+   "series": "lgR-roll/数据阶梯 n250",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.116414,
+   "best_epoch": 29,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n250",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n250_unet": {
+   "series": "lgR-roll/数据阶梯 n250",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.191476,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n250",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n500_deeplab": {
+   "series": "lgR-roll/数据阶梯 n500",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.492849,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n500",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n500_full": {
+   "series": "lgR-roll/数据阶梯 n500",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.331225,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n500",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n500_noecsam": {
+   "series": "lgR-roll/数据阶梯 n500",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.395408,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 6.047,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n500",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n500_unet": {
+   "series": "lgR-roll/数据阶梯 n500",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.404967,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 2.446,
+   "has_weight": true,
+   "script": "queues/run_queue_arch.py (v3)",
+   "root": "data_ladder/n500",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
     "has_emr": false,
     "deconv_kernels": 0
    }
@@ -1693,6 +2292,171 @@
     "has_fpn": false,
     "has_ecsam": false,
     "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd2024_deeplab": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.693922,
+   "best_epoch": 53,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd2024_full": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.6318,
+   "best_epoch": 53,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd31337_deeplab": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.689452,
+   "best_epoch": 56,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd31337_full": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.639891,
+   "best_epoch": 58,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd7_deeplab": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.696068,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd7_full": {
+   "series": "UNREGISTERED",
+   "status": "unregistered",
+   "pipeline": null,
+   "best_kappa": 0.641241,
+   "best_epoch": 55,
+   "epochs_run": 60,
+   "target_epochs": null,
+   "params_M": 6.102,
+   "has_weight": true,
+   "script": null,
+   "root": null,
+   "protocol": null,
+   "note": "",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
     "has_emr": false,
     "deconv_kernels": 0
    }

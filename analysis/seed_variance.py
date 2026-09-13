@@ -53,11 +53,14 @@ GROUPS = {
     "参照: 完整模型/DeepLab 的 P-PNG 单次结果": [
         ("full_all_v2", 42), ("nd_deeplab", 42)],
 }
-# 消融变体（用于比较散布）—— 同属 G1/G2 组
-ABLATION_MEMROLL = ["lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
-                    "lgR_D3_ch_tiny", "lgR_D4_ch_large"]
-ABLATION_PNG = ["nd_abl_no_emr", "nd_abl_no_ecsam", "nd_abl_no_fpn", "nd_abl_no_trans",
-                "nd_abl_no_adapter", "nd_abl_bilinear", "nd_abl_trans4l", "nd_abl_trans6l"]
+# 必须区分两类，否则散布会被容量效应主导而误读为"模块效应":
+#   模块消融  = 移除/移动某个模块，容量基本不变
+#   容量变体  = 改变通道宽度（D3 tiny / D4 large），是"容量"实验
+MODULE_ABL_MEMROLL = ["lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca"]
+CAPACITY_MEMROLL   = ["lgR_D3_ch_tiny", "lgR_D4_ch_large"]
+MODULE_ABL_PNG = ["nd_abl_no_emr", "nd_abl_no_ecsam", "nd_abl_no_fpn", "nd_abl_no_trans",
+                  "nd_abl_no_adapter", "nd_abl_bilinear",
+                  "nd_abl_trans4l", "nd_abl_trans6l"]
 
 
 def best_k(tag):
@@ -105,8 +108,9 @@ def main():
     print("消融变体散布（同管线内）")
     print("=" * 78)
     abl = {}
-    for label, tags in (("P-MEM-ROLL (lgR_*)", ABLATION_MEMROLL),
-                        ("P-PNG (nd_abl_* + lg_D*)", ABLATION_PNG)):
+    for label, tags in (("P-MEM-ROLL 模块消融 (D1,D2)", MODULE_ABL_MEMROLL),
+                        ("P-MEM-ROLL 容量变体 (D3,D4)", CAPACITY_MEMROLL),
+                        ("P-PNG 模块消融 (nd_abl_*)", MODULE_ABL_PNG)):
         vals = {t: best_k(t) for t in tags}
         vals = {t: v for t, v in vals.items() if v is not None}
         if vals:
@@ -125,15 +129,18 @@ def main():
     print("\n" + "=" * 78)
     print("判读: ΔKappa 折算为多少个 σ_seed")
     print("=" * 78)
+    # 注意: 记录里的键是 "std"（打印时才标为 sigma）。
+    # 此前这里写成 `"sigma" in r`，恒为假 -> sigma 永远 None、折算表从未生成。
     sigma = None
     for g, r in out["groups"].items():
-        if r.get("n", 0) >= 3 and "sigma" in r:
-            sigma = r["sigma"] if sigma is None else max(sigma, r["sigma"])
+        if r.get("n", 0) >= 3 and "std" in r:
+            sigma = r["std"] if sigma is None else max(sigma, r["std"])
     if sigma:
         out["sigma_seed_used"] = sigma
         print(f"\n采用各管线内最大 σ_seed = {sigma:.4f} (保守)")
         rows = []
-        for label, tags in (("P-MEM-ROLL", ABLATION_MEMROLL), ("P-PNG", ABLATION_PNG)):
+        for label, tags in (("P-MEM-ROLL", MODULE_ABL_MEMROLL + CAPACITY_MEMROLL),
+                            ("P-PNG", MODULE_ABL_PNG)):
             ref = "lgR_bs8_full_lr2e4" if label == "P-MEM-ROLL" else "full_all_v2"
             kr = best_k(ref)
             if kr is None:

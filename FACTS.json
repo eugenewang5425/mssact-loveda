@@ -1037,12 +1037,31 @@
  "seed_variance": {
   "groups": {
    "完整模型 MSSACT 6.10M (P-MEM-ROLL)": {
-    "n": 1,
-    "note": "样本不足, 仅作参照"
+    "n": 4,
+    "mean": 0.6362,
+    "std": 0.005,
+    "min": 0.6318,
+    "max": 0.6412,
+    "range": 0.0094,
+    "members": {
+     "lgR_bs8_full_lr2e4": 0.632,
+     "sd7_full": 0.6412,
+     "sd2024_full": 0.6318,
+     "sd31337_full": 0.6399
+    }
    },
    "DeepLabV3+ 39.69M (P-MEM-ROLL)": {
-    "n": 0,
-    "note": "样本不足, 仅作参照"
+    "n": 3,
+    "mean": 0.6931,
+    "std": 0.0034,
+    "min": 0.6895,
+    "max": 0.6961,
+    "range": 0.0066,
+    "members": {
+     "sd7_deeplab": 0.6961,
+     "sd2024_deeplab": 0.6939,
+     "sd31337_deeplab": 0.6895
+    }
    },
    "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
     "n": 2,
@@ -1058,19 +1077,27 @@
    }
   },
   "ablations": {
-   "P-MEM-ROLL (lgR_*)": {
-    "n": 4,
-    "spread": 0.5994,
-    "min": 0.0381,
+   "P-MEM-ROLL 模块消融 (D1,D2)": {
+    "n": 2,
+    "spread": 0.0082,
+    "min": 0.6293,
     "max": 0.6375,
     "values": {
      "lgR_D1_join_nofpn_notrans": 0.6293,
-     "lgR_D2_decoder_ca": 0.6375,
-     "lgR_D3_ch_tiny": 0.6103,
-     "lgR_D4_ch_large": 0.0381
+     "lgR_D2_decoder_ca": 0.6375
     }
    },
-   "P-PNG (nd_abl_* + lg_D*)": {
+   "P-MEM-ROLL 容量变体 (D3,D4)": {
+    "n": 2,
+    "spread": 0.0262,
+    "min": 0.6103,
+    "max": 0.6365,
+    "values": {
+     "lgR_D3_ch_tiny": 0.6103,
+     "lgR_D4_ch_large": 0.6365
+    }
+   },
+   "P-PNG 模块消融 (nd_abl_*)": {
     "n": 8,
     "spread": 0.0097,
     "min": 0.6272,
@@ -1086,7 +1113,94 @@
      "nd_abl_trans6l": 0.6335
     }
    }
-  }
+  },
+  "sigma_seed_used": 0.005,
+  "deltas_in_sigma": [
+   {
+    "pipeline": "P-MEM-ROLL",
+    "tag": "lgR_D1_join_nofpn_notrans",
+    "kappa": 0.6293,
+    "delta": -0.0028,
+    "n_sigma": -0.554
+   },
+   {
+    "pipeline": "P-MEM-ROLL",
+    "tag": "lgR_D2_decoder_ca",
+    "kappa": 0.6375,
+    "delta": 0.0055,
+    "n_sigma": 1.093
+   },
+   {
+    "pipeline": "P-MEM-ROLL",
+    "tag": "lgR_D3_ch_tiny",
+    "kappa": 0.6103,
+    "delta": -0.0217,
+    "n_sigma": -4.35
+   },
+   {
+    "pipeline": "P-MEM-ROLL",
+    "tag": "lgR_D4_ch_large",
+    "kappa": 0.6365,
+    "delta": 0.0044,
+    "n_sigma": 0.887
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_no_emr",
+    "kappa": 0.6355,
+    "delta": 0.0043,
+    "n_sigma": 0.86
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_no_ecsam",
+    "kappa": 0.6272,
+    "delta": -0.0041,
+    "n_sigma": -0.815
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_no_fpn",
+    "kappa": 0.6314,
+    "delta": 0.0002,
+    "n_sigma": 0.03
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_no_trans",
+    "kappa": 0.6302,
+    "delta": -0.0011,
+    "n_sigma": -0.213
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_no_adapter",
+    "kappa": 0.6342,
+    "delta": 0.003,
+    "n_sigma": 0.59
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_bilinear",
+    "kappa": 0.6369,
+    "delta": 0.0056,
+    "n_sigma": 1.127
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_trans4l",
+    "kappa": 0.6362,
+    "delta": 0.005,
+    "n_sigma": 0.998
+   },
+   {
+    "pipeline": "P-PNG",
+    "tag": "nd_abl_trans6l",
+    "kappa": 0.6335,
+    "delta": 0.0023,
+    "n_sigma": 0.451
+   }
+  ]
  },
  "artifact": {
   "label_edge_density": 0.007705,
@@ -1579,10 +1693,10 @@
    "lgR_D4_ch_large": {
     "series": "lgR-roll/架构消融与容量",
     "pipeline": "P-MEM-ROLL",
-    "status": "partial(2/60)",
-    "kappa": 0.038068,
-    "best_epoch": 2,
-    "epochs_run": 2,
+    "status": "complete",
+    "kappa": 0.636479,
+    "best_epoch": 56,
+    "epochs_run": 60,
     "params_M": 24.242,
     "epochs_total": 60
    },
@@ -1625,6 +1739,56 @@
     "epochs_run": 23,
     "params_M": 24.242,
     "epochs_total": 60
+   },
+   "lgR_b15_full": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.489907,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 6.102,
+    "epochs_total": 15
+   },
+   "lgR_b15_noecsam": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.509202,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 6.047,
+    "epochs_total": 15
+   },
+   "lgR_b15_noemr": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.478978,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 6.102,
+    "epochs_total": 15
+   },
+   "lgR_b15_unet": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.48836,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 2.446,
+    "epochs_total": 15
+   },
+   "lgR_b15_deeplab": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.635781,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 39.692,
+    "epochs_total": 15
    }
   },
   "comparable_groups": {

@@ -165,7 +165,10 @@ if os.path.exists(_idx):
     _want = ["lgR_bs8_full_lr2e4", "lgR_D1_join_nofpn_notrans", "lgR_D2_decoder_ca",
              "lgR_D3_ch_tiny", "lgR_D4_ch_large",
              "lg_D1_join_nofpn_notrans", "lg_D2_decoder_ca", "lg_D3_ch_tiny",
-             "lg_D4_ch_large"]
+             "lg_D4_ch_large",
+             # 预算攻击（15 轮）
+             "lgR_b15_full", "lgR_b15_noecsam", "lgR_b15_noemr",
+             "lgR_b15_unet", "lgR_b15_deeplab"]
     _rows = {}
     for _t in _want:
         _r = _e.get(_t)
