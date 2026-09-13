@@ -116,9 +116,11 @@ def main():
         [os.path.join(_BASE, "analysis", "eval_rigor.py"), "--infer", "--only"] + TAGS)
     # 2) 等效性检验 (一等产物)
     run("tost_equivalence", [os.path.join(_BASE, "analysis", "tost_equivalence.py")])
-    # 3) 种子方差
+    # 3) 修复归因 (效应量 / 收敛轮次 / 边界带)
+    run("fix_attribution", [os.path.join(_BASE, "analysis", "fix_attribution.py")])
+    # 4) 种子方差
     run("seed_variance", [os.path.join(_BASE, "analysis", "seed_variance.py")])
-    # 4) 索引与事实汇总
+    # 5) 索引与事实汇总
     run("build_index", [os.path.join(_BASE, "report", "build_index.py")])
     run("build_facts", [os.path.join(_BASE, "report", "build_facts.py")])
     log("全部完成")
