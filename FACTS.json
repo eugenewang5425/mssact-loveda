@@ -386,7 +386,15 @@
     "mf1": 0.6887,
     "finalized": true
    },
-   "nd_deeplab_scr": null,
+   "nd_deeplab_scr": {
+    "tag": "nd_deeplab_scr",
+    "n_epochs": 60,
+    "best_epoch": 60,
+    "kappa": 0.6281,
+    "oa": 0.7018,
+    "mf1": 0.7004,
+    "finalized": true
+   },
    "nd_deeplab": {
     "tag": "nd_deeplab",
     "n_epochs": 60,
@@ -1786,6 +1794,16 @@
     "pipeline": "P-MEM-ROLL",
     "status": "complete",
     "kappa": 0.635781,
+    "best_epoch": 15,
+    "epochs_run": 15,
+    "params_M": 39.692,
+    "epochs_total": 15
+   },
+   "lgR_b15_deeplab_scr": {
+    "series": "lgR-roll/预算攻击(15轮)",
+    "pipeline": "P-MEM-ROLL",
+    "status": "complete",
+    "kappa": 0.468234,
     "best_epoch": 15,
     "epochs_run": 15,
     "params_M": 39.692,

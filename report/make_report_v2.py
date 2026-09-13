@@ -303,26 +303,34 @@ def _tbl_baselines():
             "nd_deeplab": "DeepLabV3+（预训练主干，**旁证**）",
             "nd_segformer": "SegFormer-Lite", "nd_fpn_seg": "FPN-Seg",
             "nd_swin_unet": "Swin-Unet-Lite"}
-    from experiment_matrix import UNet, PSPNet, FCN, DeepLabV3Plus, SegFormerLite
-    from experiment_matrix_v2 import FPNSeg, SwinUnetLite
-    P = {"nd_unet": lambda: UNet(), "nd_pspnet": lambda: PSPNet(), "nd_fcn": lambda: FCN(),
-         "nd_deeplab_scr": lambda: DeepLabV3Plus(), "nd_deeplab": lambda: DeepLabV3Plus(),
-         "nd_segformer": lambda: SegFormerLite(), "nd_fpn_seg": lambda: FPNSeg(),
-         "nd_swin_unet": lambda: SwinUnetLite()}
+    # 参数量直读 experiments_index.json（由 build_index.py 从 checkpoint 张量求和）
+    PAR = {}
+    try:
+        _ix = json.load(open(os.path.join(BASE, "experiments_index.json"), encoding="utf-8"))
+        PAR = {k: (v.get("params_M") or 0) / 1.0
+               for k, v in (_ix.get("experiments") or {}).items()}
+    except Exception:
+        pass
+
+    def _pm(t, fallback=None):
+        v = PAR.get(t)
+        return f"{v:.2f}M" if v else (fallback or "—")
+
     L = ["| 模型 | 参数量 | Kappa | OA | 最优轮/总轮 |", "|---|---:|---:|---:|---|"]
     if M.get("full_all_v2"):
         r = M["full_all_v2"]
-        L.append(f"| **MSSACT-Net light（自研）** | 6.10M | **{r['kappa']:.4f}** | "
-                 f"{r['oa']:.4f} | {r['best_epoch']}/{r['n_epochs']} |")
+        L.append(f"| **MSSACT-Net light（自研）** | **{_pm('full_all_v2')}** | "
+                 f"**{r['kappa']:.4f}** | {r['oa']:.4f} | {r['best_epoch']}/{r['n_epochs']} |")
     for t in ("nd_deeplab_scr", "nd_deeplab", "nd_fpn_seg", "nd_fcn", "nd_unet",
               "nd_swin_unet", "nd_pspnet", "nd_segformer"):
         r = B.get(t)
         if not r:
             if t == "nd_deeplab_scr":
-                L.append("| **DeepLabV3+（从零，协议内）** | 39.69M | ⏳ 训练中 | — | — |")
+                L.append(f"| **DeepLabV3+（从零，协议内）** | {_pm('nd_deeplab_scr','39.69M')} | "
+                         f"⏳ 训练中 | — | — |")
             continue
         note = "" if t != "nd_deeplab" else " ⚠️非协议内"
-        L.append(f"| {NAME.get(t, t)} | ~ | {r['kappa']:.4f}{note} | {r['oa']:.4f} | "
+        L.append(f"| {NAME.get(t, t)} | {_pm(t)} | {r['kappa']:.4f}{note} | {r['oa']:.4f} | "
                  f"{r['best_epoch']}/{r['n_epochs']} |")
     return chr(10).join(L)
 

@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-13 13:01:55",
+  "generated_at": "2026-09-13 15:40:33",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 102,
+  "n_tags": 104,
   "unregistered_tags": [
    "lgR_c256_center",
    "lgR_c384_rand",
@@ -127,8 +127,8 @@
    "best_kappa_in_series": 0.6413
   },
   "C-final/对比实验": {
-   "n_experiments": 7,
-   "n_complete": 7,
+   "n_experiments": 8,
+   "n_complete": 8,
    "best_kappa_in_series": 0.6876
   },
   "C-final/消融实验": {
@@ -192,8 +192,8 @@
    "best_kappa_in_series": 0.6375
   },
   "lgR-roll/预算攻击(15轮)": {
-   "n_experiments": 5,
-   "n_complete": 5,
+   "n_experiments": 6,
+   "n_complete": 6,
    "best_kappa_in_series": 0.6358
   }
  },
@@ -998,6 +998,30 @@
    "root": "DATA_NEWSPLIT2",
    "protocol": "15ep/pt15/bs8/lr0.0002",
    "note": "P-MEM-ROLL",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_b15_deeplab_scr": {
+   "series": "lgR-roll/预算攻击(15轮)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.468234,
+   "best_epoch": 15,
+   "epochs_run": 15,
+   "target_epochs": 15,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_protocol.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "15ep/pt20/bs8/lr0.0002",
+   "note": "协议内从零 DeepLab；替代 lgR_b15_deeplab(预训练旁证)",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
@@ -2154,6 +2178,30 @@
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
    "note": "REMAP修复后正式结果",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "nd_deeplab_scr": {
+   "series": "C-final/对比实验",
+   "status": "complete",
+   "pipeline": "P-PNG",
+   "best_kappa": 0.62809,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_protocol.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "★ 协议内从零 DeepLab，替代 nd_deeplab 作为对比基线",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
