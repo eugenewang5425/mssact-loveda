@@ -38,8 +38,6 @@ import os, sys, json, re, time, glob
 
 BASE = _BASE
 CKPT = paths.CKPT
-LOGDIR = r"C:/Users/Administrator/.zcode/cli/exec/sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2"
-MAIN_LOG = os.path.join(LOGDIR, "call_00_p2ZpXJD7LuBTVfXsAVqp0139-stdout.log")
 
 # ---- 实测每轮秒数（memmap 管线） ----
 T = {"full": 43, "d1": 14.7, "d2": 44, "d3": 29, "d4": 87,

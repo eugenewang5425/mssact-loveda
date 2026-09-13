@@ -14,10 +14,7 @@ BASE = paths.REPO
 
 def tag_state(tag, target_epochs):
     """complete 判定: 队列日志已出现该任务 DONE 行 (早停/跑满都会打印); 否则按 history 轮数"""
-    QLOG_FILES = [
-        "C:/Users/Administrator/.zcode/cli/exec/sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2/call_00_ET_Gfj9wsuTCGbGVS5Ecka75306-stdout.log",
-        "C:/Users/Administrator/.zcode/cli/exec/sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2/call_00_ET_9VgeDSos6jbcb3bzHDUE5056-stdout.log",
-    ]
+    QLOG_FILES = []   # 原为本机会话绝对路径, 已移除
     for lp in QLOG_FILES:
         if os.path.exists(lp):
             try:

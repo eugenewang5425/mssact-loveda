@@ -313,3 +313,48 @@ LDA_GF_SHP=<行政区矢量>
 5. **不移动**：`paths.py`、4 个核心模块、结果目录（见第一节）
 6. **历史归档**：旧版报告、旧 README 放入 `docs/archive/`；
    被取代的脚本放入 `legacy/`
+
+---
+
+## 六、路径约定（⚠️ 新增代码必须遵守）
+
+### 6.1 脚本内一律相对路径，零绝对路径
+
+- **禁止**在脚本中出现盘符路径（`X:\…`）、`/c/Users/…`、conda 环境路径、
+  工具内部目录等本机路径。**唯一例外**是 `report/make_pdf.py` 里 Chrome/Edge 的
+  标准安装位置（`C:\Program Files\…`）——那是通用位置，不含个人信息。
+- 一律通过 `paths.py` 的常量取路径：
+
+  ```python
+  import paths
+  ck = os.path.join(paths.CKPT, f"{tag}_best.json")     # 对
+  ck = f"{BASE}/checkpoints/{tag}_best.json"            # 错（重组后会失效）
+  ck = r"D:/某个本机目录/checkpoints/…"                  # 错（泄露本机路径）
+  ```
+
+- 数据路径（可能因人而异）只放本地 `.env`（已在 `.gitignore`），代码里只留
+  `paths.py` 的默认值。
+
+### 6.2 运行目录 = 仓库根
+
+```bash
+cd loveda              # 仓库根（子目录脚本也可从根直接调用）
+python queues/run_queue_arch.py
+python report/make_pdf.py
+```
+
+子目录脚本内含路径引导块，因此**从仓库根直接以相对路径调用**即可；
+`.env` 中的路径也已统一用正斜杠（避免反斜杠被当作转义符）。
+
+### 6.3 推送前必须跑敏感信息审核
+
+```bash
+python verify/pre_push_audit.py
+```
+
+检查：① 本机绝对路径 / 用户名 / conda 路径 / 工具内部路径；
+② 内部语境词（早期内部流程相关词，一律不得出现）；
+③ 是否误提交 `backups/`、`_local_archive/`、`.env`；
+④ 大文件（≥50 MB 告警）；⑤ 含字面 `~` 的异常路径。
+
+**只有审核通过才允许 `git push`。** 退出码 0 = 通过。

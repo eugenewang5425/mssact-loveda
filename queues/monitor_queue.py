@@ -18,7 +18,10 @@ import paths  # 集中路径配置 (环境变量/.env)
 
 BASE = paths.REPO
 CKPT = paths.CKPT
-SESSION_DIR = r"C:\Users\Administrator\.zcode\cli\exec\sess_79382b4e-b5fc-48a3-9f7f-73768fa1f2f2"
+# 队列日志目录：由 run_chain.py 写入仓库内的 queues/*.log
+# 原实现指向某个会话目录的绝对路径——既不可复现，也会泄露本机路径。
+# 如需指向别处，用环境变量 LDA_QUEUE_LOGDIR 覆盖。
+LOGDIR = os.environ.get("LDA_QUEUE_LOGDIR", os.path.dirname(os.path.abspath(__file__)))
 
 ABL120 = [("abl120_no_emr",120,100),("abl120_no_ecsam",120,95),("abl120_no_fpn",120,88),
           ("abl120_no_trans",120,90),("abl120_no_adapter",120,95)]
@@ -33,7 +36,7 @@ N_MODELS_OVERFIT = 9
 ALL_TASKS = ABL120 + STRATS
 
 def discover_logs():
-    cands = glob.glob(os.path.join(SESSION_DIR, "call_00_ET_*-stdout.log"))
+    cands = glob.glob(os.path.join(LOGDIR, "*.log"))
     def size(p):
         try: return os.path.getsize(p)
         except: return 0

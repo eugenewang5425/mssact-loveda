@@ -397,6 +397,9 @@ python analysis/consensus_analysis.py
 python analysis/headroom_analysis.py
 python analysis/artifact_analysis.py
 
+# 6) 推送前审核（必须通过才 push）
+python verify/pre_push_audit.py   # 本机路径 / 内部语境词 / 大文件 / 误提交
+
 # 5) 汇总与报告
 python report/build_index.py          # 实验索引（参数量直读张量）
 python report/build_facts.py          # 事实汇总 → FACTS.json

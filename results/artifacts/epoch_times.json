@@ -1,0 +1,151 @@
+{
+ "lgR_bs8_full_lr2e4": {
+  "s_per_epoch": 43,
+  "n": 60
+ },
+ "lgR_D2_decoder_ca": {
+  "s_per_epoch": 44,
+  "n": 60
+ },
+ "lgR_D3_ch_tiny": {
+  "s_per_epoch": 29,
+  "n": 60
+ },
+ "lgR_D4_ch_large": {
+  "s_per_epoch": 87,
+  "n": 60
+ },
+ "lgR_b15_full": {
+  "s_per_epoch": 43,
+  "n": 15
+ },
+ "lgR_b15_noecsam": {
+  "s_per_epoch": 43,
+  "n": 15
+ },
+ "lgR_b15_noemr": {
+  "s_per_epoch": 45,
+  "n": 15
+ },
+ "lgR_b15_unet": {
+  "s_per_epoch": 15,
+  "n": 15
+ },
+ "lgR_b15_deeplab": {
+  "s_per_epoch": 26,
+  "n": 15
+ },
+ "lgR_n250_full": {
+  "s_per_epoch": 12,
+  "n": 90
+ },
+ "lgR_n250_noecsam": {
+  "s_per_epoch": 12,
+  "n": 90
+ },
+ "lgR_n250_unet": {
+  "s_per_epoch": 5,
+  "n": 90
+ },
+ "lgR_n250_deeplab": {
+  "s_per_epoch": 8,
+  "n": 66
+ },
+ "lgR_n500_full": {
+  "s_per_epoch": 16,
+  "n": 60
+ },
+ "lgR_n500_noecsam": {
+  "s_per_epoch": 16,
+  "n": 60
+ },
+ "lgR_n500_unet": {
+  "s_per_epoch": 6,
+  "n": 60
+ },
+ "lgR_n500_deeplab": {
+  "s_per_epoch": 11,
+  "n": 60
+ },
+ "lgR_n1000_full": {
+  "s_per_epoch": 26,
+  "n": 60
+ },
+ "lgR_n1000_noecsam": {
+  "s_per_epoch": 25,
+  "n": 60
+ },
+ "lgR_n1000_unet": {
+  "s_per_epoch": 9,
+  "n": 60
+ },
+ "lgR_n1000_deeplab": {
+  "s_per_epoch": 19,
+  "n": 60
+ },
+ "lgR_c256_center": {
+  "s_per_epoch": 44,
+  "n": 60
+ },
+ "lgR_c384_rand": {
+  "s_per_epoch": 100,
+  "n": 60
+ },
+ "lgR_c512_rand": {
+  "s_per_epoch": 192,
+  "n": 60
+ },
+ "nd_deeplab_scr": {
+  "s_per_epoch": 133,
+  "n": 60
+ },
+ "lgR_b15_deeplab_scr": {
+  "s_per_epoch": 32,
+  "n": 15
+ },
+ "sd7_full": {
+  "s_per_epoch": 43,
+  "n": 60
+ },
+ "sd7_deeplab": {
+  "s_per_epoch": 33,
+  "n": 60
+ },
+ "sd2024_full": {
+  "s_per_epoch": 49,
+  "n": 60
+ },
+ "sd2024_deeplab": {
+  "s_per_epoch": 33,
+  "n": 60
+ },
+ "sd31337_full": {
+  "s_per_epoch": 49,
+  "n": 60
+ },
+ "sd31337_deeplab": {
+  "s_per_epoch": 28,
+  "n": 60
+ },
+ "lgR_deeplab_scr": {
+  "s_per_epoch": 29,
+  "n": 60
+ },
+ "lgR_n250_deeplab_scr": {
+  "s_per_epoch": 8,
+  "n": 30
+ },
+ "lgR_n500_deeplab_scr": {
+  "s_per_epoch": 12,
+  "n": 30
+ },
+ "lgR_n1000_deeplab_scr": {
+  "s_per_epoch": 20,
+  "n": 30
+ },
+ "lgR_D1_join_nofpn_notrans": {
+  "s_per_epoch": 15,
+  "n": 60,
+  "source": "verify_rollback 实测 14.7 s/轮（报告 §5.5.6 表）；原始日志已不在，取整为 15"
+ }
+}
