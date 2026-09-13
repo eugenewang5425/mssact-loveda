@@ -11,13 +11,14 @@ make_report_v2.py 只产出 HTML，PDF 需要 Chrome headless 转换。本脚本
 # 说明: paths.py / train_v3.py / experiment_matrix*.py 保留在仓库根目录，
 #       故须把仓库根加入 sys.path；同目录模块（如 queue_guard）用 _HERE。
 import os as _os, sys as _sys
+import tempfile
 _HERE = _os.path.dirname(_os.path.abspath(__file__))
 _BASE = _os.path.dirname(_HERE)          # 仓库根
 for _p in (_BASE, _HERE):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 # --- 路径引导结束 ---
-import os, sys, subprocess, glob, time
+import os, sys, subprocess, glob, time, tempfile
 
 sys.path.insert(0, _HERE)
 import paths
@@ -74,7 +75,9 @@ def main():
     uri = "file:///" + os.path.abspath(html).replace("\\", "/")
     # 必须显式指定 user-data-dir: 用户自己的 Chrome 正占用默认 profile,
     # 否则 headless 实例会因等不到 profile 锁而挂起 (实测 600s 超时)
-    udd = os.path.join(paths.DATA_ROOT.replace(os.sep, "/").split(":/")[0] + ":/AI点子/_cr_headless")
+    # Chrome 需要独立的 user-data-dir（用户自身的 Chrome 占用默认 profile，
+    # 否则 headless 会挂起）。用系统临时目录，避免写入仓库或写死本机路径。
+    udd = os.path.join(tempfile.gettempdir(), "mssact_headless")
     os.makedirs(udd, exist_ok=True)
     print(f"浏览器 : {br}")
     print(f"HTML   : {os.path.basename(html)}")

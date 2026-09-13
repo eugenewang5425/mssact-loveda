@@ -320,7 +320,7 @@ LDA_GF_SHP=<行政区矢量>
 
 ### 6.1 脚本内一律相对路径，零绝对路径
 
-- **禁止**在脚本中出现盘符路径（`X:\…`）、`/c/Users/…`、conda 环境路径、
+- **禁止**在脚本中出现盘符路径（`X:\…`）、`/c/Users/…`、conda 环境路径、 <!-- audit:ok -->
   工具内部目录等本机路径。**唯一例外**是 `report/make_pdf.py` 里 Chrome/Edge 的
   标准安装位置（`C:\Program Files\…`）——那是通用位置，不含个人信息。
 - 一律通过 `paths.py` 的常量取路径：
@@ -329,7 +329,7 @@ LDA_GF_SHP=<行政区矢量>
   import paths
   ck = os.path.join(paths.CKPT, f"{tag}_best.json")     # 对
   ck = f"{BASE}/checkpoints/{tag}_best.json"            # 错（重组后会失效）
-  ck = r"D:/某个本机目录/checkpoints/…"                  # 错（泄露本机路径）
+  ck = r"D:/某个本机目录/checkpoints/…"                  # 错（泄露本机路径）<!-- audit:ok -->
   ```
 
 - 数据路径（可能因人而异）只放本地 `.env`（已在 `.gitignore`），代码里只留

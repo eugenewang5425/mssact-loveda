@@ -42,6 +42,8 @@ PATH_PATTERNS = [
     (r"\.zcode[\\/]", "工具内部路径"),
     (r"D:[\\/]毕业论文", "本机论文目录"),
     (r"D:[\\/]AI点子", "本机项目目录"),
+    (r"AI点子", "本机项目目录名片段"),
+    (r"毕业论文[\\/]", "本机论文目录名片段"),
 ]
 # 内部语境词（模糊化书写，避免本脚本自身命中）
 SENSITIVE_WORDS = [
@@ -66,6 +68,13 @@ def read_text(p):
         return None
 
 
+# 豁免标记：文档里**故意写的反例**、或检查器自身的规则串，可在行尾加
+#   audit:ok
+# 表示"此处为本机路径的示例/规则，不是真实泄露"。
+ALLOW_MARK = "audit:ok"
+SELF = "verify/pre_push_audit.py"      # 检查器自身含其规则串，跳过
+
+
 def main():
     all_files = "--all" in sys.argv
     files = tracked_files()
@@ -80,6 +89,8 @@ def main():
 
     # 1) 文本内容检查
     for f in files:
+        if f == SELF:
+            continue                      # 检查器自身跳过
         if os.path.splitext(f)[1].lower() in SKIP_EXT:
             continue
         s = read_text(f)
@@ -92,9 +103,11 @@ def main():
                 # 白名单：注释中明确说明"示例占位"的行
                 if FALSE_POSITIVE.search(line) or "示例" in line or "<" in line:
                     continue
+                if ALLOW_MARK in line:
+                    continue
                 problems.append((f, f"L{ln} [{name}] {line}", ln))
         for w in SENSITIVE_WORDS:
-            if w in s:
+            if w in s and ALLOW_MARK not in s:
                 ln = s[:s.index(w)].count("\n") + 1
                 problems.append((f, f"L{ln} 含内部语境词（已模糊化，此处不打印原词）", ln))
 
