@@ -129,7 +129,8 @@ if __name__ == "__main__":
                        ("analysis", "seed_variance.py"),    # 种子噪声底线
                        ("report", "build_index.py"),        # 实验索引
                        ("report", "build_facts.py"),        # 事实汇总
-                       ("report", "make_report_v2.py"),     # 报告 HTML
+                       ("viz", "make_report_figures.py"),   # 报告全部图
+                       ("report", "make_report_v3.py"),     # 报告 HTML
                        ("report", "make_pdf.py")):          # 报告 PDF
         print(f"\n===== D. {step} =====", flush=True)
         r = subprocess.run([sys.executable, "-u", os.path.join(BASE, _sub, step)], cwd=BASE,

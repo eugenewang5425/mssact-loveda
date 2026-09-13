@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """报告 HTML -> PDF（Chrome headless）+ 页数与关键内容自检
 
-make_report_v2.py 只产出 HTML，PDF 需要 Chrome headless 转换。本脚本把它固定下来，
+make_report_v3.py 只产出 HTML，PDF 需要 Chrome headless 转换。本脚本把它固定下来，
 并做两项自检：页数、以及必须出现的勘误/回退关键词（防止再次输出错误结论）。
 
 用法: python make_pdf.py [html路径]
@@ -64,7 +64,7 @@ def main():
     if html is None:
         hs = sorted(glob.glob(os.path.join(paths.REPORTS, "项目报告_*.html")), key=os.path.getmtime)
         if not hs:
-            print("未找到 项目报告_*.html，请先运行 make_report_v2.py"); raise SystemExit(1)
+            print("未找到 项目报告_*.html，请先运行 make_report_v3.py"); raise SystemExit(1)
         html = hs[-1]
     pdf = os.path.splitext(html)[0] + ".pdf"
     br = find_browser()

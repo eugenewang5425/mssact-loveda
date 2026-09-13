@@ -107,7 +107,7 @@ def main():
     for tag, sec, note in [("eval_rigor --infer (22 tag)", 90, "每 tag 约 90s"),
                            ("headroom_analysis.py", 600, ""),
                            ("seed_variance+build_index+build_facts", 180, ""),
-                           ("make_report_v2 + make_pdf", 120, "")]:
+                           ("make_report_v3 + make_pdf", 120, "")]:
         h = sec / 3600.0
         rows.append(("2 后置队列", tag, 1, sec, h)); P2 += h
     P2 += 22 * 90 / 3600   # eval_rigor 是 22 个 tag, 上面记了 1 次, 补齐
@@ -121,7 +121,7 @@ def main():
         s = T["full"] * (crop / 256.0) ** 2      # 像素量平方增长
         h = rem * s / 3600.0
         rows.append(("3 裁剪队列", tag, rem, round(s), h)); P3 += h
-    for tag, sec in [("build_index+build_facts", 180), ("make_report_v2 + make_pdf", 120)]:
+    for tag, sec in [("build_index+build_facts", 180), ("make_report_v3 + make_pdf", 120)]:
         h = sec / 3600.0
         rows.append(("3 裁剪队列", tag, 1, sec, h)); P3 += h
 

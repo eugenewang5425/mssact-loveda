@@ -364,6 +364,8 @@ loveda/
 
 ## 快速开始
 
+> 全部命令**在仓库根目录执行**；脚本内不含绝对路径，路径由 `paths.py` 统一提供。
+
 ```bash
 conda activate pytorch
 pip install -r requirements.txt
@@ -400,10 +402,11 @@ python analysis/artifact_analysis.py
 python verify/pre_push_audit.py   # 本机路径 / 内部语境词 / 大文件 / 误提交
 
 # 5) 汇总与报告
-python report/build_index.py          # 实验索引（参数量直读张量）
-python report/build_facts.py          # 事实汇总 → FACTS.json
-python report/make_report_v2.py       # 报告 HTML
-python report/make_pdf.py             # HTML → PDF（含内容自检）
+python report/build_index.py          # 实验索引 → results/facts/experiments_index.json
+python report/build_facts.py          # 事实汇总 → results/facts/FACTS.json
+python viz/make_report_figures.py     # 报告全部图 → figures/（22 张，从权威数据源生成）
+python report/make_report_v3.py       # 报告 HTML → reports/
+python report/make_pdf.py             # HTML → PDF（含 25 项内容自检 + 页脚泄露检查）
 ```
 
 ---

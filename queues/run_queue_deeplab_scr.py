@@ -115,7 +115,8 @@ if __name__ == "__main__":
 
     print("\n===== 汇总产物 =====", flush=True)
     for _sub, step in (("report", "build_index.py"), ("report", "build_facts.py"),
-                       ("report", "make_report_v2.py"), ("report", "make_pdf.py")):
+                       ("viz", "make_report_figures.py"),
+                       ("report", "make_report_v3.py"), ("report", "make_pdf.py")):
         print(f"\n=== {_sub}/{step} ===", flush=True)
         r = subprocess.run([sys.executable, "-u", os.path.join(BASE, _sub, step)],
                            cwd=BASE, **queue_guard._no_window_kwargs())
