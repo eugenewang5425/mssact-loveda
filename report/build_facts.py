@@ -282,6 +282,40 @@ if _crop_rows:
         protocol="60ep/pt20/bs8/lr2e-4, P-MEM-ROLL 管线（memmap）",
         note="batch 随裁剪面积下调(8/4/2)以避免 OOM；每轮耗时取自队列日志实测中位数")
 
+# ========== 从零训练 vs 预训练主干（DeepLabV3+ 公平性分离）==========
+# 唯一能干净分离"预训练贡献"的对照：同一模型、同一管线、同一协议，只差权重初始化。
+F["scratch_vs_pretrained"] = None
+def _bk(_tag):
+    _p = f"{CKPT}/{_tag}_history.json"
+    if not os.path.exists(_p):
+        return None
+    try:
+        _h = json.load(open(_p, encoding="utf-8"))
+        return round(float(max(r.get("kappa", -9) for r in _h)), 4)
+    except Exception:
+        return None
+_pairs = [("主数据集 60 轮", None, "lgR_deeplab_scr"),
+          ("阶梯 n250", "lgR_n250_deeplab", "lgR_n250_deeplab_scr"),
+          ("阶梯 n500", "lgR_n500_deeplab", "lgR_n500_deeplab_scr"),
+          ("阶梯 n1000", "lgR_n1000_deeplab", "lgR_n1000_deeplab_scr")]
+_svp = []
+for _lab, _tpre, _tscr in _pairs:
+    _a, _b = (_bk(_tpre) if _tpre else None), _bk(_tscr)
+    if _b is None:
+        continue
+    _svp.append(dict(setting=_lab, pretrained=_a, scratch=_b,
+                     pretrain_gain=(round(_a - _b, 4) if _a is not None else None)))
+_sc = _bk("lgR_deeplab_scr")
+_ours = _bk("lgR_bs8_full_lr2e4")
+if _svp or _sc is not None:
+    F["scratch_vs_pretrained"] = dict(
+        rows=_svp,
+        main_from_scratch=dict(mssact_6p10M=_ours, deeplab_39p69M_scratch=_sc,
+                               delta=(round(_sc - _ours, 4) if (_sc is not None and _ours is not None) else None),
+                               sigma_units=(round(abs(_sc - _ours) / 0.0050, 2)
+                                            if (_sc is not None and _ours is not None) else None)),
+        note="同管线 P-MEM-ROLL / 60ep 主数据集；σ_seed=0.0050（见 5.7）")
+
 json.dump(F, open(f"{BASE}/FACTS.json","w"), indent=1, ensure_ascii=False)
 
 # 打印摘要

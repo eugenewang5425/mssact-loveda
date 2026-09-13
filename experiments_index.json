@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-13 11:31:57",
+  "generated_at": "2026-09-13 13:01:55",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 98,
+  "n_tags": 102,
   "unregistered_tags": [
    "lgR_c256_center",
    "lgR_c384_rand",
@@ -156,24 +156,29 @@
    "n_complete": 0,
    "best_kappa_in_series": 0.6031
   },
+  "lgR-roll/DeepLab从零对照": {
+   "n_experiments": 1,
+   "n_complete": 1,
+   "best_kappa_in_series": 0.6359
+  },
   "lgR-roll/回退验证": {
    "n_experiments": 1,
    "n_complete": 1,
    "best_kappa_in_series": 0.6293
   },
   "lgR-roll/数据阶梯 n1000": {
-   "n_experiments": 4,
-   "n_complete": 4,
+   "n_experiments": 5,
+   "n_complete": 5,
    "best_kappa_in_series": 0.631
   },
   "lgR-roll/数据阶梯 n250": {
-   "n_experiments": 4,
-   "n_complete": 4,
+   "n_experiments": 5,
+   "n_complete": 5,
    "best_kappa_in_series": 0.2825
   },
   "lgR-roll/数据阶梯 n500": {
-   "n_experiments": 4,
-   "n_complete": 4,
+   "n_experiments": 5,
+   "n_complete": 5,
    "best_kappa_in_series": 0.4928
   },
   "lgR-roll/架构基线": {
@@ -1217,9 +1222,9 @@
    "series": "UNREGISTERED",
    "status": "unregistered",
    "pipeline": null,
-   "best_kappa": 0.651918,
-   "best_epoch": 49,
-   "epochs_run": 49,
+   "best_kappa": 0.652437,
+   "best_epoch": 58,
+   "epochs_run": 60,
    "target_epochs": null,
    "params_M": 6.102,
    "has_weight": true,
@@ -1244,6 +1249,30 @@
     "deconv_kernels": 0
    }
   },
+  "lgR_deeplab_scr": {
+   "series": "lgR-roll/DeepLab从零对照",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.635902,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_scr.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "★ pretrained_backbone=False；对照 lgR_bs8_full_lr2e4(0.6320, 从零)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
   "lgR_n1000_deeplab": {
    "series": "lgR-roll/数据阶梯 n1000",
    "status": "complete",
@@ -1258,6 +1287,30 @@
    "root": "data_ladder/n1000",
    "protocol": "30ep/pt30/bs8/lr0.0002",
    "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n1000_deeplab_scr": {
+   "series": "lgR-roll/数据阶梯 n1000",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.477056,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_scr.py",
+   "root": "data_ladder/n1000",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "从零训练；与同档预训练版 lgR_n1000_deeplab 配对可分离预训练贡献",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
@@ -1378,6 +1431,30 @@
     "deconv_kernels": 0
    }
   },
+  "lgR_n250_deeplab_scr": {
+   "series": "lgR-roll/数据阶梯 n250",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.176177,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_scr.py",
+   "root": "data_ladder/n250",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "从零训练；与同档预训练版 lgR_n250_deeplab 配对可分离预训练贡献",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
   "lgR_n250_full": {
    "series": "lgR-roll/数据阶梯 n250",
    "status": "complete",
@@ -1478,6 +1555,30 @@
    "root": "data_ladder/n500",
    "protocol": "30ep/pt30/bs8/lr0.0002",
    "note": "验证集固定为 newsplit2/val; fast_data=False(PNG 子集)",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR_n500_deeplab_scr": {
+   "series": "lgR-roll/数据阶梯 n500",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.439312,
+   "best_epoch": 30,
+   "epochs_run": 30,
+   "target_epochs": 30,
+   "params_M": 39.692,
+   "has_weight": true,
+   "script": "queues/run_queue_deeplab_scr.py",
+   "root": "data_ladder/n500",
+   "protocol": "30ep/pt30/bs8/lr0.0002",
+   "note": "从零训练；与同档预训练版 lgR_n500_deeplab 配对可分离预训练贡献",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,

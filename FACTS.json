@@ -1903,6 +1903,17 @@
     "e90rel": 29,
     "auc_norm": 0.289
    },
+   "lgR_n250_deeplab_scr": {
+    "n": 250,
+    "model": "deeplab_scr",
+    "n_epochs": 30,
+    "kappa": 0.1762,
+    "best_epoch": 30,
+    "k_final": 0.1762,
+    "e50rel": 24,
+    "e90rel": 30,
+    "auc_norm": 0.187
+   },
    "lgR_n500_full": {
     "n": 500,
     "model": "full",
@@ -1947,6 +1958,17 @@
     "e90rel": 27,
     "auc_norm": 0.458
    },
+   "lgR_n500_deeplab_scr": {
+    "n": 500,
+    "model": "deeplab_scr",
+    "n_epochs": 30,
+    "kappa": 0.4393,
+    "best_epoch": 30,
+    "k_final": 0.4393,
+    "e50rel": 21,
+    "e90rel": 26,
+    "auc_norm": 0.356
+   },
    "lgR_n1000_full": {
     "n": 1000,
     "model": "full",
@@ -1990,6 +2012,17 @@
     "e50rel": 13,
     "e90rel": 21,
     "auc_norm": 0.599
+   },
+   "lgR_n1000_deeplab_scr": {
+    "n": 1000,
+    "model": "deeplab_scr",
+    "n_epochs": 30,
+    "kappa": 0.4771,
+    "best_epoch": 30,
+    "k_final": 0.4771,
+    "e50rel": 13,
+    "e90rel": 21,
+    "auc_norm": 0.554
    }
   },
   "protocol": "30ep/pt30/bs8/lr2e-4, memmap 子集预解码, val 固定为 newsplit2/val",
@@ -2038,16 +2071,51 @@
     "desc": "512 随机",
     "crop": 512,
     "pos": "随机",
-    "kappa": 0.6519,
-    "best_epoch": 49,
-    "n_epochs": 51,
+    "kappa": 0.6524,
+    "best_epoch": 58,
+    "n_epochs": 60,
     "s_per_epoch": 192,
-    "total_min": 163.2,
-    "complete": false,
-    "delta": 0.0199
+    "total_min": 192.0,
+    "complete": true,
+    "delta": 0.0204
    }
   },
   "protocol": "60ep/pt20/bs8/lr2e-4, P-MEM-ROLL 管线（memmap）",
   "note": "batch 随裁剪面积下调(8/4/2)以避免 OOM；每轮耗时取自队列日志实测中位数"
+ },
+ "scratch_vs_pretrained": {
+  "rows": [
+   {
+    "setting": "主数据集 60 轮",
+    "pretrained": null,
+    "scratch": 0.6359,
+    "pretrain_gain": null
+   },
+   {
+    "setting": "阶梯 n250",
+    "pretrained": 0.2825,
+    "scratch": 0.1762,
+    "pretrain_gain": 0.1063
+   },
+   {
+    "setting": "阶梯 n500",
+    "pretrained": 0.4928,
+    "scratch": 0.4393,
+    "pretrain_gain": 0.0535
+   },
+   {
+    "setting": "阶梯 n1000",
+    "pretrained": 0.631,
+    "scratch": 0.4771,
+    "pretrain_gain": 0.1539
+   }
+  ],
+  "main_from_scratch": {
+   "mssact_6p10M": 0.632,
+   "deeplab_39p69M_scratch": 0.6359,
+   "delta": 0.0039,
+   "sigma_units": 0.78
+  },
+  "note": "同管线 P-MEM-ROLL / 60ep 主数据集；σ_seed=0.0050（见 5.7）"
  }
 }
