@@ -164,5 +164,19 @@
    "delta": 0.0023,
    "n_sigma": 0.451
   }
- ]
+ ],
+ "sigma_seed_test_protocol": {
+  "n": 4,
+  "mean": 0.568999,
+  "std": 0.004123,
+  "range": 0.00877,
+  "members": {
+   "lgR_bs8_full_lr2e4": 0.562953,
+   "sd7_full": 0.571525,
+   "sd2024_full": 0.571723,
+   "sd31337_full": 0.569796
+  },
+  "protocol": "test_clean 141 张 1024^2 整图, 256^2 滑窗/stride 128 高斯加权",
+  "note": "与 sigma_seed_used(val 协议)不同口径; 判定测试集协议的差值须用本值"
+ }
 }

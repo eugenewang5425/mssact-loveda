@@ -60,16 +60,28 @@ OUT_JSON = os.path.join(paths.RESULTS, "artifacts", "tost_equivalence.json")
 
 
 def sigma_seed():
-    """从 seed_variance.json 读实测种子标准差; 缺失则用已记录的 0.0050"""
+    """测试集协议下的实测种子标准差。
+
+    **口径纪律**: 本脚本的 dKappa 全部来自整图测试协议 (1024² 滑窗, 141 张), 故必须用
+    **同一协议**测出的 sigma。`sigma_seed_used` (0.0050) 是在 val 协议 (221 张 256² 裁剪)
+    上测的; 两协议的评估集/分辨率/推理方式都不同, 直接拿来判定属**口径错配**。
+    实测: val 0.0050 / test 0.0041 (n=4, 同一批 4 个种子)。
+    优先读 `sigma_seed_test_protocol`, 缺失时回退并**显式标注**口径不匹配。
+    """
     try:
         d = json.load(open(paths.SEEDVAR_JSON, encoding="utf-8"))
+        t = d.get("sigma_seed_test_protocol")
+        if t and t.get("std"):
+            return float(t["std"]), int(t.get("n", 0)), "test 协议(已匹配)"
         s = d.get("sigma_seed_used")
         if s:
-            g = d["groups"].get("完整模型 MSSACT 6.10M (P-MEM-ROLL)", {})
-            return float(s), int(g.get("n", 0))
+            # 注意: 分组的键名曾带参数量(如 "完整模型 MSSACT 6.10M (P-MEM-ROLL)"),
+            # 后因"参数量口径一变键就失效"而改名 -> 这里曾因此静默取到 n=0
+            g = d.get("groups", {}).get("完整模型 MSSACT (P-MEM-ROLL)", {})
+            return float(s), int(g.get("n", 0)), "val 协议(回退, 口径不匹配)"
     except Exception:
         pass
-    return 0.0050, 0
+    return 0.0050, 0, "硬编码回退(口径不匹配)"
 
 
 def comparable_groups():
@@ -107,7 +119,7 @@ def boot_pooled_kappa(cms, idx):
 
 
 def main():
-    s_seed, n_seed = sigma_seed()
+    s_seed, n_seed, sigma_src = sigma_seed()
     groups = comparable_groups()
     tag2grp = {}
     for gname, g in groups.items():
@@ -146,6 +158,7 @@ def main():
         raise SystemExit("没有任何可用预测; 先跑 analysis/eval_rigor.py --infer")
     print("载入预测 %d 个 tag, 测试集 %d 张 %d²" % (len(preds), labels.shape[0],
                                                 labels.shape[1]), flush=True)
+    print("σ_seed(测试集协议) = %.4f (n=%d, %s)" % (s_seed, n_seed, sigma_src), flush=True)
 
     # 逐图混淆矩阵 (pooled Kappa 的唯一来源)
     cms = {t: np.array([ER.conf_mat(preds[t][i], labels[i])
@@ -211,8 +224,10 @@ def main():
 
     out = dict(
         sesoi=SESOI, n_boot=N_BOOT, seed=SEED, n_images=int(n),
-        sigma_seed=s_seed, sigma_seed_n_runs=n_seed,
-        sigma_seed_source="results/facts/seed_variance.json",
+        sigma_seed=s_seed, sigma_seed_n_runs=n_seed, sigma_seed_source=sigma_src,
+        sigma_seed_note=("判定测试集协议的 dKappa 必须用**同协议**的 sigma; "
+                         "val 协议的 0.0050 只用于 val 上的量(见报告 5.7)。"
+                         "本脚本的 dKappa 全部来自整图测试协议。"),
         threshold_rule="|dKappa| >= 2*sigma_seed 记为可分辨; 1-2 sigma 弱; <1 sigma 不可分辨",
         two_error_models_note=(
             "种子层回答'换种子重训差异还在吗'(误差 = sqrt(2)*sigma_seed); "

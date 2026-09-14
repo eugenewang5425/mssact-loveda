@@ -176,6 +176,33 @@ def main():
     print("   模型初始化 / DataLoader 打乱顺序 / _geom 增强抽样")
 
     dst = paths.SEEDVAR_JSON
+    # ---- 协议匹配的 sigma: 测试集协议下的种子噪声 ----
+    # 为什么必须分开测: sigma_seed 是**协议相关**的。用 val 协议测出的 0.0050 去判定
+    # 整图测试协议(1024^2 滑窗)上的差值属于口径错配 —— 两个协议的评估集、分辨率、
+    # 推理方式都不同, 噪声水平没有理由相同。实测 val 0.0050 / test 0.0041。
+    try:
+        import os as _os2
+        rigor_p = _os2.path.join(paths.CONSENSUS, "rigor.json")
+        if _os2.path.exists(rigor_p):
+            _r = json.load(open(rigor_p, encoding="utf-8"))["results"]
+            _grp = [("lgR_bs8_full_lr2e4", 42), ("sd7_full", 7),
+                    ("sd2024_full", 2024), ("sd31337_full", 31337)]
+            _v = [(t, s, _r[t]["kappa_pooled"]) for t, s in _grp if t in _r]
+            if len(_v) >= 2:
+                import statistics as _st
+                _ks = [k for _, _, k in _v]
+                out["sigma_seed_test_protocol"] = dict(
+                    n=len(_ks), mean=round(_st.mean(_ks), 6),
+                    std=round(_st.stdev(_ks), 6),
+                    range=round(max(_ks) - min(_ks), 6),
+                    members={t: round(k, 6) for t, _, k in _v},
+                    protocol="test_clean 141 张 1024^2 整图, 256^2 滑窗/stride 128 高斯加权",
+                    note="与 sigma_seed_used(val 协议)不同口径; 判定测试集协议的差值须用本值")
+                print("  测试集协议 sigma_seed = %.4f (n=%d)" % (_st.stdev(_ks), len(_ks)))
+    except Exception as _e:
+        out["sigma_seed_test_protocol"] = None
+        print("  测试集协议 sigma 未测得: %s" % _e)
+
     json.dump(out, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"\n写入 {dst}")
 
