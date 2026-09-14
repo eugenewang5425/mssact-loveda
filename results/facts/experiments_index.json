@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-14 03:27:27",
+  "generated_at": "2026-09-15 01:19:32",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 106,
+  "n_tags": 120,
   "unregistered_tags": []
  },
  "comparable_groups": {
@@ -84,6 +84,17 @@
     "lgR120_fx_skip",
     "lgR120_fx_pos",
     "lgR120_fx_all",
+    "lgR120_fx_d2",
+    "lgR120_fxskip_lr1e4",
+    "lgR120_fxall_lr1e4",
+    "lgR120_pos_abl_no_emr",
+    "lgR120_pos_abl_no_ecsam",
+    "lgR120_pos_abl_no_fpn",
+    "lgR120_pos_abl_no_trans",
+    "lgR120_pos_abl_no_adapter",
+    "lgR120_pos_abl_bilinear",
+    "lgR120_pos_abl_trans4l",
+    "lgR120_pos_abl_trans6l",
     "lgR120_abl_no_emr",
     "lgR120_abl_no_ecsam",
     "lgR120_abl_no_fpn",
@@ -224,10 +235,25 @@
    "n_complete": 6,
    "best_kappa_in_series": 0.6358
   },
+  "lgR120/修复后消融": {
+   "n_experiments": 3,
+   "n_complete": 0,
+   "best_kappa_in_series": 0.66
+  },
+  "lgR120/修复后消融(pos底)": {
+   "n_experiments": 8,
+   "n_complete": 4,
+   "best_kappa_in_series": 0.6728
+  },
   "lgR120/修复归因": {
    "n_experiments": 4,
    "n_complete": 1,
    "best_kappa_in_series": 0.6716
+  },
+  "lgR120/判别实验": {
+   "n_experiments": 3,
+   "n_complete": 0,
+   "best_kappa_in_series": 0.6466
   }
  },
  "experiments": {
@@ -893,6 +919,99 @@
     "deconv_kernels": 0
    }
   },
+  "lgR120_abl_no_ecsam": {
+   "series": "lgR120/修复后消融",
+   "status": "partial(39/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.465743,
+   "best_epoch": 19,
+   "epochs_run": 39,
+   "target_epochs": 120,
+   "params_M": 6.409,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 以 use_skip=True+pos_enc=True 为底: 修复缺陷后的首次可解释消融",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_abl_no_emr": {
+   "series": "lgR120/修复后消融",
+   "status": "partial(112/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.660036,
+   "best_epoch": 92,
+   "epochs_run": 112,
+   "target_epochs": 120,
+   "params_M": 6.464,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 以 use_skip=True+pos_enc=True 为底: 修复缺陷后的首次可解释消融",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_abl_no_fpn": {
+   "series": "lgR120/修复后消融",
+   "status": "partial(97/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.618869,
+   "best_epoch": 91,
+   "epochs_run": 97,
+   "target_epochs": 120,
+   "params_M": 3.959,
+   "has_weight": true,
+   "script": "queues/run_queue_fix.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 以 use_skip=True+pos_enc=True 为底: 修复缺陷后的首次可解释消融",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
   "lgR120_full": {
    "series": "lgR120/修复归因",
    "status": "partial(111/120)",
@@ -938,6 +1057,37 @@
    "root": "DATA_NEWSPLIT2",
    "protocol": "120ep/pt20/bs8/lr0.0002",
    "note": "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fx_d2": {
+   "series": "lgR120/判别实验",
+   "status": "partial(114/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.646618,
+   "best_epoch": 94,
+   "epochs_run": 114,
+   "target_epochs": 120,
+   "params_M": 6.226,
+   "has_weight": true,
+   "script": "queues/run_queue_fix2.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); H2: lr1e4 两个 = 同配置降到 lr=1e-4, 与 2e-4 版直接对照",
    "arch": {
     "stem_ch": 32,
     "stage_ch": [
@@ -1009,6 +1159,316 @@
      256
     ],
     "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fxall_lr1e4": {
+   "series": "lgR120/判别实验",
+   "status": "partial(82/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.616998,
+   "best_epoch": 62,
+   "epochs_run": 82,
+   "target_epochs": 120,
+   "params_M": 6.464,
+   "has_weight": true,
+   "script": "queues/run_queue_fix2.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); H2: lr1e4 两个 = 同配置降到 lr=1e-4, 与 2e-4 版直接对照",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_fxskip_lr1e4": {
+   "series": "lgR120/判别实验",
+   "status": "partial(106/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.639493,
+   "best_epoch": 86,
+   "epochs_run": 106,
+   "target_epochs": 120,
+   "params_M": 6.464,
+   "has_weight": true,
+   "script": "queues/run_queue_fix2.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); H2: lr1e4 两个 = 同配置降到 lr=1e-4, 与 2e-4 版直接对照",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_bilinear": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.664339,
+   "best_epoch": 110,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 5.424,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_no_adapter": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "partial(117/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.670433,
+   "best_epoch": 97,
+   "epochs_run": 117,
+   "target_epochs": 120,
+   "params_M": 6.066,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_no_ecsam": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "partial(65/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.603652,
+   "best_epoch": 45,
+   "epochs_run": 65,
+   "target_epochs": 120,
+   "params_M": 6.044,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": false,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_no_emr": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "partial(114/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.664897,
+   "best_epoch": 94,
+   "epochs_run": 114,
+   "target_epochs": 120,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_no_fpn": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "partial(110/120)",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.667918,
+   "best_epoch": 90,
+   "epochs_run": 110,
+   "target_epochs": 120,
+   "params_M": 3.615,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": false,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_no_trans": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.659963,
+   "best_epoch": 116,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 4.487,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_trans4l": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.672763,
+   "best_epoch": 113,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 7.679,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 4,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "lgR120_pos_abl_trans6l": {
+   "series": "lgR120/修复后消融(pos底)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.670426,
+   "best_epoch": 113,
+   "epochs_run": 120,
+   "target_epochs": 120,
+   "params_M": 9.258,
+   "has_weight": true,
+   "script": "queues/run_queue_fix3.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "120ep/pt20/bs8/lr0.0002",
+   "note": "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 6,
     "has_transformer": true,
     "has_fpn": true,
     "has_ecsam": true,
