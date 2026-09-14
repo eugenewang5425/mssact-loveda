@@ -103,7 +103,16 @@ TAG_CFG = {
     #     LR 属于训练超参, 由队列脚本决定(见 queues/run_queue_fix2.py)
     "lgR120_fxskip_lr1e4": (_LIGHT, dict(use_skip=True)),
     "lgR120_fxall_lr1e4": (_LIGHT, dict(use_skip=True, pos_enc=True)),
-    # 修复后的消融 (底 = use_skip + pos_enc)
+    # 修复后消融第二轮: 底 = pos_enc=True（第二轮证实 use_skip 有害且 fx_all 底发散）
+    "lgR120_pos_abl_no_emr": (_LIGHT, dict(pos_enc=True, use_emr=False)),
+    "lgR120_pos_abl_no_ecsam": (_LIGHT, dict(pos_enc=True, use_ecsam=False)),
+    "lgR120_pos_abl_no_fpn": (_LIGHT, dict(pos_enc=True, use_fpn=False)),
+    "lgR120_pos_abl_no_trans": (_LIGHT, dict(pos_enc=True, use_transformer=False)),
+    "lgR120_pos_abl_no_adapter": (_LIGHT, dict(pos_enc=True, use_adapter=False)),
+    "lgR120_pos_abl_bilinear": (_LIGHT, dict(pos_enc=True, upsample_mode="bilinear")),
+    "lgR120_pos_abl_trans4l": (_LIGHT, dict(pos_enc=True, transformer_layers=4)),
+    "lgR120_pos_abl_trans6l": (_LIGHT, dict(pos_enc=True, transformer_layers=6)),
+    # 修复后的消融 (更早一轮, 底 = use_skip + pos_enc; 该底不稳定, 见 run_queue_fix3)
     "lgR120_abl_no_emr": (_LIGHT, dict(use_skip=True, pos_enc=True, use_emr=False)),
     "lgR120_abl_no_ecsam": (_LIGHT, dict(use_skip=True, pos_enc=True, use_ecsam=False)),
     "lgR120_abl_no_fpn": (_LIGHT, dict(use_skip=True, pos_enc=True, use_fpn=False)),

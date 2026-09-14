@@ -174,6 +174,12 @@ reg(["lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4"], "lgR120/判�
     "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); "
     "H2: lr1e4 两个 = 同配置降到 lr=1e-4, 与 2e-4 版直接对照",
     pipeline="P-MEM-ROLL")
+reg([f"lgR120_pos_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
+                                    "no_adapter", "bilinear", "trans4l", "trans6l")],
+    "lgR120/修复后消融(pos底)", "queues/run_queue_fix3.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
+    "★ 底 = lgR120_fx_pos(pos_enc=True, 0.6716): 稳定、且是修复族中唯一高于未修复基线的配置。"
+    "不含跳连——跳连的有害性已在四种配置下稳健复现, 见 run_queue_fix3 的 docstring",
+    pipeline="P-MEM-ROLL")
 reg(["lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn", "lgR120_abl_no_trans",
      "lgR120_abl_no_adapter", "lgR120_abl_bilinear", "lgR120_abl_trans4l",
      "lgR120_abl_trans6l"],
@@ -238,6 +244,9 @@ COMPARABLE_GROUPS = {
         "protocol": "120ep/pt20/bs8/lr2e-4",
         "members": ["lgR120_full", "lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all",
                     "lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4"] +
+                   [f"lgR120_pos_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
+                                                    "no_adapter", "bilinear", "trans4l",
+                                                    "trans6l")] +
                    [f"lgR120_abl_{s}" for s in ("no_emr", "no_ecsam", "no_fpn", "no_trans",
                                                 "no_adapter", "bilinear", "trans4l", "trans6l")],
         "note": "缺陷修复后的收敛协议组。120 轮的 OneCycle 退火终点与 60 轮不同, 故"

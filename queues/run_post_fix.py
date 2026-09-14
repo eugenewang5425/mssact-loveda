@@ -56,6 +56,9 @@ TAGS = (
      "lgR120_abl_no_emr", "lgR120_abl_no_ecsam", "lgR120_abl_no_fpn",
      "lgR120_abl_no_trans", "lgR120_abl_no_adapter", "lgR120_abl_bilinear",
      "lgR120_abl_trans4l", "lgR120_abl_trans6l",
+     "lgR120_pos_abl_no_emr", "lgR120_pos_abl_no_ecsam", "lgR120_pos_abl_no_fpn",
+     "lgR120_pos_abl_no_trans", "lgR120_pos_abl_no_adapter", "lgR120_pos_abl_bilinear",
+     "lgR120_pos_abl_trans4l", "lgR120_pos_abl_trans6l",
      # 已有有效缓存, 一并列入以保证 rigor.json 覆盖完整
      "full_all_v2", "nd_unet", "nd_fcn", "nd_deeplab", "nd_fpn_seg", "nd_swin_unet",
      "sd7_full", "sd2024_full", "sd31337_full",

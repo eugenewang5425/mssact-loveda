@@ -58,6 +58,9 @@ MUST_CONTAIN = [
     "5.6.13",                     # 修复的性能效果是负面的（第一轮实测）
     "过拟合假设已被推翻",           # 欠拟合而非过拟合的训练 loss 证据
     "非加性",                      # 两项修复合起来比单项更差
+    "5.6.14",                     # 修复后消融换底 + 数值发散
+    "有害的成分是跳连本身",         # H1/H2 双证伪后的稳健结论
+    "1.26e4",                     # 发散的确证证据（权重爆炸）
     # ---- 章节存在性 ----
     "5.6 架构有效性分析", "5.6.12", "5.7 随机种子噪声底线", "5.8 训练策略对比",
     "5.9 数据量阶梯", "5.10 预算攻击",
@@ -156,9 +159,13 @@ def main():
         return 2
     # 自检通过后才落盘；覆盖前备份旧 PDF（命名纪律: 覆盖前必备份）
     if os.path.exists(pdf):
-        bak = pdf[:-4] + "_bak_%s.pdf" % time.strftime("%Y%m%d_%H%M")
+        # 备份放 backups/（该目录已被 .gitignore 忽略），不要堆在 reports/ 里
+        bak_dir = os.path.join(os.path.dirname(pdf), "..", "backups")
+        os.makedirs(bak_dir, exist_ok=True)
+        bak = os.path.join(bak_dir, os.path.basename(pdf)[:-4]
+                           + "_bak_%s.pdf" % time.strftime("%Y%m%d_%H%M"))
         os.replace(pdf, bak)
-        print(f"   旧 PDF 已备份 -> {os.path.basename(bak)}")
+        print(f"   旧 PDF 已备份 -> backups/{os.path.basename(bak)}")
     os.replace(tmp_pdf, pdf)
     print("自检通过")
     print(f"输出   : {pdf}")

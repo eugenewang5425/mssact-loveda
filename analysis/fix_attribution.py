@@ -37,6 +37,7 @@ import paths
 
 BASE120 = "lgR120_full"          # 同调度基线
 BASE60 = "lgR_bs8_full_lr2e4"    # 仅作调度效应对照, 不可用于归因
+BASE_POS = "lgR120_fx_pos"       # 阶段 C 消融的底 (pos_enc=True, 0.6716)
 
 FIX_ROWS = [
     ("lgR120_full", "基线（无修复）", "—"),
@@ -48,6 +49,16 @@ DIAG_ROWS = [
     ("lgR120_fx_d2", "H1 判别：只融合 128²/64²（不做 256² 全分辨率融合）"),
     ("lgR120_fxskip_lr1e4", "H2 判别：修 skip + lr 降到 1e-4"),
     ("lgR120_fxall_lr1e4", "H2 判别：全修 + lr 降到 1e-4"),
+]
+POS_ABL_ROWS = [
+    ("lgR120_pos_abl_no_emr", "去掉 EMR（换标准残差块）"),
+    ("lgR120_pos_abl_no_ecsam", "去掉 ECSAM 坐标注意力"),
+    ("lgR120_pos_abl_no_fpn", "去掉 FPN"),
+    ("lgR120_pos_abl_no_trans", "去掉 Transformer"),
+    ("lgR120_pos_abl_no_adapter", "去掉 Adapter-Scale"),
+    ("lgR120_pos_abl_bilinear", "转置卷积 → 双线性上采样"),
+    ("lgR120_pos_abl_trans4l", "Transformer 层数 2 → 4"),
+    ("lgR120_pos_abl_trans6l", "Transformer 层数 2 → 6"),
 ]
 ABL_ROWS = [
     ("lgR120_abl_no_emr", "去掉 EMR（换标准残差块）"),
@@ -96,10 +107,15 @@ def summarise(tag):
     # 只看 n >= TARGET 会把"早停收敛"误判为未完成(lgR120_full 就是 best@91、跑了 111 轮),
     # 而把未完成的中间轮次拿去和基线比会得出"可分辨 -106σ"这类荒谬结论。
     complete = (n >= TARGET_EPOCHS) or (n >= best["epoch"] + PATIENCE - 1)
+    # 数值失效标记: 发散后退化为常量输出, 指标会**精确冻结**, 看起来像"停在较差的
+    # 平台"。若不标记, 会把发散当成模块效应的读数 —— lgR120_abl_no_ecsam 正是如此
+    # (loss 恒为 0.0, OA 精确恒定, best.pt 权重最大绝对值 1.26e4)。
+    n_zero_loss = sum(1 for r in h if r.get("loss") == 0.0)
     return dict(
         tag=tag, epochs_run=n, complete=bool(complete),
         kappa_best=round(float(best["kappa"]), 6), best_epoch=best["epoch"],
         kappa_final=round(float(ks[-1]), 6),
+        diverged=bool(n_zero_loss >= 3), n_zero_loss=n_zero_loss,
         # 收敛轮次是数据: 达到自身最优 90%/95%/99% 的轮次
         epoch_at_90pct=thresh_epoch(0.90),
         epoch_at_95pct=thresh_epoch(0.95),
@@ -155,6 +171,11 @@ def main():
         if s:
             s["desc"], s["config"] = desc, "判别实验"
         rows[tag] = s
+    for tag, desc in POS_ABL_ROWS:
+        s = summarise(tag)
+        if s:
+            s["desc"], s["config"] = desc, "底 = pos_enc=True (lgR120_fx_pos)"
+        rows[tag] = s
     for tag, desc in ABL_ROWS:
         s = summarise(tag)
         if s:
@@ -180,6 +201,15 @@ def main():
             b = load_boundary(tag)
             if b:
                 s["boundary"] = b
+    # 阶段 C 的消融相对**自己的底**(fx_pos), 而不是未修复基线 —— 底换了, 参照也要换
+    pbase = rows.get(BASE_POS)
+    if pbase:
+        for tag, s in rows.items():
+            if (not s or not s.get("complete") or tag == BASE_POS
+                    or "pos_abl" not in tag):
+                continue
+            s["delta_pos"] = round(s["kappa_best"] - pbase["kappa_best"], 6)
+            s["n_sigma_pos"] = round(s["delta_pos"] / sigma, 2)
 
     print("=" * 96)
     print("缺陷修复归因   σ_seed = %.4f (n=%d)   判别: |Δ| ≥ 2σ = %.4f 记为可分辨"
@@ -199,11 +229,14 @@ def main():
 
     for title, specs in (("阶段一：修复归因（对照 = 同为 120 轮的基线）", FIX_ROWS),
                          ("阶段 A：判别实验（H1 全分辨率融合 / H2 学习率）", DIAG_ROWS),
-                         ("阶段 B：修复后消融（底 = use_skip + pos_enc）", ABL_ROWS)):
+                         ("阶段 B：修复后消融（底 = use_skip + pos_enc，该底不稳定）", ABL_ROWS),
+                         ("阶段 C：修复后消融（底 = pos_enc，稳定且最优）", POS_ABL_ROWS)):
         print()
         print("--- %s ---" % title)
-        print("%-24s %8s %8s %9s %10s %-18s" % (
-            "tag", "K_best", "bestEp", "Δ(120轮)", "Δ/σ", "判定"))
+        is_c = title.startswith("阶段 C")
+        print("%-24s %8s %8s %12s %10s %-18s" % (
+            "tag", "K_best", "bestEp", "Δ(vs pos底)" if is_c else "Δ(120轮)",
+            "Δ/σ", "判定"))
         for tag, *_ in specs:
             s = rows.get(tag)
             if not s:
@@ -213,15 +246,31 @@ def main():
                 print("%-24s %8.4f %8s %9s %10s %s" % (
                     tag, s["kappa_best"], s["best_epoch"], "-", "-", "（基线）"))
                 continue
+            if tag == BASE_POS and is_c:
+                # 只在阶段 C 里显示为"底"; 在阶段一里它是有实测 Δ 的修复变体
+                print("%-24s %8.4f %8s %9s %10s %s" % (
+                    tag, s["kappa_best"], s["best_epoch"], "-", "-", "（pos 底）"))
+                continue
             if not s["complete"]:
                 print("%-24s %8.4f %8s %9s %10s %s" % (
                     tag, s["kappa_best"], s["best_epoch"], "-", "-",
                     "进行中(%d/%d 轮)" % (s["epochs_run"], TARGET_EPOCHS)))
                 continue
+            if s.get("diverged"):
+                # 发散后退化为常量输出, 指标精确冻结; 这种数字**不可**当作模块效应
+                print("%-24s %8.4f %8s %9s %10s %s" % (
+                    tag, s["kappa_best"], s["best_epoch"], "-", "-",
+                    "**发散(loss=0 共%d轮), 不可引用**" % s["n_zero_loss"]))
+                continue
+            d = s.get("delta_pos") if is_c else s.get("delta_120")
+            ns = s.get("n_sigma_pos") if is_c else s.get("n_sigma")
+            if d is None:
+                print("%-24s %8.4f %8s %9s %10s %s" % (
+                    tag, s["kappa_best"], s["best_epoch"], "-", "-", "无参照"))
+                continue
             print("%-24s %8.4f %8s %9s %10s %-18s" % (
                 tag, s["kappa_best"], s["best_epoch"],
-                "%+.4f" % s["delta_120"], "%+.2f" % s["n_sigma"],
-                grade(s["delta_120"], sigma)))
+                "%+.4f" % d, "%+.2f" % ns, grade(d, sigma)))
 
     # 收敛轮次表（用户要求: 收敛轮次本身是数据）
     print()
