@@ -43,7 +43,34 @@
    "delta_120": -0.015016,
    "delta_60_unusable": 0.018431,
    "desc": "修 D1+D2：跳连 + FPN 四级接入",
-   "config": "use_skip=True"
+   "config": "use_skip=True",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4535,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4851,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5271,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5762,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7169,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_fx_pos": {
    "tag": "lgR120_fx_pos",
@@ -62,7 +89,34 @@
    "delta_120": 0.006067,
    "delta_60_unusable": 0.039514,
    "desc": "修 D3：2D 正弦位置编码",
-   "config": "pos_enc=True"
+   "config": "pos_enc=True",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4592,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4928,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5372,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5893,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7305,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_fx_all": {
    "tag": "lgR120_fx_all",
@@ -81,7 +135,34 @@
    "delta_120": -0.032506,
    "delta_60_unusable": 0.000941,
    "desc": "三处全修",
-   "config": "use_skip=True, pos_enc=True"
+   "config": "use_skip=True, pos_enc=True",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4504,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.478,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.515,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5591,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.6988,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_fx_d2": {
    "tag": "lgR120_fx_d2",
@@ -100,7 +181,34 @@
    "delta_120": -0.018874,
    "delta_60_unusable": 0.014573,
    "desc": "H1 判别：只融合 128²/64²（不做 256² 全分辨率融合）",
-   "config": "判别实验"
+   "config": "判别实验",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4508,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4806,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5202,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5678,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7033,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_fxskip_lr1e4": {
    "tag": "lgR120_fxskip_lr1e4",
@@ -119,7 +227,34 @@
    "delta_120": -0.025999,
    "delta_60_unusable": 0.007448,
    "desc": "H2 判别：修 skip + lr 降到 1e-4",
-   "config": "判别实验"
+   "config": "判别实验",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4513,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4806,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5207,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5691,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7075,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_fxall_lr1e4": {
    "tag": "lgR120_fxall_lr1e4",
@@ -138,16 +273,419 @@
    "delta_120": -0.048494,
    "delta_60_unusable": -0.015047,
    "desc": "H2 判别：全修 + lr 降到 1e-4",
-   "config": "判别实验"
+   "config": "判别实验",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4458,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4735,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5108,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.555,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.6922,
+     "n": 115433613
+    }
+   }
   },
-  "lgR120_pos_abl_no_emr": null,
-  "lgR120_pos_abl_no_ecsam": null,
-  "lgR120_pos_abl_no_fpn": null,
-  "lgR120_pos_abl_no_trans": null,
-  "lgR120_pos_abl_no_adapter": null,
-  "lgR120_pos_abl_bilinear": null,
-  "lgR120_pos_abl_trans4l": null,
-  "lgR120_pos_abl_trans6l": null,
+  "lgR120_pos_abl_no_emr": {
+   "tag": "lgR120_pos_abl_no_emr",
+   "epochs_run": 114,
+   "complete": true,
+   "kappa_best": 0.664897,
+   "best_epoch": 94,
+   "kappa_final": 0.663627,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 46,
+   "epoch_at_95pct": 63,
+   "epoch_at_99pct": 90,
+   "sec_per_epoch": 41.3,
+   "n_sigma": -0.12,
+   "delta_120": -0.000595,
+   "delta_60_unusable": 0.032852,
+   "desc": "去掉 EMR（换标准残差块）",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4623,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4962,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5418,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5957,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7401,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.006662,
+   "n_sigma_pos": -1.33
+  },
+  "lgR120_pos_abl_no_ecsam": {
+   "tag": "lgR120_pos_abl_no_ecsam",
+   "epochs_run": 65,
+   "complete": true,
+   "kappa_best": 0.603652,
+   "best_epoch": 45,
+   "kappa_final": 0.0,
+   "diverged": true,
+   "n_zero_loss": 13,
+   "epoch_at_90pct": 27,
+   "epoch_at_95pct": 33,
+   "epoch_at_99pct": 45,
+   "sec_per_epoch": 38.2,
+   "n_sigma": -12.37,
+   "delta_120": -0.06184,
+   "delta_60_unusable": -0.028393,
+   "desc": "去掉 ECSAM 坐标注意力",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4379,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4614,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.495,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5383,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.6684,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.067907,
+   "n_sigma_pos": -13.58
+  },
+  "lgR120_pos_abl_no_fpn": {
+   "tag": "lgR120_pos_abl_no_fpn",
+   "epochs_run": 110,
+   "complete": true,
+   "kappa_best": 0.667918,
+   "best_epoch": 90,
+   "kappa_final": 0.658886,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 45,
+   "epoch_at_95pct": 71,
+   "epoch_at_99pct": 90,
+   "sec_per_epoch": 31.8,
+   "n_sigma": 0.49,
+   "delta_120": 0.002426,
+   "delta_60_unusable": 0.035873,
+   "desc": "去掉 FPN",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4656,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4997,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5449,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.599,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.739,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.003641,
+   "n_sigma_pos": -0.73
+  },
+  "lgR120_pos_abl_no_trans": {
+   "tag": "lgR120_pos_abl_no_trans",
+   "epochs_run": 120,
+   "complete": true,
+   "kappa_best": 0.659963,
+   "best_epoch": 116,
+   "kappa_final": 0.655426,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 41,
+   "epoch_at_95pct": 57,
+   "epoch_at_99pct": 94,
+   "sec_per_epoch": 29.7,
+   "n_sigma": -1.11,
+   "delta_120": -0.005529,
+   "delta_60_unusable": 0.027918,
+   "desc": "去掉 Transformer",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4541,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4841,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5248,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5745,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7146,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.011596,
+   "n_sigma_pos": -2.32
+  },
+  "lgR120_pos_abl_no_adapter": {
+   "tag": "lgR120_pos_abl_no_adapter",
+   "epochs_run": 117,
+   "complete": true,
+   "kappa_best": 0.670433,
+   "best_epoch": 97,
+   "kappa_final": 0.663217,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 41,
+   "epoch_at_95pct": 65,
+   "epoch_at_99pct": 96,
+   "sec_per_epoch": 45.0,
+   "n_sigma": 0.99,
+   "delta_120": 0.004941,
+   "delta_60_unusable": 0.038388,
+   "desc": "去掉 Adapter-Scale",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4615,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4966,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5434,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5982,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7405,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.001126,
+   "n_sigma_pos": -0.23
+  },
+  "lgR120_pos_abl_bilinear": {
+   "tag": "lgR120_pos_abl_bilinear",
+   "epochs_run": 120,
+   "complete": true,
+   "kappa_best": 0.664339,
+   "best_epoch": 110,
+   "kappa_final": 0.660113,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 40,
+   "epoch_at_95pct": 55,
+   "epoch_at_99pct": 100,
+   "sec_per_epoch": 35.0,
+   "n_sigma": -0.23,
+   "delta_120": -0.001153,
+   "delta_60_unusable": 0.032294,
+   "desc": "转置卷积 → 双线性上采样",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4621,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4969,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5428,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5953,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.735,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.00722,
+   "n_sigma_pos": -1.44
+  },
+  "lgR120_pos_abl_trans4l": {
+   "tag": "lgR120_pos_abl_trans4l",
+   "epochs_run": 120,
+   "complete": true,
+   "kappa_best": 0.672763,
+   "best_epoch": 113,
+   "kappa_final": 0.664631,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 39,
+   "epoch_at_95pct": 68,
+   "epoch_at_99pct": 96,
+   "sec_per_epoch": 47.1,
+   "n_sigma": 1.45,
+   "delta_120": 0.007271,
+   "delta_60_unusable": 0.040718,
+   "desc": "Transformer 层数 2 → 4",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.461,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4959,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5419,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5957,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7373,
+     "n": 115433613
+    }
+   },
+   "delta_pos": 0.001204,
+   "n_sigma_pos": 0.24
+  },
+  "lgR120_pos_abl_trans6l": {
+   "tag": "lgR120_pos_abl_trans6l",
+   "epochs_run": 120,
+   "complete": true,
+   "kappa_best": 0.670426,
+   "best_epoch": 113,
+   "kappa_final": 0.666104,
+   "diverged": false,
+   "n_zero_loss": 0,
+   "epoch_at_90pct": 46,
+   "epoch_at_95pct": 59,
+   "epoch_at_99pct": 91,
+   "sec_per_epoch": 51.6,
+   "n_sigma": 0.99,
+   "delta_120": 0.004934,
+   "delta_60_unusable": 0.038381,
+   "desc": "Transformer 层数 2 → 6",
+   "config": "底 = pos_enc=True (lgR120_fx_pos)",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4627,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4977,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5435,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5971,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7409,
+     "n": 115433613
+    }
+   },
+   "delta_pos": -0.001133,
+   "n_sigma_pos": -0.23
+  },
   "lgR120_abl_no_emr": {
    "tag": "lgR120_abl_no_emr",
    "epochs_run": 112,
@@ -165,7 +703,34 @@
    "delta_120": -0.005456,
    "delta_60_unusable": 0.027991,
    "desc": "去掉 EMR（换标准残差块）",
-   "config": "use_skip+pos_enc + no_emr"
+   "config": "use_skip+pos_enc + no_emr",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.4627,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.4976,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.5427,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.5938,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.7299,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_abl_no_ecsam": {
    "tag": "lgR120_abl_no_ecsam",
@@ -184,7 +749,34 @@
    "delta_120": -0.199749,
    "delta_60_unusable": -0.166302,
    "desc": "去掉 ECSAM 坐标注意力",
-   "config": "use_skip+pos_enc + no_ecsam"
+   "config": "use_skip+pos_enc + no_ecsam",
+   "boundary": {
+    "0 (边界像素)": {
+     "frac": 0.02362,
+     "oa": 0.3534,
+     "n": 3478241
+    },
+    "1-2": {
+     "frac": 0.05338,
+     "oa": 0.3727,
+     "n": 7860438
+    },
+    "3-4": {
+     "frac": 0.05167,
+     "oa": 0.3974,
+     "n": 7609482
+    },
+    "5-8": {
+     "frac": 0.08747,
+     "oa": 0.4211,
+     "n": 12881887
+    },
+    ">8 (内部)": {
+     "frac": 0.78386,
+     "oa": 0.4707,
+     "n": 115433613
+    }
+   }
   },
   "lgR120_abl_no_fpn": {
    "tag": "lgR120_abl_no_fpn",
