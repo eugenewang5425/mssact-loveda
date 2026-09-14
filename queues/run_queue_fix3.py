@@ -190,7 +190,9 @@ def post_steps():
             py = c
     out = os.path.join(paths.LOGS, "queue_fix3_post.log")
     with open(out, "a", encoding="utf-8") as fh:
-        rc = subprocess.run([py, "-u", os.path.join(_HERE, "run_post_fix.py")],
+        # 传入自身 PID: run_post_fix 的互斥检查否则会把本队列当成"还在训练"而拒绝启动
+        rc = subprocess.run([py, "-u", os.path.join(_HERE, "run_post_fix.py"),
+                             "--parent-pid", str(os.getpid())],
                             cwd=BASE, stdout=fh, stderr=subprocess.STDOUT,
                             **_no_window_kwargs()).returncode
     log("run_post_fix exit=%d -> %s" % (rc, os.path.basename(out)))

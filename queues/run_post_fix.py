@@ -108,8 +108,15 @@ def backup_consensus():
 
 
 def main():
-    if queues_running():
-        log("仍有 run_queue* 在运行, 拒绝开始 (推理会与训练争显存)")
+    import argparse
+    ap = argparse.ArgumentParser()
+    # 由训练队列调用时传自己的 PID: 否则互斥检查会把父队列当成"还在训练"而拒绝启动
+    ap.add_argument("--parent-pid", type=int, default=None,
+                    help="调用本脚本的队列 PID, 从互斥检查中排除")
+    a = ap.parse_args()
+    excl = (a.parent_pid,) if a.parent_pid else ()
+    if queues_running(exclude_pids=excl):
+        log("仍有其他 run_queue* 在运行, 拒绝开始 (推理会与训练争显存)")
         raise SystemExit(1)
     backup_consensus()
 

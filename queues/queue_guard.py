@@ -43,9 +43,16 @@ def _no_window_kwargs():
     return kw
 
 
-def queues_running(marker="run_queue"):
-    """是否有其他含 marker 的 python 进程在跑（排除自身 PID）"""
+def queues_running(marker="run_queue", exclude_pids=()):
+    """是否有其他含 marker 的 python 进程在跑（排除自身 PID 与 exclude_pids）
+
+    exclude_pids 的用途: 队列 A 在结束时调用 run_post_fix, 而 run_post_fix 的互斥
+    检查会把 A 自己（命令行含 "run_queue"）当成"还在训练"从而拒绝启动 —— 实测
+    `run_post_fix exit=1`, 日志"仍有 run_queue* 在运行"。故调用方把自己的 PID 传进来
+    排除掉, 保护逻辑本身不变（其他任何 run_queue 进程仍会拦住它）。
+    """
     my_pid = os.getpid()
+    excl = set(int(p) for p in exclude_pids) | {my_pid}
     try:
         r = subprocess.run(
             ["powershell", "-NoProfile", "-Command",
@@ -56,7 +63,7 @@ def queues_running(marker="run_queue"):
             if marker not in line:
                 continue
             pid = line.split(",")[0].strip('"')
-            if pid.isdigit() and int(pid) != my_pid:
+            if pid.isdigit() and int(pid) not in excl:
                 return True
         return False
     except Exception:
