@@ -11,7 +11,13 @@
     "lgR_bs8_full_lr2e4": 0.632,
     "sd7_full": 0.6412,
     "sd2024_full": 0.6318,
-    "sd31337_full": 0.6399
+    "sd31337_full": 0.6399,
+    "sd1234_full": null,
+    "sd5555_full": null,
+    "sd8888_full": null,
+    "sd31415_full": null,
+    "sd27182_full": null,
+    "sd9999_full": null
    }
   },
   "DeepLabV3+ (P-MEM-ROLL)": {
@@ -24,7 +30,13 @@
    "members": {
     "sd7_deeplab": 0.6961,
     "sd2024_deeplab": 0.6939,
-    "sd31337_deeplab": 0.6895
+    "sd31337_deeplab": 0.6895,
+    "sd1234_deeplab": null,
+    "sd5555_deeplab": null,
+    "sd8888_deeplab": null,
+    "sd31415_deeplab": null,
+    "sd27182_deeplab": null,
+    "sd9999_deeplab": null
    }
   },
   "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
