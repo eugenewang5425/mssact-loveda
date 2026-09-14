@@ -124,6 +124,11 @@ TAG_CFG = {
     "lgR120_abl_trans6l": (_LIGHT, dict(use_skip=True, pos_enc=True, transformer_layers=6)),
 }
 
+# ---- 种子扩展 (2026-09-15): n=4→10 / n=3→9 ----
+for _s in (1234, 5555, 8888, 31415, 27182, 9999):
+    TAG_CFG["sd%d_full" % _s] = (_LIGHT, {})
+    TAG_CFG["sd%d_deeplab" % _s] = ("deeplab", {})
+
 # 允许按前缀批量登记同一配置(如 lgR_fx_lr1e4 这类探索性 tag), 避免每次实验都要改本文件
 PREFIX_FALLBACK = ()
 

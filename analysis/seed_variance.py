@@ -47,9 +47,12 @@ CKPT = paths.CKPT
 GROUPS = {
     "完整模型 MSSACT (P-MEM-ROLL)": [
         ("lgR_bs8_full_lr2e4", 42), ("sd7_full", 7), ("sd2024_full", 2024),
-        ("sd31337_full", 31337)],
+        ("sd31337_full", 31337)] + [
+        # 2026-09-15 种子扩展: n=4 -> 10 (GEO-Bench 建议 >=10)
+        ("sd%d_full" % s, s) for s in (1234, 5555, 8888, 31415, 27182, 9999)],
     "DeepLabV3+ (P-MEM-ROLL)": [
-        ("sd7_deeplab", 7), ("sd2024_deeplab", 2024), ("sd31337_deeplab", 31337)],
+        ("sd7_deeplab", 7), ("sd2024_deeplab", 2024), ("sd31337_deeplab", 31337)] + [
+        ("sd%d_deeplab" % s, s) for s in (1234, 5555, 8888, 31415, 27182, 9999)],
     "参照: 完整模型/DeepLab 的 P-PNG 单次结果": [
         ("full_all_v2", 42), ("nd_deeplab", 42)],
 }
@@ -185,8 +188,9 @@ def main():
         rigor_p = _os2.path.join(paths.CONSENSUS, "rigor.json")
         if _os2.path.exists(rigor_p):
             _r = json.load(open(rigor_p, encoding="utf-8"))["results"]
-            _grp = [("lgR_bs8_full_lr2e4", 42), ("sd7_full", 7),
-                    ("sd2024_full", 2024), ("sd31337_full", 31337)]
+            _grp = ([("lgR_bs8_full_lr2e4", 42), ("sd7_full", 7),
+                     ("sd2024_full", 2024), ("sd31337_full", 31337)] +
+                    [("sd%d_full" % s, s) for s in (1234, 5555, 8888, 31415, 27182, 9999)])
             _v = [(t, s, _r[t]["kappa_pooled"]) for t, s in _grp if t in _r]
             if len(_v) >= 2:
                 import statistics as _st

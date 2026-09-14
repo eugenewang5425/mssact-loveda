@@ -192,13 +192,17 @@ reg(["lgR_c256_center", "lgR_c384_rand", "lgR_c512_rand"],
     "lgR-roll/裁剪策略", "queues/run_queue_crop.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
     "裁剪尺度与随机/中心裁剪; **裁剪边长改变即改变协议**, 不可并入 G2 比较",
     pipeline="P-MEM-ROLL")
-reg(["sd7_full", "sd2024_full", "sd31337_full"],
-    "lgR-roll/种子方差(完整模型)", "queues/run_queue_final.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
-    "sigma_seed 的实测来源 (n=4, 并入 seed=42 的 lgR_bs8_full_lr2e4)",
+reg(["sd7_full", "sd2024_full", "sd31337_full"] +
+    ["sd%d_full" % s for s in (1234, 5555, 8888, 31415, 27182, 9999)],
+    "lgR-roll/种子方差(完整模型)", "queues/run_queue_final.py / queues/run_queue_seeds.py",
+    "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
     pipeline="P-MEM-ROLL")
-reg(["sd7_deeplab", "sd2024_deeplab", "sd31337_deeplab"],
-    "lgR-roll/种子方差(DeepLab)", "queues/run_queue_final.py", "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
-    "DeepLabV3+ 种子方差; 注意其主干为 ImageNet 预训练, 见 deeplab 预训练混淆",
+reg(["sd7_deeplab", "sd2024_deeplab", "sd31337_deeplab"] +
+    ["sd%d_deeplab" % s for s in (1234, 5555, 8888, 31415, 27182, 9999)],
+    "lgR-roll/种子方差(DeepLab)", "queues/run_queue_final.py / queues/run_queue_seeds.py",
+    "DATA_NEWSPLIT2", 60, 20, 8, 2e-4,
+    "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
     pipeline="P-MEM-ROLL")
 
 # ---- 废弃/失败运行 (保留记录, 明确不可引用) ----

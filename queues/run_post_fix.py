@@ -62,7 +62,10 @@ TAGS = (
      # 已有有效缓存, 一并列入以保证 rigor.json 覆盖完整
      "full_all_v2", "nd_unet", "nd_fcn", "nd_deeplab", "nd_fpn_seg", "nd_swin_unet",
      "sd7_full", "sd2024_full", "sd31337_full",
-     "sd7_deeplab", "sd2024_deeplab", "sd31337_deeplab"])
+     "sd7_deeplab", "sd2024_deeplab", "sd31337_deeplab",
+     "sd1234_full", "sd5555_full", "sd8888_full", "sd31415_full", "sd27182_full",
+     "sd9999_full", "sd1234_deeplab", "sd5555_deeplab", "sd8888_deeplab",
+     "sd31415_deeplab", "sd27182_deeplab", "sd9999_deeplab"])
 
 
 def log(msg):

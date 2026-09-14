@@ -1,0 +1,109 @@
+{
+ "note": "协议解剖: 两协议窗口均为 256²; 差异因子 = 图像集(F1)/覆盖率(F2)/混合(F3)/窗口尺度(F4)。臂定义见模块 docstring。",
+ "arms": {
+  "A": "val 4角patch(原值=history best)",
+  "B": "test_clean 4角patch(复刻val)",
+  "C": "test_clean 256²网格stride256无混合",
+  "D": "test_clean 滑窗+高斯(=现整图协议,取自rigor.json)",
+  "E": "test_clean 512²窗口stride256+高斯"
+ },
+ "metric": "pooled Kappa (eval_rigor.pooled_kappa, 与报告同口径)",
+ "ref": "full_all_v2",
+ "rows": {
+  "full_all_v2": {
+   "A_val_corner": 0.6312448395511953,
+   "B_test_corner": 0.558995,
+   "C_test_dense_noblend": 0.56461,
+   "D_test_slide_blend": 0.577442,
+   "E_test_win512": 0.580471
+  },
+  "nd_abl_no_emr": {
+   "A_val_corner": 0.6355462462089883,
+   "B_test_corner": 0.554536,
+   "C_test_dense_noblend": 0.558457,
+   "D_test_slide_blend": 0.572567,
+   "E_test_win512": 0.580977
+  },
+  "nd_abl_no_ecsam": {
+   "A_val_corner": 0.6271705254143373,
+   "B_test_corner": 0.530746,
+   "C_test_dense_noblend": 0.539239,
+   "D_test_slide_blend": 0.551287,
+   "E_test_win512": 0.556336
+  },
+  "nd_abl_no_fpn": {
+   "A_val_corner": 0.6313954500582187,
+   "B_test_corner": 0.544805,
+   "C_test_dense_noblend": 0.556235,
+   "D_test_slide_blend": 0.571075,
+   "E_test_win512": 0.57745
+  },
+  "nd_abl_bilinear": {
+   "A_val_corner": 0.6368788831025747,
+   "B_test_corner": 0.550985,
+   "C_test_dense_noblend": 0.55319,
+   "D_test_slide_blend": 0.568456,
+   "E_test_win512": 0.57522
+  },
+  "nd_abl_no_trans": {
+   "A_val_corner": 0.6301796179030393,
+   "B_test_corner": 0.542199,
+   "C_test_dense_noblend": 0.544809,
+   "D_test_slide_blend": 0.557282,
+   "E_test_win512": 0.559857
+  }
+ },
+ "variants": {
+  "nd_abl_no_emr": {
+   "deltas": {
+    "A_val_corner": 0.004301,
+    "B_test_corner": -0.004459,
+    "C_test_dense_noblend": -0.006153,
+    "D_test_slide_blend": -0.004875,
+    "E_test_win512": 0.000506
+   },
+   "verdict": "评估流程驱动(ΔB≈ΔD)"
+  },
+  "nd_abl_no_ecsam": {
+   "deltas": {
+    "A_val_corner": -0.004074,
+    "B_test_corner": -0.028249,
+    "C_test_dense_noblend": -0.025371,
+    "D_test_slide_blend": -0.026155,
+    "E_test_win512": -0.024135
+   },
+   "verdict": "评估流程驱动(ΔB≈ΔD)"
+  },
+  "nd_abl_no_fpn": {
+   "deltas": {
+    "A_val_corner": 0.000151,
+    "B_test_corner": -0.01419,
+    "C_test_dense_noblend": -0.008375,
+    "D_test_slide_blend": -0.006367,
+    "E_test_win512": -0.003021
+   },
+   "verdict": "评估流程驱动(ΔB≈ΔD)"
+  },
+  "nd_abl_bilinear": {
+   "deltas": {
+    "A_val_corner": 0.005634,
+    "B_test_corner": -0.00801,
+    "C_test_dense_noblend": -0.01142,
+    "D_test_slide_blend": -0.008986,
+    "E_test_win512": -0.005251
+   },
+   "verdict": "评估流程驱动(ΔB≈ΔD)"
+  },
+  "nd_abl_no_trans": {
+   "deltas": {
+    "A_val_corner": -0.001065,
+    "B_test_corner": -0.016796,
+    "C_test_dense_noblend": -0.019801,
+    "D_test_slide_blend": -0.02016,
+    "E_test_win512": -0.020614
+   },
+   "verdict": "评估流程驱动(ΔB≈ΔD)"
+  }
+ },
+ "reading_rule": "ΔB≈ΔA → 图像集驱动; ΔB≈ΔD → 评估流程驱动; C vs D → 混合作用; E vs D → 窗口尺度作用"
+}
