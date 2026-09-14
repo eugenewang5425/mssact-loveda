@@ -61,6 +61,7 @@ MUST_CONTAIN = [
     "5.6.14",                     # 修复后消融换底 + 数值发散
     "有害的成分是跳连本身",         # H1/H2 双证伪后的稳健结论
     "1.26e4",                     # 发散的确证证据（权重爆炸）
+    "一条被推翻的归因",             # DeepLab +0.0720 曾驱动出实测有害的跳连改动
     # ---- 章节存在性 ----
     "5.6 架构有效性分析", "5.6.12", "5.7 随机种子噪声底线", "5.8 训练策略对比",
     "5.9 数据量阶梯", "5.10 预算攻击",
@@ -72,6 +73,18 @@ def find_browser():
         if os.path.exists(c):
             return c
     return None
+
+
+def _kill_tree(pid):
+    """只杀本脚本启动的那棵进程树（其 user-data-dir 唯一, 不会影响用户的 Chrome）"""
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)],
+                           capture_output=True, timeout=30)
+        else:
+            os.kill(pid, 15)
+    except Exception:
+        pass
 
 
 def main():
@@ -107,19 +120,36 @@ def main():
     cmd = [br, "--headless=new", "--disable-gpu", f"--user-data-dir={udd}",
            "--no-first-run", "--no-pdf-header-footer",
            f"--print-to-pdf={tmp_pdf}", uri]
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=CHROME_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        print("Chrome 超时 (%ds)。报告约 42 页且内嵌全部图片, 训练同时运行时 CPU "
-              "紧张会明显变慢 (实测 124s, 偶发 >300s); 可调大 CHROME_TIMEOUT。"
-              "另请确认 user-data-dir 可写：" % CHROME_TIMEOUT)
+    # 不依赖 Chrome 退出：实测它常常**写完 PDF 却不退出**（headless 的已知行为），
+    # 于是 subprocess.run 一直等到超时，而结果其实已经完整落盘 (3.1MB)。
+    # 旧写法因此把好端端的 PDF 扔掉、报"超时"—— 之前几次成功只是碰巧它退出了。
+    # 改为轮询输出文件：出现且大小连续两次探测不变即认为写完，随后只杀我们自己
+    # 启动的那棵进程树（有唯一 user-data-dir，不会碰到用户的 Chrome）。
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    t0 = time.time()
+    last_size, stable = -1, 0
+    while time.time() - t0 < CHROME_TIMEOUT:
+        if os.path.exists(tmp_pdf):
+            cur = os.path.getsize(tmp_pdf)
+            if cur > 0 and cur == last_size:
+                stable += 1
+                if stable >= 2:            # 连续两次(约 6s)不变 -> 写完
+                    break
+            else:
+                stable = 0
+            last_size = cur
+        time.sleep(3)
+    else:
+        print("Chrome 在 %ds 内未写出 PDF。请确认 user-data-dir 可写：" % CHROME_TIMEOUT)
         print(f"  {udd}")
+        _kill_tree(proc.pid)
         raise SystemExit(1)
-    if not os.path.exists(tmp_pdf):
-        print("Chrome 未产出 PDF，stderr:")
-        print(r.stderr[-2000:])
+    _kill_tree(proc.pid)
+    if not os.path.exists(tmp_pdf) or os.path.getsize(tmp_pdf) == 0:
+        print("Chrome 未产出 PDF")
         raise SystemExit(1)
     size = os.path.getsize(tmp_pdf)
+    print(f"渲染   : {size:,} bytes ({time.time()-t0:.0f}s; 按文件写稳定判定，不依赖 Chrome 退出)")
 
     # 自检
     from pypdf import PdfReader
