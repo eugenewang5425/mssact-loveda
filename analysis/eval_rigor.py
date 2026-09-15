@@ -253,17 +253,34 @@ def main():
             cms[tag].append(conf_mat(pred[i], labels[i]))
             accumulate_bands(pred[i], labels[i], dists[i], valids[i], bandacc)
         ks = np.array(ks); oas = np.array(oas)
-        ious = np.array(ious)                      # (n_img, 7)
-        mean_iou = np.nanmean(ious, 0)             # 逐类 mIoU
+        ious = np.array(ious)                      # (n_img, 7) 逐图逐类 IoU
+        miou_img_mean = np.nanmean(ious, 0)        # 逐类「逐图平均」IoU（旧口径）
         cm = np.array(cms[tag])
+        # ---- 标准 pooled mIoU（2026-09-15 更正）----
+        # 此前把 `miou_pooled` 实现成了「逐图算每类 IoU 再对图平均」，**名实不符且非标准**：
+        # 逐图 IoU 在类别像素数很少时极不稳定（一个错像素即可把该类 IoU 压到 0），
+        # 对图平均后被系统性拉低。实测同一批预测：标准 pooled 0.5383 vs 逐图平均 0.3327，
+        # **相差 0.2057**——报告因此长期低估自己的 mIoU 约 21 个点。
+        # 标准口径（FCN/DeepLab/LoveDA 排行榜一致）：先汇总全数据集的混淆矩阵，
+        # 再逐类算 IoU，最后对类取平均。
+        _CM = cm.sum(0).astype(np.float64)
+        _inter = np.diag(_CM)
+        _union = _CM.sum(0) + _CM.sum(1) - _inter
+        per_class_iou = np.where(_union > 0, _inter / np.maximum(_union, 1), np.nan)
         res[tag] = dict(
             source=src,
             kappa_pooled=round(float(pooled_kappa(cm)), 6),
             kappa_img_mean=round(float(np.nanmean(ks)), 6),
             oa_img_mean=round(float(np.nanmean(oas)), 6),
-            miou_pooled=round(float(np.nanmean(mean_iou)), 6),
-            per_class_iou=[None if np.isnan(v) else round(float(v), 4) for v in mean_iou],
-            miou_no_barren=round(float(np.nanmean(np.delete(mean_iou, 4))), 6),
+            oa_pooled=round(float(np.trace(cm.sum(0)) / cm.sum()), 6),
+            miou_pooled=round(float(np.nanmean(per_class_iou)), 6),
+            per_class_iou=[None if np.isnan(v) else round(float(v), 4)
+                           for v in per_class_iou],
+            miou_no_barren=round(float(np.nanmean(np.delete(per_class_iou, 4))), 6),
+            # 旧的非标准口径, 保留字段以便与历史记录对照, 但**不应再作为 mIoU 引用**
+            miou_img_mean=round(float(np.nanmean(miou_img_mean)), 6),
+            miou_def_note=("miou_pooled = 标准口径(汇总混淆矩阵后逐类 IoU 再平均); "
+                           "miou_img_mean = 旧的逐图平均口径, 系统性偏低约 0.20, 勿引用"),
         )
         per_img[tag] = dict(kappa=ks.tolist(), oa=oas.tolist(),
                             iou=ious.tolist())
