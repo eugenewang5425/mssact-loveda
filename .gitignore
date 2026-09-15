@@ -59,6 +59,8 @@ results/artifacts/bench_*.json
 reports/项目报告_*.html
 reports/项目报告.pdf
 项目报告.pdf
+# 审核过程的派生产物（文本层提取，可再生；审核结论保留在 docs/报告审核_*.md）
+reports/_report_text.txt
 # 备份产物一律不入库（约定放 backups/，该目录本身已在上方忽略）
 # 这三条是兜底：曾因"没有规则覆盖 .bak"而被 git add -A 扫进仓库
 *.bak
