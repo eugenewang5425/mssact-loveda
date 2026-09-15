@@ -1,6 +1,6 @@
 {
- "sigma_seed": 0.005,
- "sigma_seed_n_runs": 4,
+ "sigma_seed": 0.0042,
+ "sigma_seed_n_runs": 10,
  "target_epochs": 120,
  "base_120": "lgR120_full",
  "base_60_reference_only": "lgR_bs8_full_lr2e4",
@@ -39,7 +39,7 @@
    "epoch_at_95pct": 58,
    "epoch_at_99pct": 103,
    "sec_per_epoch": 54.6,
-   "n_sigma": -3.0,
+   "n_sigma": -3.58,
    "delta_120": -0.015016,
    "delta_60_unusable": 0.018431,
    "desc": "修 D1+D2：跳连 + FPN 四级接入",
@@ -85,7 +85,7 @@
    "epoch_at_95pct": 68,
    "epoch_at_99pct": 94,
    "sec_per_epoch": 46.6,
-   "n_sigma": 1.21,
+   "n_sigma": 1.44,
    "delta_120": 0.006067,
    "delta_60_unusable": 0.039514,
    "desc": "修 D3：2D 正弦位置编码",
@@ -131,7 +131,7 @@
    "epoch_at_95pct": 41,
    "epoch_at_99pct": 62,
    "sec_per_epoch": 54.9,
-   "n_sigma": -6.5,
+   "n_sigma": -7.74,
    "delta_120": -0.032506,
    "delta_60_unusable": 0.000941,
    "desc": "三处全修",
@@ -177,7 +177,7 @@
    "epoch_at_95pct": 55,
    "epoch_at_99pct": 93,
    "sec_per_epoch": 54.2,
-   "n_sigma": -3.77,
+   "n_sigma": -4.49,
    "delta_120": -0.018874,
    "delta_60_unusable": 0.014573,
    "desc": "H1 判别：只融合 128²/64²（不做 256² 全分辨率融合）",
@@ -223,7 +223,7 @@
    "epoch_at_95pct": 58,
    "epoch_at_99pct": 86,
    "sec_per_epoch": 49.6,
-   "n_sigma": -5.2,
+   "n_sigma": -6.19,
    "delta_120": -0.025999,
    "delta_60_unusable": 0.007448,
    "desc": "H2 判别：修 skip + lr 降到 1e-4",
@@ -269,7 +269,7 @@
    "epoch_at_95pct": 52,
    "epoch_at_99pct": 62,
    "sec_per_epoch": 48.5,
-   "n_sigma": -9.7,
+   "n_sigma": -11.55,
    "delta_120": -0.048494,
    "delta_60_unusable": -0.015047,
    "desc": "H2 判别：全修 + lr 降到 1e-4",
@@ -315,7 +315,7 @@
    "epoch_at_95pct": 63,
    "epoch_at_99pct": 90,
    "sec_per_epoch": 41.3,
-   "n_sigma": -0.12,
+   "n_sigma": -0.14,
    "delta_120": -0.000595,
    "delta_60_unusable": 0.032852,
    "desc": "去掉 EMR（换标准残差块）",
@@ -348,7 +348,7 @@
     }
    },
    "delta_pos": -0.006662,
-   "n_sigma_pos": -1.33
+   "n_sigma_pos": -1.59
   },
   "lgR120_pos_abl_no_ecsam": {
    "tag": "lgR120_pos_abl_no_ecsam",
@@ -363,7 +363,7 @@
    "epoch_at_95pct": 33,
    "epoch_at_99pct": 45,
    "sec_per_epoch": 38.2,
-   "n_sigma": -12.37,
+   "n_sigma": -14.72,
    "delta_120": -0.06184,
    "delta_60_unusable": -0.028393,
    "desc": "去掉 ECSAM 坐标注意力",
@@ -396,7 +396,7 @@
     }
    },
    "delta_pos": -0.067907,
-   "n_sigma_pos": -13.58
+   "n_sigma_pos": -16.17
   },
   "lgR120_pos_abl_no_fpn": {
    "tag": "lgR120_pos_abl_no_fpn",
@@ -411,7 +411,7 @@
    "epoch_at_95pct": 71,
    "epoch_at_99pct": 90,
    "sec_per_epoch": 31.8,
-   "n_sigma": 0.49,
+   "n_sigma": 0.58,
    "delta_120": 0.002426,
    "delta_60_unusable": 0.035873,
    "desc": "去掉 FPN",
@@ -444,7 +444,7 @@
     }
    },
    "delta_pos": -0.003641,
-   "n_sigma_pos": -0.73
+   "n_sigma_pos": -0.87
   },
   "lgR120_pos_abl_no_trans": {
    "tag": "lgR120_pos_abl_no_trans",
@@ -459,7 +459,7 @@
    "epoch_at_95pct": 57,
    "epoch_at_99pct": 94,
    "sec_per_epoch": 29.7,
-   "n_sigma": -1.11,
+   "n_sigma": -1.32,
    "delta_120": -0.005529,
    "delta_60_unusable": 0.027918,
    "desc": "去掉 Transformer",
@@ -492,7 +492,7 @@
     }
    },
    "delta_pos": -0.011596,
-   "n_sigma_pos": -2.32
+   "n_sigma_pos": -2.76
   },
   "lgR120_pos_abl_no_adapter": {
    "tag": "lgR120_pos_abl_no_adapter",
@@ -507,7 +507,7 @@
    "epoch_at_95pct": 65,
    "epoch_at_99pct": 96,
    "sec_per_epoch": 45.0,
-   "n_sigma": 0.99,
+   "n_sigma": 1.18,
    "delta_120": 0.004941,
    "delta_60_unusable": 0.038388,
    "desc": "去掉 Adapter-Scale",
@@ -540,7 +540,7 @@
     }
    },
    "delta_pos": -0.001126,
-   "n_sigma_pos": -0.23
+   "n_sigma_pos": -0.27
   },
   "lgR120_pos_abl_bilinear": {
    "tag": "lgR120_pos_abl_bilinear",
@@ -555,7 +555,7 @@
    "epoch_at_95pct": 55,
    "epoch_at_99pct": 100,
    "sec_per_epoch": 35.0,
-   "n_sigma": -0.23,
+   "n_sigma": -0.27,
    "delta_120": -0.001153,
    "delta_60_unusable": 0.032294,
    "desc": "转置卷积 → 双线性上采样",
@@ -588,7 +588,7 @@
     }
    },
    "delta_pos": -0.00722,
-   "n_sigma_pos": -1.44
+   "n_sigma_pos": -1.72
   },
   "lgR120_pos_abl_trans4l": {
    "tag": "lgR120_pos_abl_trans4l",
@@ -603,7 +603,7 @@
    "epoch_at_95pct": 68,
    "epoch_at_99pct": 96,
    "sec_per_epoch": 47.1,
-   "n_sigma": 1.45,
+   "n_sigma": 1.73,
    "delta_120": 0.007271,
    "delta_60_unusable": 0.040718,
    "desc": "Transformer 层数 2 → 4",
@@ -636,7 +636,7 @@
     }
    },
    "delta_pos": 0.001204,
-   "n_sigma_pos": 0.24
+   "n_sigma_pos": 0.29
   },
   "lgR120_pos_abl_trans6l": {
    "tag": "lgR120_pos_abl_trans6l",
@@ -651,7 +651,7 @@
    "epoch_at_95pct": 59,
    "epoch_at_99pct": 91,
    "sec_per_epoch": 51.6,
-   "n_sigma": 0.99,
+   "n_sigma": 1.17,
    "delta_120": 0.004934,
    "delta_60_unusable": 0.038381,
    "desc": "Transformer 层数 2 → 6",
@@ -684,7 +684,7 @@
     }
    },
    "delta_pos": -0.001133,
-   "n_sigma_pos": -0.23
+   "n_sigma_pos": -0.27
   },
   "lgR120_abl_no_emr": {
    "tag": "lgR120_abl_no_emr",
@@ -699,7 +699,7 @@
    "epoch_at_95pct": 65,
    "epoch_at_99pct": 92,
    "sec_per_epoch": 48.5,
-   "n_sigma": -1.09,
+   "n_sigma": -1.3,
    "delta_120": -0.005456,
    "delta_60_unusable": 0.027991,
    "desc": "去掉 EMR（换标准残差块）",
@@ -745,7 +745,7 @@
    "epoch_at_95pct": 17,
    "epoch_at_99pct": 19,
    "sec_per_epoch": 51.4,
-   "n_sigma": -39.95,
+   "n_sigma": -47.56,
    "delta_120": -0.199749,
    "delta_60_unusable": -0.166302,
    "desc": "去掉 ECSAM 坐标注意力",

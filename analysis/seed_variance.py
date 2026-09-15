@@ -50,10 +50,17 @@ GROUPS = {
         ("sd31337_full", 31337)] + [
         # 2026-09-15 种子扩展: n=4 -> 10 (GEO-Bench 建议 >=10)
         ("sd%d_full" % s, s) for s in (1234, 5555, 8888, 31415, 27182, 9999)],
-    "DeepLabV3+ (P-MEM-ROLL)": [
-        ("sd7_deeplab", 7), ("sd2024_deeplab", 2024), ("sd31337_deeplab", 31337)] + [
+    # /!\ DeepLab 必须按**主干预训练状态**拆开, 不可混为一组 (2026-09-15 事故):
+    # 旧 3 个 seed 训练于 pretrained_backbone 默认仍为 True 的时期
+    # (主干 bn1.weight 均值 0.248), 新 6 个训练于默认改为 False 之后 (0.973)。
+    # 混成一组会把"配置差 0.065"当成"种子噪声", 得到 sigma=0.0334 (真实种子噪声
+    # 仅约 0.003); 而该 sigma 又会被下游拿去给 MSSACT 消融定门限 -> 一切差异都
+    # 判成"不可分辨"。拆分依据 = 实测 BN 统计, 见 check_group_homogeneity()。
+    "DeepLabV3+ 预训练主干 (P-MEM-ROLL)": [
+        ("sd7_deeplab", 7), ("sd2024_deeplab", 2024), ("sd31337_deeplab", 31337)],
+    "DeepLabV3+ 从零 (P-MEM-ROLL)": [
         ("sd%d_deeplab" % s, s) for s in (1234, 5555, 8888, 31415, 27182, 9999)],
-    "参照: 完整模型/DeepLab 的 P-PNG 单次结果": [
+    "REF-参照(非种子组): 完整模型/DeepLab 的 P-PNG 单次结果": [
         ("full_all_v2", 42), ("nd_deeplab", 42)],
 }
 # 必须区分两类，否则散布会被容量效应主导而误读为"模块效应":
@@ -77,6 +84,76 @@ def best_k(tag):
         return float(max(h, key=lambda r: r.get("kappa", -9)).get("kappa"))
     except Exception:
         return None
+
+
+def bn_pretrain_stat(tag):
+    """用主干首个 BN 层的 weight 均值判断该 checkpoint 是否加载过 ImageNet 预训练。
+
+    判定依据(此前对 DeepLab 取证时确立): 从零训练 ≈1.0, ImageNet 预训练 ≈0.25。
+    用途: 组内同质性检查 —— 种子组必须是**同一配置**, 否则其 std 混入配置差而非噪声。
+    """
+    import torch as _t
+    p = os.path.join(CKPT, f"{tag}_best.pt")
+    if not os.path.exists(p):
+        return None
+    try:
+        sd = _t.load(p, map_location="cpu", weights_only=True)
+        keys = [k for k in sd if k.endswith("bn1.weight") and "backbone" in k]
+        if not keys:
+            keys = [k for k in sd if k.endswith("bn1.weight")][:1]
+        if not keys:
+            return None
+        return float(sd[keys[0]].float().mean())
+    except Exception:
+        return None
+
+
+def param_count(tag):
+    """checkpoint 的 nn.Parameter 计数(架构指纹); 失败返回 None"""
+    import torch as _t
+    p = os.path.join(CKPT, f"{tag}_best.pt")
+    if not os.path.exists(p):
+        return None
+    try:
+        sd = _t.load(p, map_location="cpu", weights_only=True)
+        return sum(int(v.numel()) for k, v in sd.items()
+                   if hasattr(v, "numel") and not k.endswith("num_batches_tracked")
+                   and ".running_" not in k)
+    except Exception:
+        return None
+
+
+def check_group_homogeneity(groups):
+    """组内同质性: 种子组必须是同一**配置**。检出两类混合, 二者都会污染 σ:
+
+    (a) 主干预训练状态不一致 —— 2026-09-15 实际发生: 3 个预训练版 + 6 个从零版
+        DeepLab 混成一组, 得到 σ=0.0334(真实种子噪声仅 ~0.003, 差 11 倍),
+        而该 σ 会被下游拿去给 MSSACT 消融定门限, 使一切差异都判成"不可分辨"。
+    (b) 架构不一致 —— 用参数量做指纹检出(如"参照"行曾把 6.1M 与 39.6M 并成"一组")。
+
+    返回 [(组名, {原因: [tag...]})]; 空列表 = 全部通过。
+    """
+    bad = []
+    for name, members in groups.items():
+        if name.startswith("REF-"):
+            continue          # 参照行不是种子组(本就混架构), 不参与 sigma
+        kinds, params = {}, {}
+        for tag, _seed in members:
+            v = bn_pretrain_stat(tag)
+            if v is not None:
+                kinds[tag] = "预训练" if v < 0.6 else "从零"
+            params[tag] = param_count(tag)
+        mixed = {}
+        if len(set(kinds.values())) > 1:
+            for t, k in kinds.items():
+                mixed.setdefault("主干预训练=" + k, []).append(t)
+        pc = {t: c for t, c in params.items() if c}
+        if len(set(pc.values())) > 1:
+            for t, c in pc.items():
+                mixed.setdefault("参数量=%d" % c, []).append(t)
+        if mixed:
+            bad.append((name, mixed))
+    return bad
 
 
 def main():
@@ -128,19 +205,47 @@ def main():
                 print(f"   {t:<28s} {v:.4f}")
     out["ablations"] = abl
 
+    # ---- 组内同质性检查(自动拦截"混合配置"造成的假 sigma) ----
+    _bad = check_group_homogeneity(GROUPS)
+    out["group_homogeneity"] = {"ok": not _bad, "mixed": [
+        {"group": g, "by": k} for g, k in _bad]}
+    print("")
+    if _bad:
+        print("!" * 78)
+        print("!! 组内同质性检查未通过 —— 下列组混入了不同配置的成员,")
+        print("!! 其 sigma 混有'配置差'而非纯'种子噪声', **不可用于任何门限判定**:")
+        for g, k in _bad:
+            print("!!   %s" % g)
+            for kind, tags in k.items():
+                print("!!      %s: %s" % (kind, tags))
+        print("!" * 78)
+    else:
+        print("组内同质性检查: 通过 (各组的主干预训练状态与架构均一致)")
+
     # 判读
     print("\n" + "=" * 78)
     print("判读: ΔKappa 折算为多少个 σ_seed")
     print("=" * 78)
     # 注意: 记录里的键是 "std"（打印时才标为 sigma）。
     # 此前这里写成 `"sigma" in r`，恒为假 -> sigma 永远 None、折算表从未生成。
+    # sigma_seed_used = **与消融同配置**的种子噪声, 即 MSSACT 完整模型组。
+    # 不能用"各管线取最大(保守)" —— σ 是**配置相关**的: 不同架构的种子噪声不可互换。
+    # 事故记录(2026-09-15): 曾用 max(各管线), 因 DeepLab 组被污染(σ 0.0334, 真实 0.003)
+    # 而把 MSSACT 消融的门限放大 8 倍, 所有真实差异都会被判成"不可分辨"。
+    # 跨配置的 σ 仍各自记录在 groups 里, 供对应架构的判定使用。
+    _KEY = "完整模型 MSSACT (P-MEM-ROLL)"
     sigma = None
-    for g, r in out["groups"].items():
-        if r.get("n", 0) >= 3 and "std" in r:
-            sigma = r["std"] if sigma is None else max(sigma, r["std"])
+    if _KEY in out["groups"] and "std" in out["groups"][_KEY]:
+        sigma = out["groups"][_KEY]["std"]
     if sigma:
         out["sigma_seed_used"] = sigma
-        print(f"\n采用各管线内最大 σ_seed = {sigma:.4f} (保守)")
+        out["sigma_seed_used_source"] = ("与消融同配置(" + _KEY + ")的种子噪声; "
+                                         "不用跨架构取最大, 因为 sigma 是配置相关的")
+        print("")
+        print("采用与消融同配置的 σ_seed = %.4f (%s)" % (sigma, _KEY))
+        for g, r in out["groups"].items():
+            if g != _KEY and "std" in r and not g.startswith("REF-"):
+                print("    参照(不用于 MSSACT 判定): %s σ=%.4f n=%d" % (g, r["std"], r["n"]))
         rows = []
         for label, tags in (("P-MEM-ROLL", MODULE_ABL_MEMROLL + CAPACITY_MEMROLL),
                             ("P-PNG", MODULE_ABL_PNG)):

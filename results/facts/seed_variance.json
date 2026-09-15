@@ -1,26 +1,26 @@
 {
  "groups": {
   "完整模型 MSSACT (P-MEM-ROLL)": {
-   "n": 4,
-   "mean": 0.6362,
-   "std": 0.005,
-   "min": 0.6318,
+   "n": 10,
+   "mean": 0.6349,
+   "std": 0.0042,
+   "min": 0.6276,
    "max": 0.6412,
-   "range": 0.0094,
+   "range": 0.0136,
    "members": {
     "lgR_bs8_full_lr2e4": 0.632,
     "sd7_full": 0.6412,
     "sd2024_full": 0.6318,
     "sd31337_full": 0.6399,
-    "sd1234_full": null,
-    "sd5555_full": null,
-    "sd8888_full": null,
-    "sd31415_full": null,
-    "sd27182_full": null,
-    "sd9999_full": null
+    "sd1234_full": 0.634,
+    "sd5555_full": 0.6325,
+    "sd8888_full": 0.6276,
+    "sd31415_full": 0.6361,
+    "sd27182_full": 0.6347,
+    "sd9999_full": 0.6389
    }
   },
-  "DeepLabV3+ (P-MEM-ROLL)": {
+  "DeepLabV3+ 预训练主干 (P-MEM-ROLL)": {
    "n": 3,
    "mean": 0.6931,
    "std": 0.0034,
@@ -30,16 +30,26 @@
    "members": {
     "sd7_deeplab": 0.6961,
     "sd2024_deeplab": 0.6939,
-    "sd31337_deeplab": 0.6895,
-    "sd1234_deeplab": null,
-    "sd5555_deeplab": null,
-    "sd8888_deeplab": null,
-    "sd31415_deeplab": null,
-    "sd27182_deeplab": null,
-    "sd9999_deeplab": null
+    "sd31337_deeplab": 0.6895
    }
   },
-  "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
+  "DeepLabV3+ 从零 (P-MEM-ROLL)": {
+   "n": 6,
+   "mean": 0.6267,
+   "std": 0.0041,
+   "min": 0.6213,
+   "max": 0.6333,
+   "range": 0.012,
+   "members": {
+    "sd1234_deeplab": 0.625,
+    "sd5555_deeplab": 0.6213,
+    "sd8888_deeplab": 0.6273,
+    "sd31415_deeplab": 0.6244,
+    "sd27182_deeplab": 0.6333,
+    "sd9999_deeplab": 0.6286
+   }
+  },
+  "REF-参照(非种子组): 完整模型/DeepLab 的 P-PNG 单次结果": {
    "n": 2,
    "mean": 0.6594,
    "std": 0.0399,
@@ -90,103 +100,114 @@
    }
   }
  },
- "sigma_seed_used": 0.005,
+ "group_homogeneity": {
+  "ok": true,
+  "mixed": []
+ },
+ "sigma_seed_used": 0.0042,
+ "sigma_seed_used_source": "与消融同配置(完整模型 MSSACT (P-MEM-ROLL))的种子噪声; 不用跨架构取最大, 因为 sigma 是配置相关的",
  "deltas_in_sigma": [
   {
    "pipeline": "P-MEM-ROLL",
    "tag": "lgR_D1_join_nofpn_notrans",
    "kappa": 0.6293,
    "delta": -0.0028,
-   "n_sigma": -0.554
+   "n_sigma": -0.66
   },
   {
    "pipeline": "P-MEM-ROLL",
    "tag": "lgR_D2_decoder_ca",
    "kappa": 0.6375,
    "delta": 0.0055,
-   "n_sigma": 1.093
+   "n_sigma": 1.301
   },
   {
    "pipeline": "P-MEM-ROLL",
    "tag": "lgR_D3_ch_tiny",
    "kappa": 0.6103,
    "delta": -0.0217,
-   "n_sigma": -4.35
+   "n_sigma": -5.179
   },
   {
    "pipeline": "P-MEM-ROLL",
    "tag": "lgR_D4_ch_large",
    "kappa": 0.6365,
    "delta": 0.0044,
-   "n_sigma": 0.887
+   "n_sigma": 1.056
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_no_emr",
    "kappa": 0.6355,
    "delta": 0.0043,
-   "n_sigma": 0.86
+   "n_sigma": 1.024
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_no_ecsam",
    "kappa": 0.6272,
    "delta": -0.0041,
-   "n_sigma": -0.815
+   "n_sigma": -0.97
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_no_fpn",
    "kappa": 0.6314,
    "delta": 0.0002,
-   "n_sigma": 0.03
+   "n_sigma": 0.036
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_no_trans",
    "kappa": 0.6302,
    "delta": -0.0011,
-   "n_sigma": -0.213
+   "n_sigma": -0.254
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_no_adapter",
    "kappa": 0.6342,
    "delta": 0.003,
-   "n_sigma": 0.59
+   "n_sigma": 0.703
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_bilinear",
    "kappa": 0.6369,
    "delta": 0.0056,
-   "n_sigma": 1.127
+   "n_sigma": 1.341
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_trans4l",
    "kappa": 0.6362,
    "delta": 0.005,
-   "n_sigma": 0.998
+   "n_sigma": 1.188
   },
   {
    "pipeline": "P-PNG",
    "tag": "nd_abl_trans6l",
    "kappa": 0.6335,
    "delta": 0.0023,
-   "n_sigma": 0.451
+   "n_sigma": 0.537
   }
  ],
  "sigma_seed_test_protocol": {
-  "n": 4,
-  "mean": 0.568999,
-  "std": 0.004123,
+  "n": 10,
+  "mean": 0.567967,
+  "std": 0.003446,
   "range": 0.00877,
   "members": {
    "lgR_bs8_full_lr2e4": 0.562953,
    "sd7_full": 0.571525,
    "sd2024_full": 0.571723,
-   "sd31337_full": 0.569796
+   "sd31337_full": 0.569796,
+   "sd1234_full": 0.563539,
+   "sd5555_full": 0.57011,
+   "sd8888_full": 0.563175,
+   "sd31415_full": 0.569056,
+   "sd27182_full": 0.568024,
+   "sd9999_full": 0.569774
   },
   "protocol": "test_clean 141 张 1024^2 整图, 256^2 滑窗/stride 128 高斯加权",
   "note": "与 sigma_seed_used(val 协议)不同口径; 判定测试集协议的差值须用本值"

@@ -3,8 +3,8 @@
  "n_boot": 1000,
  "seed": 12345,
  "n_images": 141,
- "sigma_seed": 0.004123,
- "sigma_seed_n_runs": 4,
+ "sigma_seed": 0.003446,
+ "sigma_seed_n_runs": 10,
  "sigma_seed_source": "test 协议(已匹配)",
  "sigma_seed_note": "判定测试集协议的 dKappa 必须用**同协议**的 sigma; val 协议的 0.0050 只用于 val 上的量(见报告 5.7)。本脚本的 dKappa 全部来自整图测试协议。",
  "threshold_rule": "|dKappa| >= 2*sigma_seed 记为可分辨; 1-2 sigma 弱; <1 sigma 不可分辨",
@@ -18,7 +18,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.534821,
    "delta": -0.042621,
-   "delta_in_sigma_seed": -10.337,
+   "delta_in_sigma_seed": -12.368,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.053168,
@@ -29,7 +29,7 @@
     -0.033598
    ],
    "boot_se": 0.005344,
-   "combined_se": 0.00791,
+   "combined_se": 0.007233,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0107 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -41,7 +41,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.443346,
    "delta": -0.134096,
-   "delta_in_sigma_seed": -32.524,
+   "delta_in_sigma_seed": -38.914,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.153009,
@@ -52,7 +52,7 @@
     -0.118864
    ],
    "boot_se": 0.00944,
-   "combined_se": 0.011095,
+   "combined_se": 0.010624,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0180 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -64,7 +64,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.541627,
    "delta": -0.035816,
-   "delta_in_sigma_seed": -8.687,
+   "delta_in_sigma_seed": -10.393,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.045285,
@@ -75,7 +75,7 @@
     -0.028253
    ],
    "boot_se": 0.004814,
-   "combined_se": 0.007561,
+   "combined_se": 0.00685,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0094 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -87,7 +87,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.649467,
    "delta": 0.072025,
-   "delta_in_sigma_seed": 17.469,
+   "delta_in_sigma_seed": 20.901,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     0.052543,
@@ -98,7 +98,7 @@
     0.089615
    ],
    "boot_se": 0.010315,
-   "combined_se": 0.011849,
+   "combined_se": 0.011408,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0202 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -110,7 +110,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.189704,
    "delta": -0.387738,
-   "delta_in_sigma_seed": -94.043,
+   "delta_in_sigma_seed": -112.518,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.413512,
@@ -121,7 +121,7 @@
     -0.365533
    ],
    "boot_se": 0.01353,
-   "combined_se": 0.014733,
+   "combined_se": 0.014381,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0261 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -133,7 +133,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.543981,
    "delta": -0.033461,
-   "delta_in_sigma_seed": -8.116,
+   "delta_in_sigma_seed": -9.71,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.043235,
@@ -144,7 +144,7 @@
     -0.025063
    ],
    "boot_se": 0.00509,
-   "combined_se": 0.00774,
+   "combined_se": 0.007047,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0101 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -156,7 +156,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.504078,
    "delta": -0.073364,
-   "delta_in_sigma_seed": -17.794,
+   "delta_in_sigma_seed": -21.29,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.089066,
@@ -167,7 +167,7 @@
     -0.059734
    ],
    "boot_se": 0.00823,
-   "combined_se": 0.010086,
+   "combined_se": 0.009565,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0163 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -179,7 +179,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.572567,
    "delta": -0.004875,
-   "delta_in_sigma_seed": -1.183,
+   "delta_in_sigma_seed": -1.415,
    "resolvable_2sigma_seed": false,
    "boot_ci95": [
     -0.016071,
@@ -190,7 +190,7 @@
     0.005346
    ],
    "boot_se": 0.006016,
-   "combined_se": 0.008378,
+   "combined_se": 0.007742,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -202,7 +202,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.551287,
    "delta": -0.026156,
-   "delta_in_sigma_seed": -6.344,
+   "delta_in_sigma_seed": -7.59,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.036005,
@@ -213,7 +213,7 @@
     -0.017854
    ],
    "boot_se": 0.005217,
-   "combined_se": 0.007824,
+   "combined_se": 0.007139,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0102 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -225,7 +225,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.571075,
    "delta": -0.006367,
-   "delta_in_sigma_seed": -1.544,
+   "delta_in_sigma_seed": -1.848,
    "resolvable_2sigma_seed": false,
    "boot_ci95": [
     -0.015788,
@@ -236,7 +236,7 @@
     0.00075
    ],
    "boot_se": 0.004563,
-   "combined_se": 0.007404,
+   "combined_se": 0.006676,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -248,7 +248,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.557282,
    "delta": -0.02016,
-   "delta_in_sigma_seed": -4.89,
+   "delta_in_sigma_seed": -5.85,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.027305,
@@ -259,7 +259,7 @@
     -0.014355
    ],
    "boot_se": 0.003581,
-   "combined_se": 0.006843,
+   "combined_se": 0.006048,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0071 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -271,7 +271,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.566747,
    "delta": -0.010696,
-   "delta_in_sigma_seed": -2.594,
+   "delta_in_sigma_seed": -3.104,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.017587,
@@ -282,7 +282,7 @@
     -0.004976
    ],
    "boot_se": 0.003543,
-   "combined_se": 0.006823,
+   "combined_se": 0.006025,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -294,7 +294,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.568456,
    "delta": -0.008986,
-   "delta_in_sigma_seed": -2.179,
+   "delta_in_sigma_seed": -2.608,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.018256,
@@ -305,7 +305,7 @@
     -0.000961
    ],
    "boot_se": 0.004831,
-   "combined_se": 0.007572,
+   "combined_se": 0.006862,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -317,7 +317,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.56727,
    "delta": -0.010173,
-   "delta_in_sigma_seed": -2.467,
+   "delta_in_sigma_seed": -2.952,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.018528,
@@ -328,7 +328,7 @@
     -0.002637
    ],
    "boot_se": 0.004477,
-   "combined_se": 0.007351,
+   "combined_se": 0.006618,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -340,7 +340,7 @@
    "kappa_ref": 0.577442,
    "kappa_tag": 0.574181,
    "delta": -0.003261,
-   "delta_in_sigma_seed": -0.791,
+   "delta_in_sigma_seed": -0.946,
    "resolvable_2sigma_seed": false,
    "boot_ci95": [
     -0.012704,
@@ -351,7 +351,7 @@
     0.006138
    ],
    "boot_se": 0.005318,
-   "combined_se": 0.007892,
+   "combined_se": 0.007214,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -363,7 +363,7 @@
    "kappa_ref": 0.562953,
    "kappa_tag": 0.550715,
    "delta": -0.012238,
-   "delta_in_sigma_seed": -2.968,
+   "delta_in_sigma_seed": -3.551,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.021504,
@@ -374,7 +374,7 @@
     -0.005269
    ],
    "boot_se": 0.004487,
-   "combined_se": 0.007358,
+   "combined_se": 0.006625,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0088 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -386,7 +386,7 @@
    "kappa_ref": 0.562953,
    "kappa_tag": 0.572501,
    "delta": 0.009548,
-   "delta_in_sigma_seed": 2.316,
+   "delta_in_sigma_seed": 2.771,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     0.003279,
@@ -397,7 +397,7 @@
     0.014785
    ],
    "boot_se": 0.003181,
-   "combined_se": 0.006642,
+   "combined_se": 0.00582,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -409,7 +409,7 @@
    "kappa_ref": 0.562953,
    "kappa_tag": 0.537762,
    "delta": -0.025191,
-   "delta_in_sigma_seed": -6.11,
+   "delta_in_sigma_seed": -7.31,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.034754,
@@ -420,7 +420,7 @@
     -0.017641
    ],
    "boot_se": 0.004937,
-   "combined_se": 0.00764,
+   "combined_se": 0.006937,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0094 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -432,7 +432,7 @@
    "kappa_ref": 0.562953,
    "kappa_tag": 0.581252,
    "delta": 0.018298,
-   "delta_in_sigma_seed": 4.438,
+   "delta_in_sigma_seed": 5.31,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     0.010911,
@@ -443,7 +443,7 @@
     0.02469
    ],
    "boot_se": 0.003801,
-   "combined_se": 0.00696,
+   "combined_se": 0.006181,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0074 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -455,7 +455,7 @@
    "kappa_ref": 0.604665,
    "kappa_tag": 0.588214,
    "delta": -0.016451,
-   "delta_in_sigma_seed": -3.99,
+   "delta_in_sigma_seed": -4.774,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.023963,
@@ -466,7 +466,7 @@
     -0.010258
    ],
    "boot_se": 0.003842,
-   "combined_se": 0.006983,
+   "combined_se": 0.006206,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0074 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -478,7 +478,7 @@
    "kappa_ref": 0.604665,
    "kappa_tag": 0.599905,
    "delta": -0.00476,
-   "delta_in_sigma_seed": -1.155,
+   "delta_in_sigma_seed": -1.381,
    "resolvable_2sigma_seed": false,
    "boot_ci95": [
     -0.016494,
@@ -489,7 +489,7 @@
     0.005005
    ],
    "boot_se": 0.005849,
-   "combined_se": 0.008259,
+   "combined_se": 0.007613,
    "tost_equivalent_at_SESOI": true,
    "tost_margin": 0.02,
    "note": ""
@@ -501,7 +501,7 @@
    "kappa_ref": 0.604665,
    "kappa_tag": 0.566313,
    "delta": -0.038352,
-   "delta_in_sigma_seed": -9.302,
+   "delta_in_sigma_seed": -11.129,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.051084,
@@ -512,7 +512,7 @@
     -0.028017
    ],
    "boot_se": 0.006583,
-   "combined_se": 0.008794,
+   "combined_se": 0.00819,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0122 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -524,7 +524,7 @@
    "kappa_ref": 0.566313,
    "kappa_tag": 0.600175,
    "delta": 0.033862,
-   "delta_in_sigma_seed": 8.213,
+   "delta_in_sigma_seed": 9.826,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     0.021173,
@@ -535,7 +535,7 @@
     0.045841
    ],
    "boot_se": 0.006726,
-   "combined_se": 0.008902,
+   "combined_se": 0.008306,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0133 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -547,7 +547,7 @@
    "kappa_ref": 0.566313,
    "kappa_tag": 0.340382,
    "delta": -0.225931,
-   "delta_in_sigma_seed": -54.798,
+   "delta_in_sigma_seed": -65.563,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.248899,
@@ -558,7 +558,7 @@
     -0.205533
    ],
    "boot_se": 0.012035,
-   "combined_se": 0.013373,
+   "combined_se": 0.012984,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0234 > SESOI 0.02, 测试集取样误差不足以认证等效"
@@ -570,7 +570,7 @@
    "kappa_ref": 0.566313,
    "kappa_tag": 0.544637,
    "delta": -0.021676,
-   "delta_in_sigma_seed": -5.257,
+   "delta_in_sigma_seed": -6.29,
    "resolvable_2sigma_seed": true,
    "boot_ci95": [
     -0.030572,
@@ -581,7 +581,7 @@
     -0.01439
    ],
    "boot_se": 0.004527,
-   "combined_se": 0.007382,
+   "combined_se": 0.006652,
    "tost_equivalent_at_SESOI": false,
    "tost_margin": 0.02,
    "note": "boot CI 半宽 0.0088 > SESOI 0.02, 测试集取样误差不足以认证等效"

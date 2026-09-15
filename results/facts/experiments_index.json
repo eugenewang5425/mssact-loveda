@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "generated_at": "2026-09-15 01:19:32",
+  "generated_at": "2026-09-15 12:20:23",
   "generated_by": "build_index.py",
   "protocol": "AdamW(wd=0.02) + OneCycle(6% warmup, cosine) + EMA(0.999) + 类别加权CE + 验证Kappa早停",
   "criterion": "val Kappa (OA 被多数类支配, 不作选择依据)",
@@ -16,7 +16,7 @@
    "lgR-roll": "memmap 预解码 + 原增强(全局RNG) + workers=0, 架构实验正式结果"
   },
   "hard_rule": "禁止跨管线世代比较 Kappa; 参数量为直读张量求和, 非估算",
-  "n_tags": 120,
+  "n_tags": 132,
   "unregistered_tags": []
  },
  "comparable_groups": {
@@ -216,13 +216,13 @@
    "best_kappa_in_series": 0.6375
   },
   "lgR-roll/种子方差(DeepLab)": {
-   "n_experiments": 3,
-   "n_complete": 3,
+   "n_experiments": 9,
+   "n_complete": 9,
    "best_kappa_in_series": 0.6961
   },
   "lgR-roll/种子方差(完整模型)": {
-   "n_experiments": 3,
-   "n_complete": 3,
+   "n_experiments": 9,
+   "n_complete": 9,
    "best_kappa_in_series": 0.6412
   },
   "lgR-roll/裁剪策略": {
@@ -3031,6 +3031,61 @@
     "deconv_kernels": 0
    }
   },
+  "sd1234_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.625047,
+   "best_epoch": 54,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd1234_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.633986,
+   "best_epoch": 52,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
   "sd2024_deeplab": {
    "series": "lgR-roll/种子方差(DeepLab)",
    "status": "complete",
@@ -3041,10 +3096,10 @@
    "target_epochs": 60,
    "params_M": 39.635,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "DeepLabV3+ 种子方差; 注意其主干为 ImageNet 预训练, 见 deeplab 预训练混淆",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
@@ -3065,10 +3120,65 @@
    "target_epochs": 60,
    "params_M": 6.099,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "sigma_seed 的实测来源 (n=4, 并入 seed=42 的 lgR_bs8_full_lr2e4)",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd27182_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.633326,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd27182_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.634658,
+   "best_epoch": 53,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
    "arch": {
     "stem_ch": 32,
     "stage_ch": [
@@ -3096,10 +3206,10 @@
    "target_epochs": 60,
    "params_M": 39.635,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "DeepLabV3+ 种子方差; 注意其主干为 ImageNet 预训练, 见 deeplab 预训练混淆",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
@@ -3120,10 +3230,120 @@
    "target_epochs": 60,
    "params_M": 6.099,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "sigma_seed 的实测来源 (n=4, 并入 seed=42 的 lgR_bs8_full_lr2e4)",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd31415_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.624444,
+   "best_epoch": 59,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd31415_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.636126,
+   "best_epoch": 57,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd5555_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.621283,
+   "best_epoch": 57,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd5555_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.632455,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
    "arch": {
     "stem_ch": 32,
     "stage_ch": [
@@ -3151,10 +3371,10 @@
    "target_epochs": 60,
    "params_M": 39.635,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "DeepLabV3+ 种子方差; 注意其主干为 ImageNet 预训练, 见 deeplab 预训练混淆",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
    "arch": {
     "transformer_layers": 0,
     "has_transformer": false,
@@ -3175,10 +3395,120 @@
    "target_epochs": 60,
    "params_M": 6.099,
    "has_weight": true,
-   "script": "queues/run_queue_final.py",
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
    "root": "DATA_NEWSPLIT2",
    "protocol": "60ep/pt20/bs8/lr0.0002",
-   "note": "sigma_seed 的实测来源 (n=4, 并入 seed=42 的 lgR_bs8_full_lr2e4)",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd8888_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.627281,
+   "best_epoch": 59,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd8888_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.627648,
+   "best_epoch": 56,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
+   "arch": {
+    "stem_ch": 32,
+    "stage_ch": [
+     32,
+     64,
+     128,
+     256
+    ],
+    "transformer_layers": 2,
+    "has_transformer": true,
+    "has_fpn": true,
+    "has_ecsam": true,
+    "has_adapter": true,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd9999_deeplab": {
+   "series": "lgR-roll/种子方差(DeepLab)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.628578,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 39.635,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "DeepLabV3+ 种子方差 (2026-09-15 扩展到 n=9); 注意其主干为 ImageNet 预训练",
+   "arch": {
+    "transformer_layers": 0,
+    "has_transformer": false,
+    "has_fpn": false,
+    "has_ecsam": false,
+    "has_adapter": false,
+    "has_emr": false,
+    "deconv_kernels": 0
+   }
+  },
+  "sd9999_full": {
+   "series": "lgR-roll/种子方差(完整模型)",
+   "status": "complete",
+   "pipeline": "P-MEM-ROLL",
+   "best_kappa": 0.638858,
+   "best_epoch": 60,
+   "epochs_run": 60,
+   "target_epochs": 60,
+   "params_M": 6.099,
+   "has_weight": true,
+   "script": "queues/run_queue_final.py / queues/run_queue_seeds.py",
+   "root": "DATA_NEWSPLIT2",
+   "protocol": "60ep/pt20/bs8/lr0.0002",
+   "note": "sigma_seed 的实测来源; 2026-09-15 扩展到 n=10 (GEO-Bench 建议 >=10)",
    "arch": {
     "stem_ch": 32,
     "stage_ch": [

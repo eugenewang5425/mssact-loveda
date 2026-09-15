@@ -1106,20 +1106,26 @@
  "seed_variance": {
   "groups": {
    "完整模型 MSSACT (P-MEM-ROLL)": {
-    "n": 4,
-    "mean": 0.6362,
-    "std": 0.005,
-    "min": 0.6318,
+    "n": 10,
+    "mean": 0.6349,
+    "std": 0.0042,
+    "min": 0.6276,
     "max": 0.6412,
-    "range": 0.0094,
+    "range": 0.0136,
     "members": {
      "lgR_bs8_full_lr2e4": 0.632,
      "sd7_full": 0.6412,
      "sd2024_full": 0.6318,
-     "sd31337_full": 0.6399
+     "sd31337_full": 0.6399,
+     "sd1234_full": 0.634,
+     "sd5555_full": 0.6325,
+     "sd8888_full": 0.6276,
+     "sd31415_full": 0.6361,
+     "sd27182_full": 0.6347,
+     "sd9999_full": 0.6389
     }
    },
-   "DeepLabV3+ (P-MEM-ROLL)": {
+   "DeepLabV3+ 预训练主干 (P-MEM-ROLL)": {
     "n": 3,
     "mean": 0.6931,
     "std": 0.0034,
@@ -1132,7 +1138,23 @@
      "sd31337_deeplab": 0.6895
     }
    },
-   "参照: 完整模型/DeepLab 的 P-PNG 单次结果": {
+   "DeepLabV3+ 从零 (P-MEM-ROLL)": {
+    "n": 6,
+    "mean": 0.6267,
+    "std": 0.0041,
+    "min": 0.6213,
+    "max": 0.6333,
+    "range": 0.012,
+    "members": {
+     "sd1234_deeplab": 0.625,
+     "sd5555_deeplab": 0.6213,
+     "sd8888_deeplab": 0.6273,
+     "sd31415_deeplab": 0.6244,
+     "sd27182_deeplab": 0.6333,
+     "sd9999_deeplab": 0.6286
+    }
+   },
+   "REF-参照(非种子组): 完整模型/DeepLab 的 P-PNG 单次结果": {
     "n": 2,
     "mean": 0.6594,
     "std": 0.0399,
@@ -1183,93 +1205,118 @@
     }
    }
   },
-  "sigma_seed_used": 0.005,
+  "group_homogeneity": {
+   "ok": true,
+   "mixed": []
+  },
+  "sigma_seed_used": 0.0042,
+  "sigma_seed_used_source": "与消融同配置(完整模型 MSSACT (P-MEM-ROLL))的种子噪声; 不用跨架构取最大, 因为 sigma 是配置相关的",
   "deltas_in_sigma": [
    {
     "pipeline": "P-MEM-ROLL",
     "tag": "lgR_D1_join_nofpn_notrans",
     "kappa": 0.6293,
     "delta": -0.0028,
-    "n_sigma": -0.554
+    "n_sigma": -0.66
    },
    {
     "pipeline": "P-MEM-ROLL",
     "tag": "lgR_D2_decoder_ca",
     "kappa": 0.6375,
     "delta": 0.0055,
-    "n_sigma": 1.093
+    "n_sigma": 1.301
    },
    {
     "pipeline": "P-MEM-ROLL",
     "tag": "lgR_D3_ch_tiny",
     "kappa": 0.6103,
     "delta": -0.0217,
-    "n_sigma": -4.35
+    "n_sigma": -5.179
    },
    {
     "pipeline": "P-MEM-ROLL",
     "tag": "lgR_D4_ch_large",
     "kappa": 0.6365,
     "delta": 0.0044,
-    "n_sigma": 0.887
+    "n_sigma": 1.056
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_no_emr",
     "kappa": 0.6355,
     "delta": 0.0043,
-    "n_sigma": 0.86
+    "n_sigma": 1.024
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_no_ecsam",
     "kappa": 0.6272,
     "delta": -0.0041,
-    "n_sigma": -0.815
+    "n_sigma": -0.97
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_no_fpn",
     "kappa": 0.6314,
     "delta": 0.0002,
-    "n_sigma": 0.03
+    "n_sigma": 0.036
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_no_trans",
     "kappa": 0.6302,
     "delta": -0.0011,
-    "n_sigma": -0.213
+    "n_sigma": -0.254
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_no_adapter",
     "kappa": 0.6342,
     "delta": 0.003,
-    "n_sigma": 0.59
+    "n_sigma": 0.703
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_bilinear",
     "kappa": 0.6369,
     "delta": 0.0056,
-    "n_sigma": 1.127
+    "n_sigma": 1.341
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_trans4l",
     "kappa": 0.6362,
     "delta": 0.005,
-    "n_sigma": 0.998
+    "n_sigma": 1.188
    },
    {
     "pipeline": "P-PNG",
     "tag": "nd_abl_trans6l",
     "kappa": 0.6335,
     "delta": 0.0023,
-    "n_sigma": 0.451
+    "n_sigma": 0.537
    }
-  ]
+  ],
+  "sigma_seed_test_protocol": {
+   "n": 10,
+   "mean": 0.567967,
+   "std": 0.003446,
+   "range": 0.00877,
+   "members": {
+    "lgR_bs8_full_lr2e4": 0.562953,
+    "sd7_full": 0.571525,
+    "sd2024_full": 0.571723,
+    "sd31337_full": 0.569796,
+    "sd1234_full": 0.563539,
+    "sd5555_full": 0.57011,
+    "sd8888_full": 0.563175,
+    "sd31415_full": 0.569056,
+    "sd27182_full": 0.568024,
+    "sd9999_full": 0.569774
+   },
+   "protocol": "test_clean 141 张 1024^2 整图, 256^2 滑窗/stride 128 高斯加权",
+   "note": "与 sigma_seed_used(val 协议)不同口径; 判定测试集协议的差值须用本值"
+  }
  },
  "artifact": {
   "label_edge_density": 0.007705,
@@ -1420,7 +1467,7 @@
   ],
   "results": {
    "nd_pspnet": {
-    "source": "infer 63s",
+    "source": "cache",
     "kappa_pooled": 0.443346,
     "kappa_img_mean": 0.299705,
     "oa_img_mean": 0.565353,
@@ -1464,7 +1511,7 @@
     }
    },
    "nd_segformer": {
-    "source": "infer 46s",
+    "source": "cache",
     "kappa_pooled": 0.189704,
     "kappa_img_mean": 0.108473,
     "oa_img_mean": 0.347057,
@@ -1508,7 +1555,7 @@
     }
    },
    "nd_abl_no_emr": {
-    "source": "infer 88s",
+    "source": "cache",
     "kappa_pooled": 0.572567,
     "kappa_img_mean": 0.43683,
     "oa_img_mean": 0.659887,
@@ -1552,7 +1599,7 @@
     }
    },
    "nd_abl_no_ecsam": {
-    "source": "infer 85s",
+    "source": "cache",
     "kappa_pooled": 0.551287,
     "kappa_img_mean": 0.410676,
     "oa_img_mean": 0.640522,
@@ -1596,7 +1643,7 @@
     }
    },
    "nd_abl_no_fpn": {
-    "source": "infer 58s",
+    "source": "cache",
     "kappa_pooled": 0.571075,
     "kappa_img_mean": 0.43578,
     "oa_img_mean": 0.657779,
@@ -1640,7 +1687,7 @@
     }
    },
    "nd_abl_no_trans": {
-    "source": "infer 83s",
+    "source": "cache",
     "kappa_pooled": 0.557282,
     "kappa_img_mean": 0.421571,
     "oa_img_mean": 0.646505,
@@ -1684,7 +1731,7 @@
     }
    },
    "nd_abl_no_adapter": {
-    "source": "infer 87s",
+    "source": "cache",
     "kappa_pooled": 0.566747,
     "kappa_img_mean": 0.4343,
     "oa_img_mean": 0.655279,
@@ -1728,7 +1775,7 @@
     }
    },
    "nd_abl_bilinear": {
-    "source": "infer 89s",
+    "source": "cache",
     "kappa_pooled": 0.568456,
     "kappa_img_mean": 0.434723,
     "oa_img_mean": 0.6558,
@@ -1772,7 +1819,7 @@
     }
    },
    "nd_abl_trans4l": {
-    "source": "infer 93s",
+    "source": "cache",
     "kappa_pooled": 0.56727,
     "kappa_img_mean": 0.435374,
     "oa_img_mean": 0.654831,
@@ -1816,7 +1863,7 @@
     }
    },
    "nd_abl_trans6l": {
-    "source": "infer 97s",
+    "source": "cache",
     "kappa_pooled": 0.574181,
     "kappa_img_mean": 0.441982,
     "oa_img_mean": 0.661788,
@@ -1860,7 +1907,7 @@
     }
    },
    "lg_D1_join_nofpn_notrans": {
-    "source": "infer 53s",
+    "source": "cache",
     "kappa_pooled": 0.551749,
     "kappa_img_mean": 0.416376,
     "oa_img_mean": 0.642761,
@@ -1904,7 +1951,7 @@
     }
    },
    "lg_D2_decoder_ca": {
-    "source": "infer 90s",
+    "source": "cache",
     "kappa_pooled": 0.567379,
     "kappa_img_mean": 0.431894,
     "oa_img_mean": 0.656709,
@@ -1948,7 +1995,7 @@
     }
    },
    "lg_D3_ch_tiny": {
-    "source": "infer 66s",
+    "source": "cache",
     "kappa_pooled": 0.537726,
     "kappa_img_mean": 0.39943,
     "oa_img_mean": 0.631957,
@@ -1992,7 +2039,7 @@
     }
    },
    "lg_D4_ch_large": {
-    "source": "infer 169s",
+    "source": "cache",
     "kappa_pooled": 0.510477,
     "kappa_img_mean": 0.375531,
     "oa_img_mean": 0.605023,
@@ -2036,7 +2083,7 @@
     }
    },
    "lgR_bs8_full_lr2e4": {
-    "source": "infer 90s",
+    "source": "cache",
     "kappa_pooled": 0.562953,
     "kappa_img_mean": 0.425645,
     "oa_img_mean": 0.653114,
@@ -2080,7 +2127,7 @@
     }
    },
    "lgR_D1_join_nofpn_notrans": {
-    "source": "infer 47s",
+    "source": "cache",
     "kappa_pooled": 0.550715,
     "kappa_img_mean": 0.414175,
     "oa_img_mean": 0.645416,
@@ -2124,7 +2171,7 @@
     }
    },
    "lgR_D2_decoder_ca": {
-    "source": "infer 93s",
+    "source": "cache",
     "kappa_pooled": 0.572501,
     "kappa_img_mean": 0.43639,
     "oa_img_mean": 0.668176,
@@ -2168,7 +2215,7 @@
     }
    },
    "lgR_D3_ch_tiny": {
-    "source": "infer 65s",
+    "source": "cache",
     "kappa_pooled": 0.537762,
     "kappa_img_mean": 0.401879,
     "oa_img_mean": 0.632641,
@@ -2212,7 +2259,7 @@
     }
    },
    "lgR_D4_ch_large": {
-    "source": "infer 169s",
+    "source": "cache",
     "kappa_pooled": 0.581252,
     "kappa_img_mean": 0.445683,
     "oa_img_mean": 0.670034,
@@ -2256,7 +2303,7 @@
     }
    },
    "lgR_deeplab_scr": {
-    "source": "infer 68s",
+    "source": "cache",
     "kappa_pooled": 0.559499,
     "kappa_img_mean": 0.430018,
     "oa_img_mean": 0.649227,
@@ -2344,7 +2391,7 @@
     }
    },
    "lgR120_fx_skip": {
-    "source": "infer 95s",
+    "source": "cache",
     "kappa_pooled": 0.588214,
     "kappa_img_mean": 0.451113,
     "oa_img_mean": 0.676358,
@@ -2388,7 +2435,7 @@
     }
    },
    "lgR120_fx_pos": {
-    "source": "infer 91s",
+    "source": "cache",
     "kappa_pooled": 0.599905,
     "kappa_img_mean": 0.470958,
     "oa_img_mean": 0.689155,
@@ -2432,7 +2479,7 @@
     }
    },
    "lgR120_fx_all": {
-    "source": "infer 88s",
+    "source": "cache",
     "kappa_pooled": 0.566313,
     "kappa_img_mean": 0.432035,
     "oa_img_mean": 0.659494,
@@ -2476,7 +2523,7 @@
     }
    },
    "lgR120_fx_d2": {
-    "source": "infer 87s",
+    "source": "cache",
     "kappa_pooled": 0.574181,
     "kappa_img_mean": 0.434995,
     "oa_img_mean": 0.664254,
@@ -2520,7 +2567,7 @@
     }
    },
    "lgR120_fxskip_lr1e4": {
-    "source": "infer 85s",
+    "source": "cache",
     "kappa_pooled": 0.573406,
     "kappa_img_mean": 0.43986,
     "oa_img_mean": 0.667625,
@@ -2564,7 +2611,7 @@
     }
    },
    "lgR120_fxall_lr1e4": {
-    "source": "infer 83s",
+    "source": "cache",
     "kappa_pooled": 0.555898,
     "kappa_img_mean": 0.422151,
     "oa_img_mean": 0.653481,
@@ -2608,7 +2655,7 @@
     }
    },
    "lgR120_abl_no_emr": {
-    "source": "infer 82s",
+    "source": "cache",
     "kappa_pooled": 0.600175,
     "kappa_img_mean": 0.465364,
     "oa_img_mean": 0.689686,
@@ -2652,7 +2699,7 @@
     }
    },
    "lgR120_abl_no_ecsam": {
-    "source": "infer 79s",
+    "source": "cache",
     "kappa_pooled": 0.340382,
     "kappa_img_mean": 0.237602,
     "oa_img_mean": 0.454899,
@@ -2696,7 +2743,7 @@
     }
    },
    "lgR120_abl_no_fpn": {
-    "source": "infer 48s",
+    "source": "cache",
     "kappa_pooled": 0.544637,
     "kappa_img_mean": 0.411317,
     "oa_img_mean": 0.637801,
@@ -2740,7 +2787,7 @@
     }
    },
    "lgR120_pos_abl_no_emr": {
-    "source": "infer 77s",
+    "source": "cache",
     "kappa_pooled": 0.60969,
     "kappa_img_mean": 0.475236,
     "oa_img_mean": 0.697694,
@@ -2784,7 +2831,7 @@
     }
    },
    "lgR120_pos_abl_no_ecsam": {
-    "source": "infer 73s",
+    "source": "cache",
     "kappa_pooled": 0.538238,
     "kappa_img_mean": 0.397651,
     "oa_img_mean": 0.631743,
@@ -2828,7 +2875,7 @@
     }
    },
    "lgR120_pos_abl_no_fpn": {
-    "source": "infer 41s",
+    "source": "cache",
     "kappa_pooled": 0.607029,
     "kappa_img_mean": 0.476843,
     "oa_img_mean": 0.697509,
@@ -2872,7 +2919,7 @@
     }
    },
    "lgR120_pos_abl_no_trans": {
-    "source": "infer 73s",
+    "source": "cache",
     "kappa_pooled": 0.585994,
     "kappa_img_mean": 0.453943,
     "oa_img_mean": 0.674183,
@@ -2916,7 +2963,7 @@
     }
    },
    "lgR120_pos_abl_no_adapter": {
-    "source": "infer 77s",
+    "source": "cache",
     "kappa_pooled": 0.607055,
     "kappa_img_mean": 0.476231,
     "oa_img_mean": 0.69836,
@@ -2960,7 +3007,7 @@
     }
    },
    "lgR120_pos_abl_bilinear": {
-    "source": "infer 77s",
+    "source": "cache",
     "kappa_pooled": 0.608191,
     "kappa_img_mean": 0.47859,
     "oa_img_mean": 0.693845,
@@ -3004,7 +3051,7 @@
     }
    },
    "lgR120_pos_abl_trans4l": {
-    "source": "infer 80s",
+    "source": "cache",
     "kappa_pooled": 0.609803,
     "kappa_img_mean": 0.47991,
     "oa_img_mean": 0.695551,
@@ -3048,7 +3095,7 @@
     }
    },
    "lgR120_pos_abl_trans6l": {
-    "source": "infer 83s",
+    "source": "cache",
     "kappa_pooled": 0.612889,
     "kappa_img_mean": 0.482829,
     "oa_img_mean": 0.698702,
@@ -3356,7 +3403,7 @@
     }
    },
    "sd7_full": {
-    "source": "infer 79s",
+    "source": "cache",
     "kappa_pooled": 0.571525,
     "kappa_img_mean": 0.437037,
     "oa_img_mean": 0.659336,
@@ -3400,7 +3447,7 @@
     }
    },
    "sd2024_full": {
-    "source": "infer 81s",
+    "source": "cache",
     "kappa_pooled": 0.571723,
     "kappa_img_mean": 0.435406,
     "oa_img_mean": 0.66584,
@@ -3444,7 +3491,7 @@
     }
    },
    "sd31337_full": {
-    "source": "infer 82s",
+    "source": "cache",
     "kappa_pooled": 0.569796,
     "kappa_img_mean": 0.429744,
     "oa_img_mean": 0.657574,
@@ -3488,7 +3535,7 @@
     }
    },
    "sd7_deeplab": {
-    "source": "infer 54s",
+    "source": "cache",
     "kappa_pooled": 0.651496,
     "kappa_img_mean": 0.529926,
     "oa_img_mean": 0.727434,
@@ -3532,7 +3579,7 @@
     }
    },
    "sd2024_deeplab": {
-    "source": "infer 54s",
+    "source": "cache",
     "kappa_pooled": 0.651944,
     "kappa_img_mean": 0.532263,
     "oa_img_mean": 0.728065,
@@ -3576,7 +3623,7 @@
     }
    },
    "sd31337_deeplab": {
-    "source": "infer 54s",
+    "source": "cache",
     "kappa_pooled": 0.650117,
     "kappa_img_mean": 0.532179,
     "oa_img_mean": 0.72572,
@@ -3615,6 +3662,534 @@
      ">8 (内部)": {
       "frac": 0.78386,
       "oa": 0.7703,
+      "n": 115433613
+     }
+    }
+   },
+   "sd1234_full": {
+    "source": "infer 73s",
+    "kappa_pooled": 0.563539,
+    "kappa_img_mean": 0.430127,
+    "oa_img_mean": 0.652682,
+    "miou_pooled": 0.30254,
+    "per_class_iou": [
+     0.3701,
+     0.3912,
+     0.3835,
+     0.2849,
+     0.2222,
+     0.2492,
+     0.2167
+    ],
+    "miou_no_barren": 0.315938,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4491,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4759,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5136,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5617,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6901,
+      "n": 115433613
+     }
+    }
+   },
+   "sd5555_full": {
+    "source": "infer 71s",
+    "kappa_pooled": 0.57011,
+    "kappa_img_mean": 0.435103,
+    "oa_img_mean": 0.659832,
+    "miou_pooled": 0.330829,
+    "per_class_iou": [
+     0.3804,
+     0.4116,
+     0.3863,
+     0.3536,
+     0.2306,
+     0.2557,
+     0.2977
+    ],
+    "miou_no_barren": 0.347533,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4506,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4781,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5169,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5649,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6984,
+      "n": 115433613
+     }
+    }
+   },
+   "sd8888_full": {
+    "source": "infer 71s",
+    "kappa_pooled": 0.563175,
+    "kappa_img_mean": 0.428145,
+    "oa_img_mean": 0.65269,
+    "miou_pooled": 0.317208,
+    "per_class_iou": [
+     0.3699,
+     0.3927,
+     0.3797,
+     0.3185,
+     0.2058,
+     0.2456,
+     0.3082
+    ],
+    "miou_no_barren": 0.335773,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.449,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4768,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5153,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5633,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6897,
+      "n": 115433613
+     }
+    }
+   },
+   "sd31415_full": {
+    "source": "infer 70s",
+    "kappa_pooled": 0.569056,
+    "kappa_img_mean": 0.432878,
+    "oa_img_mean": 0.657489,
+    "miou_pooled": 0.323264,
+    "per_class_iou": [
+     0.3737,
+     0.4122,
+     0.3841,
+     0.3434,
+     0.2158,
+     0.2526,
+     0.281
+    ],
+    "miou_no_barren": 0.34117,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4485,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4764,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5154,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5627,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6959,
+      "n": 115433613
+     }
+    }
+   },
+   "sd27182_full": {
+    "source": "infer 71s",
+    "kappa_pooled": 0.568024,
+    "kappa_img_mean": 0.435622,
+    "oa_img_mean": 0.658145,
+    "miou_pooled": 0.323823,
+    "per_class_iou": [
+     0.3832,
+     0.4084,
+     0.3809,
+     0.3313,
+     0.1862,
+     0.247,
+     0.3298
+    ],
+    "miou_no_barren": 0.346757,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4508,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4792,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5188,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5677,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6957,
+      "n": 115433613
+     }
+    }
+   },
+   "sd9999_full": {
+    "source": "infer 70s",
+    "kappa_pooled": 0.569774,
+    "kappa_img_mean": 0.435617,
+    "oa_img_mean": 0.658944,
+    "miou_pooled": 0.322305,
+    "per_class_iou": [
+     0.3795,
+     0.4199,
+     0.3858,
+     0.3212,
+     0.2183,
+     0.2474,
+     0.2839
+    ],
+    "miou_no_barren": 0.339641,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4502,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4786,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5176,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5647,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6973,
+      "n": 115433613
+     }
+    }
+   },
+   "sd1234_deeplab": {
+    "source": "infer 52s",
+    "kappa_pooled": 0.562188,
+    "kappa_img_mean": 0.434728,
+    "oa_img_mean": 0.654898,
+    "miou_pooled": 0.321799,
+    "per_class_iou": [
+     0.3901,
+     0.403,
+     0.3617,
+     0.3241,
+     0.2044,
+     0.2436,
+     0.3258
+    ],
+    "miou_no_barren": 0.34136,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4474,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4746,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5119,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5603,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6934,
+      "n": 115433613
+     }
+    }
+   },
+   "sd5555_deeplab": {
+    "source": "infer 50s",
+    "kappa_pooled": 0.547548,
+    "kappa_img_mean": 0.419832,
+    "oa_img_mean": 0.635895,
+    "miou_pooled": 0.306005,
+    "per_class_iou": [
+     0.3381,
+     0.3987,
+     0.3464,
+     0.3069,
+     0.2053,
+     0.2539,
+     0.2926
+    ],
+    "miou_no_barren": 0.322791,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4397,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4636,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.4976,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5413,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6731,
+      "n": 115433613
+     }
+    }
+   },
+   "sd8888_deeplab": {
+    "source": "infer 49s",
+    "kappa_pooled": 0.562974,
+    "kappa_img_mean": 0.439869,
+    "oa_img_mean": 0.653971,
+    "miou_pooled": 0.327579,
+    "per_class_iou": [
+     0.3861,
+     0.41,
+     0.3737,
+     0.3498,
+     0.2054,
+     0.2568,
+     0.3112
+    ],
+    "miou_no_barren": 0.347942,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4489,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4754,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5126,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5617,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6918,
+      "n": 115433613
+     }
+    }
+   },
+   "sd31415_deeplab": {
+    "source": "infer 50s",
+    "kappa_pooled": 0.554161,
+    "kappa_img_mean": 0.428182,
+    "oa_img_mean": 0.643817,
+    "miou_pooled": 0.311718,
+    "per_class_iou": [
+     0.3623,
+     0.4061,
+     0.3511,
+     0.3168,
+     0.2039,
+     0.2497,
+     0.2921
+    ],
+    "miou_no_barren": 0.329691,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4432,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4694,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5052,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.551,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6811,
+      "n": 115433613
+     }
+    }
+   },
+   "sd27182_deeplab": {
+    "source": "infer 49s",
+    "kappa_pooled": 0.562777,
+    "kappa_img_mean": 0.434886,
+    "oa_img_mean": 0.654921,
+    "miou_pooled": 0.323429,
+    "per_class_iou": [
+     0.3834,
+     0.419,
+     0.3545,
+     0.3168,
+     0.2013,
+     0.265,
+     0.3241
+    ],
+    "miou_no_barren": 0.343785,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4465,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.4727,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5095,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5568,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.694,
+      "n": 115433613
+     }
+    }
+   },
+   "sd9999_deeplab": {
+    "source": "infer 50s",
+    "kappa_pooled": 0.551365,
+    "kappa_img_mean": 0.424223,
+    "oa_img_mean": 0.645506,
+    "miou_pooled": 0.315078,
+    "per_class_iou": [
+     0.3802,
+     0.4038,
+     0.3267,
+     0.3383,
+     0.1965,
+     0.252,
+     0.3081
+    ],
+    "miou_no_barren": 0.33484,
+    "boundary": {
+     "0 (边界像素)": {
+      "frac": 0.02362,
+      "oa": 0.4403,
+      "n": 3478241
+     },
+     "1-2": {
+      "frac": 0.05338,
+      "oa": 0.466,
+      "n": 7860438
+     },
+     "3-4": {
+      "frac": 0.05167,
+      "oa": 0.5023,
+      "n": 7609482
+     },
+     "5-8": {
+      "frac": 0.08747,
+      "oa": 0.5476,
+      "n": 12881887
+     },
+     ">8 (内部)": {
+      "frac": 0.78386,
+      "oa": 0.6841,
       "n": 115433613
      }
     }
