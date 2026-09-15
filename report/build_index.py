@@ -169,6 +169,11 @@ reg(["lgR120_fx_skip", "lgR120_fx_pos", "lgR120_fx_all"], "lgR120/修复归因",
     "queues/run_queue_fix.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
     "fx_skip=修D1+D2(跳连+FPN四级接入); fx_pos=修D3(2D正弦位置编码); fx_all=三处全修",
     pipeline="P-MEM-ROLL")
+reg(["lgR120_fx_skip_s7", "lgR120_fx_skip_s2024",
+     "lgR120_fx_pos_s7", "lgR120_fx_pos_s2024"], "lgR120/修复配置种子复现",
+    "queues/run_queue_fx_seeds.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
+    "★ 让「跳连有害」（否定性承重结论）与「位置编码弱正向」由单次升级为有复现的效应量; "
+    "seed 7/2024 与既有 sd* 系列同值以便横向对照", pipeline="P-MEM-ROLL")
 reg(["lgR120_fx_d2", "lgR120_fxskip_lr1e4", "lgR120_fxall_lr1e4"], "lgR120/判别实验",
     "queues/run_queue_fix2.py", "DATA_NEWSPLIT2", 120, 20, 8, 2e-4,
     "H1: fx_d2 = 只融合 128²/64²(不做 256² 全分辨率融合); "

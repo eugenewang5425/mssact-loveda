@@ -124,6 +124,11 @@ TAG_CFG = {
     "lgR120_abl_trans6l": (_LIGHT, dict(use_skip=True, pos_enc=True, transformer_layers=6)),
 }
 
+# ---- 修复配置的种子复现 (2026-09-15): 让"跳连有害"这一承重否定结论有复现 ----
+for _s in (7, 2024):
+    TAG_CFG["lgR120_fx_skip_s%d" % _s] = (_LIGHT, dict(use_skip=True))
+    TAG_CFG["lgR120_fx_pos_s%d" % _s] = (_LIGHT, dict(pos_enc=True))
+
 # ---- 种子扩展 (2026-09-15): n=4→10 / n=3→9 ----
 for _s in (1234, 5555, 8888, 31415, 27182, 9999):
     TAG_CFG["sd%d_full" % _s] = (_LIGHT, {})
