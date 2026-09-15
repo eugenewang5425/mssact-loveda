@@ -565,20 +565,16 @@ n=250/500 的极小数据档显著更低——说明自研模型**更依赖数�
 | 早停 | 验证集 Kappa 连续 20 轮不升则停 |
 | 数据增强 | 每轮每图随机裁剪 1 个 patch（位置固定为 epoch_seed 决定）；随机 90° 旋转 ×4、水平/垂直翻转 |
 
-**类别权重公式**：设第 c 类像素数为 $n_c$，则
+**类别权重公式**：设第 $c$ 类在训练集中的像素数为 $n_c$，有效像素总数为 $N$，则第 $c$ 类的损失权重为
 
-```
-w_c = ( (n_c / N)^(-1/2) ) / mean_k( (n_k / N)^(-1/2) )
-```
+FORMULA_CLASS_WEIGHT
 
 即取频率的**负平方根**并归一化到均值为 1。用负平方根而非倒数，是为了避免
 极稀有类（如道路）获得过大的权重而使训练不稳定。
 
-**EMA 更新公式**：设模型参数为 $\\theta$，影子参数为 $\\theta'$，decay 为 $\\lambda$：
+**EMA 更新公式**：设在线模型参数为 $\theta$，影子（EMA）参数为 $\theta'$，衰减系数为 $\lambda$：
 
-```
-theta' <- lambda * theta' + (1 - lambda) * theta     (lambda = 0.999)
-```
+FORMULA_EMA
 
 即影子参数是历史参数的指数滑动平均；用其评估可显著降低验证指标的抖动。
 
@@ -590,17 +586,11 @@ theta' <- lambda * theta' + (1 - lambda) * theta     (lambda = 0.999)
 
 **OA（总体精度）**
 
-```
-OA = sum_i CM_ii / N
-```
+FORMULA_OA
 
 **Kappa（本报告的主指标与选优/早停依据）**
 
-```
-po = sum_i CM_ii / N                       # 观测一致率
-pe = sum_i ( row_i * col_i ) / N^2         # 随机一致率
-Kappa = (po - pe) / (1 - pe)
-```
+FORMULA_KAPPA
 
 **为什么用 Kappa 而非 OA**：LoveDA 背景类占比约 37%，一个"全部预测背景"的
 平凡模型即可取得 OA ≈ 0.37，但其 Kappa = 0。Kappa 扣除了随机一致率，
@@ -608,19 +598,11 @@ Kappa = (po - pe) / (1 - pe)
 
 **F1 / mF1（按类）**
 
-```
-precision_i = CM_ii / col_i        # 亦称 UA（用户精度）
-recall_i    = CM_ii / row_i        # 亦称 PA（生产者精度）
-F1_i        = 2 * precision_i * recall_i / (precision_i + recall_i)
-mF1         = mean_i F1_i
-```
+FORMULA_F1
 
 **IoU / mIoU**
 
-```
-IoU_i = CM_ii / ( row_i + col_i - CM_ii )
-mIoU  = mean_i IoU_i
-```
+FORMULA_MIOU
 
 > **⚠️ 勘误（2026-09-15）：本报告此前的 mIoU 数值被系统性低估约 21 个点。**
 > 上面这个定义是**标准口径**——先在**全数据集**上汇总混淆矩阵 `CM`，再逐类算 IoU、
@@ -1915,8 +1897,140 @@ for key, fn in [("FIG_CLASSDIST", "fig_class_distribution.png"),
     b64 = img(fn)
     MD = MD.replace(key, b64) if b64 else MD.replace(key, "")
 
+# ---------------------------------------------------------------------------
+# 数学公式：先保护、后渲染（2026-09-15 引入 KaTeX）
+#
+# 为什么必须"先保护"：python-markdown 会把 `_..._` 当强调语法。公式里出现两个下划线
+# 就会被撕碎，例如 `$p_o - p_e$` → `$p<em>o - p</em>e$`，渲染必然失败。
+# 故先把数学片段替换成不参与 markdown 的占位符，跑完 markdown 再连同定界符还原，
+# 交给 KaTeX 的 auto-render 处理。
+# ---------------------------------------------------------------------------
+_MATH_STORE = []
+
+
+def _protect_math(text):
+    # 手写扫描器而非正则: 正则里要写 $ 的字面转义, 而本仓库的补丁脚本经多层 shell
+    # 传递后反斜杠会被吞掉一层, 反复破坏源码 (本周已踩三次)。扫描器零转义。
+    out = []
+    i, n = 0, len(text)
+    while i < n:
+        if text[i] == "$":
+            if text.startswith("$$", i):          # 块级 $$...$$
+                j = text.find("$$", i + 2)
+                if j > 0:
+                    _MATH_STORE.append(text[i:j + 2])
+                    out.append("@@MATH%d@@" % (len(_MATH_STORE) - 1))
+                    i = j + 2
+                    continue
+            else:                                  # 行内 $...$（不跨行、非空）
+                j = text.find("$", i + 1)
+                if j > 0:
+                    seg = text[i + 1:j]
+                    if seg and chr(10) not in seg:
+                        _MATH_STORE.append(text[i:j + 1])
+                        out.append("@@MATH%d@@" % (len(_MATH_STORE) - 1))
+                        i = j + 1
+                        continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+
+
+def _restore_math(html_text):
+    for i, tex in enumerate(_MATH_STORE):
+        display = tex.startswith("$$")
+        cls = "math-display" if display else "math-inline"
+        html_text = html_text.replace("@@MATH%d@@" % i,
+                                      '<span class="%s">%s</span>' % (cls, tex))
+    return html_text
+
+
+# ===========================================================================
+# 数学公式块（普通字符串，非 f-string —— 故 LaTeX 花括号无需写成双括号）
+# 每个块都给出符号定义: 符号 / 含义 / 取值域。此前公式里的 n_c、CM_ij、row_i、
+# col_i 从未定义即出现，是审核与用户共同指出的可读性缺失。
+# ===========================================================================
+FORMULA_CLASS_WEIGHT = r"""$$ w_c \;=\; \frac{(n_c/N)^{-1/2}}{\operatorname{mean}_k\!\left[(n_k/N)^{-1/2}\right]} $$
+
+| 符号 | 含义 | 取值域 |
+|---|---|---|
+| $c$ | 类别索引（本报告重映射后为 $0\ldots6$，$0$ 为背景） | $0$–$6$ |
+| $n_c$ | 训练集中第 $c$ 类的像素数（**不含** ignore 像素） | 正整数 |
+| $N$ | 训练集有效像素总数，$N=\sum_c n_c$ | 正整数 |
+| $n_c/N$ | 第 $c$ 类的像素频率 | $(0,1)$ |
+| $\operatorname{mean}_k$ | 对 $k=0\ldots6$ 取算术平均 | — |
+| $w_c$ | 第 $c$ 类的损失权重 | 归一化后 $\operatorname{mean}_c w_c=1$ |
+"""
+FORMULA_EMA = r"""$$ \theta' \;\leftarrow\; \lambda\,\theta' \;+\; (1-\lambda)\,\theta,\qquad \lambda=0.999 $$
+
+| 符号 | 含义 | 取值域 |
+|---|---|---|
+| $\theta$ | 梯度更新后的**在线**权重 | 张量 |
+| $\theta'$ | **影子**权重，只做指数滑动平均、不接收梯度 | 张量 |
+| $\lambda$ | 衰减系数（每个优化步更新一次） | $0.999$ |
+| $\theta'$ 的有效平均窗口 | $\approx 1/(1-\lambda)$ 步 | $\approx 1000$ 步 |
+
+**评估与选优全部使用 $\theta'$**：影子权重是历史权重的指数滑动平均，可显著降低验证指标的抖动。
+"""
+FORMULA_OA = r"""$$ \mathrm{OA} \;=\; \frac{1}{N}\sum_{i=0}^{6} CM_{ii} $$
+
+| 符号 | 含义 |
+|---|---|
+| $CM$ | $7\times7$ 混淆矩阵，$CM_{ij}$ = 真值为 $i$、模型预测为 $j$ 的像素数 |
+| $CM_{ii}$ | 对角线元素，即第 $i$ 类被正确识别的像素数 |
+| $N$ | 全部有效像素数（**已屏蔽** ignore 像素） |
+"""
+FORMULA_KAPPA = r"""$$ p_o \;=\; \frac{1}{N}\sum_{i=0}^{6} CM_{ii},\qquad
+   p_e \;=\; \frac{1}{N^{2}}\sum_{i=0}^{6} \mathrm{row}_i\cdot\mathrm{col}_i,\qquad
+   \kappa \;=\; \frac{p_o-p_e}{1-p_e} $$
+
+| 符号 | 含义 | 备注 |
+|---|---|---|
+| $p_o$ | 观测一致率 | 与上式的 OA **数值相同** |
+| $\mathrm{row}_i=\sum_j CM_{ij}$ | 真值为 $i$ 的像素总数 | 即该类的**支持度**（分母） |
+| $\mathrm{col}_i=\sum_j CM_{ji}$ | 被预测为 $i$ 的像素总数 | 即该类的**预测总量** |
+| $p_e$ | 随机一致率：两个独立随机标注者按各类边缘分布标注时的期望一致率 | 由 $\mathrm{row},\mathrm{col}$ 决定 |
+| $\kappa$ | Kappa 系数 | $1$ = 完全一致，$0$ = 与随机相当，可为负 |
+"""
+FORMULA_F1 = r"""$$ \mathrm{precision}_i=\frac{CM_{ii}}{\mathrm{col}_i},\qquad
+   \mathrm{recall}_i=\frac{CM_{ii}}{\mathrm{row}_i},\qquad
+   F1_i=\frac{2\,\mathrm{precision}_i\,\mathrm{recall}_i}{\mathrm{precision}_i+\mathrm{recall}_i} $$
+
+$$ \mathrm{mF1}=\frac{1}{7}\sum_{i=0}^{6}F1_i $$
+
+| 符号 | 含义 | 亦称 |
+|---|---|---|
+| $\mathrm{precision}_i$ | 预测为 $i$ 的像素中真正属于 $i$ 的比例 | **UA**（用户精度） |
+| $\mathrm{recall}_i$ | 真值为 $i$ 的像素中被正确识别的比例 | **PA**（生产者精度） |
+| $F1_i$ | 二者的调和平均 | — |
+| $\mathrm{mF1}$ | 对 7 类取算术平均；**按类等权**，故不受大类支配 | — |
+"""
+FORMULA_MIOU = r"""$$ \mathrm{IoU}_i=\frac{CM_{ii}}{\mathrm{row}_i+\mathrm{col}_i-CM_{ii}},\qquad
+   \mathrm{mIoU}=\frac{1}{7}\sum_{i=0}^{6}\mathrm{IoU}_i $$
+
+| 符号 | 含义 |
+|---|---|
+| 分母 | 并集大小：真值或预测命中第 $i$ 类的像素数（交集被计两次，故减去 $CM_{ii}$） |
+| $\mathrm{mIoU}$ | 对 7 类取算术平均（**按类等权**） |
+
+**口径纪律**：$\mathrm{mIoU}$ 必须先在全数据集上**汇总**出唯一的 $CM$，再逐类算 IoU、最后对类平均。
+若改成像元级逐图计算再对图平均，类别像素少时极不稳定、会系统性偏低（实测差 0.20，见下方勘误）。
+"""
+
+for _k, _v in (("FORMULA_CLASS_WEIGHT", FORMULA_CLASS_WEIGHT), ("FORMULA_EMA", FORMULA_EMA),
+               ("FORMULA_OA", FORMULA_OA), ("FORMULA_KAPPA", FORMULA_KAPPA),
+               ("FORMULA_F1", FORMULA_F1), ("FORMULA_MIOU", FORMULA_MIOU)):
+    MD = MD.replace(_k, _v)
+
+MD = _protect_math(MD)
 body = markdown.markdown(MD, extensions=["tables", "fenced_code"])
-html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+body = _restore_math(body)
+html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.body,{{delimiters:[{{left:'$$',right:'$$',display:true}},{{left:'$',right:'$',display:false}}],throwOnError:false}});"></script>
+<style>
 body {{ font-family: "Microsoft YaHei","SimSun",sans-serif; margin: 40px; line-height: 1.75; color:#222; }}
 h1 {{ color:#b30000; border-bottom:3px solid #b30000; padding-bottom:8px; }}
 h2 {{ color:#333; border-bottom:1px solid #ccc; padding-bottom:5px; margin-top:34px; }}
@@ -1929,6 +2043,12 @@ img {{ max-width:100%; margin:12px 0; border:1px solid #ddd; }}
 code {{ background:#f5f5f5; padding:2px 5px; border-radius:3px; font-size:13px; }}
 pre {{ background:#f5f5f5; padding:12px; border-radius:5px; overflow-x:auto; }}
 blockquote {{ border-left:4px solid #b30000; padding-left:12px; color:#555; background:#fafafa; }}
+/* 数学公式：块级居中并留白，行内与正文基线对齐；渲染失败时保留可读的原文 */
+.math-display {{ display:block; text-align:center; margin:14px 0; }}
+.math-inline {{ display:inline; }}
+.katex {{ font-size:1.02em; }}
+/* 统一纸张尺寸，便于页码覆盖层与正文页面对齐 */
+@page {{ size: A4; margin: 16mm 14mm; }}
 </style></head><body>{body}</body></html>"""
 
 out_html = os.path.join(paths.REPORTS, f"项目报告_{TODAY}.html")

@@ -186,6 +186,13 @@ def main():
     # 页脚泄露检查：PDF 不得含本机 file:// 路径
     # 注意: 这里必须只 append 失败项, 不能再用一个 `ok = True` 覆盖前面结果 ——
     # 此前正是那行 `ok = True` 把本检查的 ok=False 抹掉了, 使整条 file:// 防线失效。
+    # 数学公式必须已渲染: 残留成对 $ 说明 KaTeX 未生效（CDN 未加载/超时）
+    _n_dollar = txt.count("$")
+    if _n_dollar >= 2:
+        print("   ✗ PDF 中残留 %d 个 $ 定界符 —— 公式未渲染，检查 KaTeX CDN 是否可达" % _n_dollar)
+        fails.append("公式未渲染($ 残留)")
+    else:
+        print("   ✓ 数学公式已渲染（无 $ 定界符残留）")
     if "file://" in txt:
         print("   ✗ PDF 含 file:// 页脚（本机路径泄露）—— 请确认 --no-pdf-header-footer 生效")
         fails.append("file:// 页脚泄露")
