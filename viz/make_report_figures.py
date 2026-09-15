@@ -143,9 +143,11 @@ def fig_learning_curves():
 def fig_comparison_bars():
     B = F["stage_C_1768_final"].get("baselines", {})
     M = F["stage_C_1768_final"].get("main", {})
-    order = [("full_all_v2", "MSSACT-Net light\n(自研, 6.10M)", C_OURS),
-             ("nd_deeplab_scr", "DeepLabV3+\n从零 (39.69M)", C_SCR),
-             ("nd_deeplab", "DeepLabV3+\n预训练 (旁证)", C_PRE),
+    # 标签刻意缩短并加宽画布: 原标签(如 "MSSACT-Net light\n(自研, 6.10M)")在 9 根柱下
+    # 会与相邻标签在横轴上互相压字(用户截图已指出)。
+    order = [("full_all_v2", "MSSACT-Net\n自研 6.10M", C_OURS),
+             ("nd_deeplab_scr", "DeepLabV3+\n从零 39.69M", C_SCR),
+             ("nd_deeplab", "DeepLabV3+\n预训练 39.69M", C_PRE),
              ("nd_fpn_seg", "FPN-Seg\n27.20M", C_OTH), ("nd_fcn", "FCN\n23.78M", C_OTH),
              ("nd_unet", "U-Net\n2.45M", C_OTH), ("nd_swin_unet", "Swin-Unet\n32.67M", C_OTH),
              ("nd_pspnet", "PSPNet\n13.60M", C_OTH), ("nd_segformer", "SegFormer\n1.23M", C_OTH)]
@@ -154,15 +156,22 @@ def fig_comparison_bars():
         r = M.get(t) or B.get(t)
         if not r: continue
         xs.append(lab); ys.append(r["kappa"]); cs.append(c); ls.append(t)
-    fig, ax = plt.subplots(figsize=(9, 4))
+    fig, ax = plt.subplots(figsize=(10.6, 4.2))     # 加宽: 9 根柱 + 两行标签需要横向空间
     ax.bar(range(len(xs)), ys, color=cs)
     ax.axhline(M.get("full_all_v2", {}).get("kappa", 0), ls="--", c=C_OURS, lw=1)
-    ax.errorbar([0], [ys[0]], yerr=[3 * SIGMA], fmt="none", ecolor="k", capsize=4)
-    ax.text(0.1, ys[0] + 3 * SIGMA + .004, "±3σ_seed", fontsize=8)
+    # ±3σ_seed 用**图例**表示而不是贴一行文字: 原来 ax.text 放在 x=0.1 处,
+    # 与第 0 根柱的数值标签("0.6312")互相压字, 且误差棒顶帽也挤在一起。
+    ax.errorbar([0], [ys[0]], yerr=[3 * SIGMA], fmt="none", ecolor="k", capsize=4,
+                label=f"±3σ_seed（σ={SIGMA:.4f}）")
+    # 第 0 根柱同时带误差棒, 其竖线会穿过贴在柱顶的数值标签 —— 把它移到误差棒顶帽之上;
+    # 其余柱没有误差棒, 维持柱顶。用户截图里"自研柱顶的奇怪符号"就是这条竖线。
+    _cap_top = ys[0] + 3 * SIGMA
     for i, v in enumerate(ys):
-        ax.text(i, v + .003, f"{v:.4f}", ha="center", fontsize=7.5)
-    ax.set_xticks(range(len(xs))); ax.set_xticklabels(xs, fontsize=7.5)
-    ax.set_ylabel("验证集 Kappa"); ax.set_ylim(0, max(ys) * 1.18)
+        _y = (_cap_top + .006) if i == 0 else (v + .004)
+        ax.text(i, _y, f"{v:.4f}", ha="center", fontsize=6.5)
+    ax.set_xticks(range(len(xs))); ax.set_xticklabels(xs, fontsize=7)
+    ax.set_ylabel("验证集 Kappa"); ax.set_ylim(0, max(ys) * 1.22)
+    ax.legend(fontsize=7, loc="upper right", framealpha=.9)
     ax.set_title("阶段 C 对比实验（同协议；从零训练的公平对比）")
     ax.grid(axis="y", alpha=.3)
     save("fig_comparison_bars.png")
@@ -339,7 +348,11 @@ def fig_agreement():
         ax.text(i, v + .008, f"{v:.4f}", ha="center", fontsize=9)
     ax.set_ylim(0, 1); ax.set_ylabel("一致率"); ax.grid(axis="y", alpha=.3)
     ax.set_title("标签质量上限的证据（test_clean 141 张，6 个模型）")
-    ax.text(1.0, 0.30, "模型互相认同 远高于 认同人工标签", ha="center", fontsize=9, color="#2471a3")
+    # 原先把这句注释放在 (x=1.0, y=0.30) —— 正好落在中间那根柱体内部,
+    # 文字颜色又与柱色相近, 于是被柱体遮住只露出两端的残字(用户截图即此)。
+    # 柱高为 0.65/0.76/0.68, 故 y≈0.90 一带是空白区, 移到这里。
+    ax.text(1.0, 0.90, "模型互相认同 远高于 认同人工标签", ha="center", fontsize=9,
+            color="#2471a3")
     save("fig_agreement.png")
 
 
